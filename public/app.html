@@ -163,6 +163,22 @@
     #ec-valor-total-box{background:var(--sidebar-bg);border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
     #ec-valor-total-box span:first-child{font-size:12px;color:rgba(255,255,255,.5)}
     #ec-valor-total-label{font-size:20px;font-weight:800;color:var(--laranja)}
+    #ec-add-bar{display:flex;gap:8px;align-items:flex-end;margin-bottom:10px}
+    #ec-add-bar select{flex:1}
+    #btn-add-item-exec{background:var(--laranja);color:white;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .15s}
+    #btn-add-item-exec:hover{background:var(--laranja-esc)}
+    #ec-itens-wrap{border-radius:8px;overflow:hidden;border:1px solid var(--borda);margin-bottom:10px}
+    .ec-item-header{display:grid;grid-template-columns:38px 1fr 90px 60px 90px 28px;gap:8px;padding:6px 10px;background:var(--sidebar-bg);color:rgba(255,255,255,.55);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+    .ec-item-row{display:grid;grid-template-columns:38px 1fr 90px 60px 90px 28px;gap:8px;align-items:center;padding:7px 10px;border-bottom:1px solid var(--borda);font-size:12px;background:white}
+    .ec-item-row:nth-child(even){background:var(--laranja-claro)}
+    .ec-item-row:last-child{border-bottom:none}
+    .ec-item-num{font-weight:700;color:var(--texto-leve)}
+    .ec-item-info .titulo{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ec-item-info .comp{font-size:10px;color:var(--texto-leve)}
+    .ec-item-unit{text-align:right;font-size:11px;color:var(--texto-leve)}
+    .ec-item-qtdinp{width:52px;padding:3px 6px;font-size:12px;text-align:center;border:1.5px solid var(--borda);border-radius:6px}
+    .ec-item-sub{text-align:right;font-weight:700;color:var(--laranja);font-size:12px}
+    #ec-itens-empty{padding:14px;text-align:center;font-size:12px;color:var(--texto-leve);background:var(--bg)}
 
     /* TOAST */
     #toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;color:white;z-index:9999;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s;pointer-events:none;max-width:360px;box-shadow:0 4px 20px rgba(0,0,0,.2)}
@@ -345,25 +361,16 @@
         </div>
 
         <div class="form-secao">
-          <div class="form-secao-titulo">Item do Cardápio</div>
-          <div class="fgrid">
-            <div class="fg span2">
-              <label>Nº Item da Proposta de Preço</label>
-              <select id="ec-item"><option value="">— selecione um item —</option></select>
-            </div>
-            <div class="fg span2"><label>Produtos e Serviços</label><input type="text" id="ec-produtos" class="ec-auto" readonly placeholder="Preenchido automaticamente"/></div>
-            <div class="fg"><label>Complexidade</label><input type="text" id="ec-complexidade" class="ec-auto" readonly placeholder="Auto"/></div>
-            <div class="fg"><label>Valor Unitário (desc. 13,5%)</label><input type="text" id="ec-valor-unit" class="ec-auto" readonly placeholder="Auto"/></div>
+          <div class="form-secao-titulo">Itens do Cardápio</div>
+          <div id="ec-add-bar">
+            <select id="ec-item"><option value="">— selecione o Nº Item da Proposta de Preço —</option></select>
+            <button id="btn-add-item-exec">+ Adicionar Item</button>
           </div>
-        </div>
-
-        <div class="form-secao">
-          <div class="form-secao-titulo">Quantidade e Total</div>
-          <div class="fgrid">
-            <div class="fg"><label>Quantidade</label><input type="number" id="ec-qtd" value="1" min="1"/></div>
+          <div id="ec-itens-wrap">
+            <div id="ec-itens-empty">Nenhum item adicionado</div>
           </div>
           <div id="ec-valor-total-box">
-            <span>Valor Total (desc. 13,5%)</span>
+            <span>Valor Total de todos os itens (desc. 13,5%)</span>
             <span id="ec-valor-total-label">R$ 0,00</span>
           </div>
         </div>
@@ -732,7 +739,7 @@ async function toggleUsuario(id,ativo){
 
 // ── Execução Controle ────────────────────────────────────────────────────────
 let execucaoData=[];
-let ecValorUnitario=0;
+let ecItens=[];
 
 function popularSelectCardapio(){
   const sel=document.getElementById('ec-item');
@@ -748,27 +755,49 @@ function popularSelectCardapio(){
   });
 }
 
-document.getElementById('ec-item').addEventListener('change',function(){
-  const opt=this.options[this.selectedIndex];
-  if(!opt.value){
-    document.getElementById('ec-produtos').value='';
-    document.getElementById('ec-complexidade').value='';
-    document.getElementById('ec-valor-unit').value='';
-    ecValorUnitario=0;
-  }else{
-    document.getElementById('ec-produtos').value=opt.dataset.titulo||'';
-    document.getElementById('ec-complexidade').value=opt.dataset.complexidade||'';
-    ecValorUnitario=parseFloat(opt.dataset.valor)||0;
-    document.getElementById('ec-valor-unit').value=brl(ecValorUnitario);
-  }
-  calcValorTotalExec();
+document.getElementById('btn-add-item-exec').addEventListener('click',()=>{
+  const sel=document.getElementById('ec-item');
+  const opt=sel.options[sel.selectedIndex];
+  if(!opt||!opt.value){toast('Selecione um item do cardápio.','erro');return;}
+  const id=+opt.value;
+  const ex=ecItens.find(i=>i.id===id);
+  if(ex){ex.qtd++;renderItensExec();return;}
+  ecItens.push({id,titulo:opt.dataset.titulo||'',complexidade:opt.dataset.complexidade||'',valor:parseFloat(opt.dataset.valor)||0,qtd:1});
+  renderItensExec();
 });
 
-document.getElementById('ec-qtd').addEventListener('input',calcValorTotalExec);
-
-function calcValorTotalExec(){
-  const qt=parseFloat(document.getElementById('ec-qtd').value)||0;
-  const total=ecValorUnitario*qt;
+function renderItensExec(){
+  const wrap=document.getElementById('ec-itens-wrap');
+  if(!ecItens.length){
+    wrap.innerHTML='<div id="ec-itens-empty">Nenhum item adicionado</div>';
+    document.getElementById('ec-valor-total-label').textContent=brl(0);
+    return;
+  }
+  let html=`<div class="ec-item-header"><span>Nº</span><span>Produto / Complexidade</span><span style="text-align:right">Valor Unit.</span><span style="text-align:center">Qtd</span><span style="text-align:right">Subtotal</span><span></span></div>`;
+  ecItens.forEach((item,idx)=>{
+    html+=`<div class="ec-item-row">
+      <span class="ec-item-num">${item.id}</span>
+      <div class="ec-item-info"><div class="titulo">${item.titulo}</div><div class="comp">${item.complexidade}</div></div>
+      <span class="ec-item-unit">${brl(item.valor)}</span>
+      <input type="number" class="ec-item-qtdinp" value="${item.qtd}" min="1" data-idx="${idx}"/>
+      <span class="ec-item-sub">${brl(item.valor*item.qtd)}</span>
+      <button class="btn-rem" data-idx="${idx}">×</button>
+    </div>`;
+  });
+  wrap.innerHTML=html;
+  wrap.querySelectorAll('.ec-item-qtdinp').forEach(inp=>{
+    inp.addEventListener('input',function(){
+      ecItens[+this.dataset.idx].qtd=Math.max(1,+this.value||1);
+      renderItensExec();
+    });
+  });
+  wrap.querySelectorAll('.btn-rem').forEach(btn=>{
+    btn.addEventListener('click',function(){
+      ecItens.splice(+this.dataset.idx,1);
+      renderItensExec();
+    });
+  });
+  const total=ecItens.reduce((s,i)=>s+i.valor*i.qtd,0);
   document.getElementById('ec-valor-total-label').textContent=brl(total);
 }
 
@@ -786,12 +815,13 @@ function renderTabelaExecucao(){
   tbody.innerHTML='';
   document.getElementById('exec-count').textContent=`${execucaoData.length} registro(s)`;
   execucaoData.forEach(row=>{
+    const itens=Array.isArray(row.itens)?row.itens:[];
     const tr=document.createElement('tr');
     tr.innerHTML=`
       <td>${row.unidade_req||'—'}</td>
       <td>${row.projeto||'—'}</td>
-      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${row.nome_projeto||'—'}</td>
-      <td>${row.num_item||'—'}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${row.nome_projeto||''}">${row.nome_projeto||'—'}</td>
+      <td>${itens.length?itens.map(i=>i.id).join(', '):'—'}</td>
       <td class="td-money">${brl(row.valor_total)}</td>
       <td>${row.numero_ap||'—'}</td>
       <td><button class="btn-pdf" data-id="${row.id}">× Excluir</button></td>`;
@@ -806,22 +836,21 @@ function renderTabelaExecucao(){
 }
 
 document.getElementById('btn-salvar-exec').addEventListener('click',async()=>{
-  const numItem=document.getElementById('ec-item').value;
-  if(!numItem){toast('Selecione um item do cardápio.','erro');return;}
-  const qt=parseFloat(document.getElementById('ec-qtd').value)||0;
-  if(!qt){toast('Informe a quantidade.','erro');return;}
+  if(!ecItens.length){toast('Adicione pelo menos um item do cardápio.','erro');return;}
+  const valorTotal=ecItens.reduce((s,i)=>s+i.valor*i.qtd,0);
   const dados={
     unidade_req:document.getElementById('ec-unidade').value,
     projeto:document.getElementById('ec-projeto').value,
     nome_projeto:document.getElementById('ec-nome-projeto').value.trim(),
     descricao:document.getElementById('ec-descricao').value.trim(),
     link_trello:document.getElementById('ec-link-trello').value.trim(),
-    num_item:numItem,
-    produtos_servicos:document.getElementById('ec-produtos').value,
-    complexidade:document.getElementById('ec-complexidade').value,
-    valor_unitario:ecValorUnitario,
-    quantidade:qt,
-    valor_total:ecValorUnitario*qt,
+    num_item:ecItens.map(i=>i.id).join(', '),
+    produtos_servicos:ecItens.map(i=>i.titulo).join('; '),
+    complexidade:ecItens.map(i=>i.complexidade).join('; '),
+    valor_unitario:ecItens[0]?.valor||0,
+    quantidade:ecItens.reduce((s,i)=>s+i.qtd,0),
+    valor_total:valorTotal,
+    itens:ecItens,
     numero_ap:document.getElementById('ec-numero-ap').value.trim(),
     obs:document.getElementById('ec-obs').value.trim(),
     link_comprovacao:document.getElementById('ec-link-comp').value.trim(),
@@ -830,17 +859,12 @@ document.getElementById('btn-salvar-exec').addEventListener('click',async()=>{
     const r=await fetch('/api/execucao',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)});
     if(!r.ok){const e=await r.json();toast(e.erro||'Erro ao salvar.','erro');return;}
     toast('✅ Execução salva!','ok');
-    // Limpa campos de item/qtd/obs mas mantém unidade/projeto/nome
+    ecItens=[];
+    renderItensExec();
     document.getElementById('ec-item').value='';
-    document.getElementById('ec-produtos').value='';
-    document.getElementById('ec-complexidade').value='';
-    document.getElementById('ec-valor-unit').value='';
-    document.getElementById('ec-qtd').value='1';
     document.getElementById('ec-numero-ap').value='';
     document.getElementById('ec-obs').value='';
     document.getElementById('ec-link-comp').value='';
-    ecValorUnitario=0;
-    calcValorTotalExec();
     await carregarExecucao();
   }catch{toast('Erro de conexão.','erro');}
 });

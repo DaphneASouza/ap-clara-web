@@ -258,8 +258,16 @@ app.delete('/api/usuarios/:id', requireAdmin, async (req, res) => {
 const EXEC_FIELDS = [
   'unidade_req','projeto','nome_projeto','descricao','link_trello','num_item',
   'produtos_servicos','complexidade','valor_unitario','quantidade','valor_total',
-  'numero_ap','obs','link_comprovacao',
+  'numero_ap','obs','link_comprovacao','itens',
 ];
+
+function prepExecBody(body) {
+  const b = { ...body };
+  if (b.itens !== undefined && typeof b.itens !== 'string') {
+    b.itens = JSON.stringify(b.itens);
+  }
+  return b;
+}
 
 app.get('/api/execucao', requireAuth, async (req, res) => {
   try {
@@ -269,7 +277,8 @@ app.get('/api/execucao', requireAuth, async (req, res) => {
 });
 
 app.post('/api/execucao', requireAuth, async (req, res) => {
-  const vals = EXEC_FIELDS.map(f => req.body[f] ?? null);
+  const b = prepExecBody(req.body);
+  const vals = EXEC_FIELDS.map(f => b[f] ?? null);
   const cols = EXEC_FIELDS.join(',');
   const params = EXEC_FIELDS.map((_,i) => `$${i+1}`).join(',');
   try {
@@ -281,8 +290,9 @@ app.post('/api/execucao', requireAuth, async (req, res) => {
 });
 
 app.put('/api/execucao/:id', requireAuth, async (req, res) => {
+  const b = prepExecBody(req.body);
   const sets = EXEC_FIELDS.map((f,i) => `${f}=$${i+1}`).join(',');
-  const vals = [...EXEC_FIELDS.map(f => req.body[f] ?? null), req.params.id];
+  const vals = [...EXEC_FIELDS.map(f => b[f] ?? null), req.params.id];
   try {
     await pool.query(`UPDATE execucao SET ${sets} WHERE id=$${EXEC_FIELDS.length+1}`, vals);
     res.json({ ok: true });

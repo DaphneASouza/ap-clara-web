@@ -57,6 +57,9 @@ async function setupDB() {
     );
   `);
 
+  // Garante coluna itens na tabela execucao (migracao segura)
+  await pool.query(`ALTER TABLE execucao ADD COLUMN IF NOT EXISTS itens JSONB DEFAULT '[]'`);
+
   // Cria admin Daphne se não existir
   const bcrypt = require('bcrypt');
   const existe = await pool.query(`SELECT id FROM usuarios WHERE login = 'daphne'`);
