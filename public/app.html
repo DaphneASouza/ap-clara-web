@@ -5,540 +5,307 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Clara Digital — APs</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --laranja:       #E65C00;
-      --laranja-esc:   #B84800;
-      --laranja-claro: #FFF3EC;
-      --laranja-med:   #FFD6B8;
-      --cinza-bg:      #F4F4F5;
-      --borda:         #E4E4E7;
-      --texto:         #18181B;
-      --texto-leve:    #71717A;
-      --branco:        #FFFFFF;
-      --verde:         #16A34A;
-      --radius:        8px;
-      --shadow:        0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --laranja:#E65C00;--laranja-esc:#C04E00;--laranja-claro:#FFF3EC;--laranja-med:#FFD6B8;
+      --sidebar-bg:#1C1C2E;--sidebar-hover:#2A2A40;
+      --bg:#F0F2F5;--borda:#E4E4E7;--texto:#18181B;--texto-leve:#71717A;
+      --verde:#16A34A;--verde-claro:#DCFCE7;--azul:#2563EB;--azul-claro:#DBEAFE;
+      --roxo:#7C3AED;--roxo-claro:#EDE9FE;--radius:10px;
+      --shadow:0 1px 3px rgba(0,0,0,.08);--shadow-md:0 4px 16px rgba(0,0,0,.10);
     }
+    body{font-family:'Inter',sans-serif;font-size:13px;background:var(--bg);color:var(--texto);display:flex;height:100vh;overflow:hidden}
 
-    body {
-      font-family: 'Inter', sans-serif;
-      font-size: 13px;
-      background: var(--cinza-bg);
-      color: var(--texto);
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+    /* SIDEBAR */
+    #sidebar{width:220px;flex-shrink:0;background:var(--sidebar-bg);display:flex;flex-direction:column;height:100vh;overflow:hidden}
+    #sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid rgba(255,255,255,.07)}
+    .logo-clara{font-size:22px;font-weight:800;color:var(--laranja);letter-spacing:-.5px}
+    .logo-clara span{color:white}
+    .logo-sub{font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;letter-spacing:.5px;text-transform:uppercase}
+    #sidebar-nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
+    .nav-section{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.25);padding:12px 8px 6px}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;color:rgba(255,255,255,.55);cursor:pointer;transition:all .15s;font-size:13px;font-weight:500;border:none;background:none;width:100%;text-align:left}
+    .nav-item:hover{background:var(--sidebar-hover);color:white}
+    .nav-item.active{background:var(--laranja);color:white}
+    .nav-item .icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+    #sidebar-footer{padding:16px 12px;border-top:1px solid rgba(255,255,255,.07)}
+    .user-card{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px}
+    .user-avatar{width:34px;height:34px;border-radius:50%;background:var(--laranja);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;flex-shrink:0}
+    .user-nome{font-size:13px;font-weight:600;color:white}
+    .user-nivel{font-size:10px;color:rgba(255,255,255,.4);text-transform:uppercase}
+    .btn-logout-side{background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:16px;margin-left:auto;padding:4px;transition:color .15s}
+    .btn-logout-side:hover{color:white}
 
-    /* ── Topbar ─────────────────────────────────────────────────── */
-    #topbar {
-      background: var(--laranja);
-      color: white;
-      padding: 0 20px;
-      height: 52px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 2px 8px rgba(0,0,0,.2);
-      flex-shrink: 0;
-    }
+    /* MAIN */
+    #main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    #topbar{background:white;border-bottom:1px solid var(--borda);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+    #page-title{font-size:16px;font-weight:700}
+    #page-sub{font-size:12px;color:var(--texto-leve);margin-top:1px}
+    .badge-nivel{background:var(--laranja-claro);color:var(--laranja);padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600}
+    #content{flex:1;overflow:hidden;position:relative}
 
-    .top-left { display: flex; align-items: center; gap: 12px; }
-    .top-logo  { font-size: 17px; font-weight: 700; letter-spacing: .3px; }
-    .top-sub   { font-size: 11px; opacity: .8; }
-    .top-right { display: flex; align-items: center; gap: 10px; }
-    .top-user  { font-size: 12px; opacity: .9; }
+    .page{display:none;height:100%;overflow-y:auto;padding:24px}
+    .page.active{display:block}
 
-    .btn-logout {
-      background: rgba(255,255,255,.2);
-      border: 1px solid rgba(255,255,255,.3);
-      color: white;
-      padding: 5px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-family: inherit;
-      cursor: pointer;
-      transition: background .15s;
-    }
-    .btn-logout:hover { background: rgba(255,255,255,.3); }
+    /* DASHBOARD */
+    .metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+    .metric-card{background:white;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}
+    .metric-header{display:flex;justify-content:space-between;align-items:flex-start}
+    .metric-label{font-size:12px;color:var(--texto-leve);font-weight:500}
+    .metric-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+    .metric-value{font-size:22px;font-weight:700;color:var(--texto)}
+    .metric-sub{font-size:11px;color:var(--texto-leve)}
+    .charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+    .chart-card{background:white;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+    .chart-title{font-size:14px;font-weight:700;margin-bottom:4px}
+    .chart-sub{font-size:12px;color:var(--texto-leve);margin-bottom:16px}
+    .recentes-table{width:100%;border-collapse:collapse;font-size:12px}
+    .recentes-table thead th{padding:8px 10px;text-align:left;font-weight:600;color:var(--texto-leve);border-bottom:1px solid var(--borda);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+    .recentes-table tbody td{padding:10px 10px;border-bottom:1px solid #F4F4F5}
+    .recentes-table tbody tr:last-child td{border-bottom:none}
+    .recentes-table tbody tr:hover td{background:var(--laranja-claro)}
+    .tag-ap{background:var(--laranja-claro);color:var(--laranja);padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
 
-    /* ── Nav abas ───────────────────────────────────────────────── */
-    #nav {
-      background: white;
-      border-bottom: 1px solid var(--borda);
-      display: flex;
-      padding: 0 16px;
-      gap: 4px;
-      flex-shrink: 0;
-    }
+    /* EXECUÇÃO */
+    #page-execucao{display:none;height:100%;overflow:hidden;padding:0}
+    #page-execucao.active{display:flex;flex-direction:row}
+    #exec-esq{width:340px;flex-shrink:0;background:white;border-right:1px solid var(--borda);display:flex;flex-direction:column;overflow-y:auto;padding:20px;gap:18px}
+    .form-secao{display:flex;flex-direction:column;gap:10px}
+    .form-secao-titulo{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--laranja);padding-bottom:6px;border-bottom:1px solid var(--laranja-med)}
+    .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .fgrid.col3{grid-template-columns:1fr 1fr 1fr}
+    .fg{display:flex;flex-direction:column;gap:3px}
+    .fg.span2{grid-column:span 2}
+    .fg label{font-size:11px;font-weight:600;color:var(--texto-leve)}
+    input,select,textarea{border:1.5px solid var(--borda);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;color:var(--texto);background:white;outline:none;transition:border-color .15s,box-shadow .15s}
+    input:focus,select:focus,textarea:focus{border-color:var(--laranja);box-shadow:0 0 0 3px rgba(230,92,0,.1)}
+    textarea{resize:vertical;min-height:56px}
+    #num-ap{background:var(--laranja-claro);border:1.5px solid var(--laranja-med);border-radius:8px;padding:10px;font-size:20px;font-weight:800;color:var(--laranja);text-align:center;letter-spacing:1px}
+    #totais-box{background:var(--sidebar-bg);border-radius:8px;padding:14px}
+    .tot-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px;color:rgba(255,255,255,.5)}
+    .tot-row span:last-child{font-weight:600;color:rgba(255,255,255,.8)}
+    .tot-row.destaque{border-top:1px solid rgba(255,255,255,.1);margin-top:6px;padding-top:10px;font-size:15px;font-weight:700}
+    .tot-row.destaque span{color:var(--laranja)!important}
+    #btn-gerar{background:var(--laranja);color:white;border:none;border-radius:8px;padding:13px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s}
+    #btn-gerar:hover:not(:disabled){background:var(--laranja-esc)}
+    #btn-gerar:disabled{background:#C4C4C4;cursor:not-allowed}
+    #exec-dir{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+    #busca-bar{padding:12px 16px;background:white;border-bottom:1px solid var(--borda);display:flex;gap:10px;align-items:center;flex-shrink:0}
+    #busca-input{flex:1;background:var(--bg);border-color:transparent}
+    #busca-input:focus{background:white;border-color:var(--laranja)}
+    #busca-count{font-size:11px;color:var(--texto-leve);white-space:nowrap}
+    #lista-cardapio{flex:1;overflow-y:auto;background:white}
+    .item-card{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid #F4F4F5;gap:12px;cursor:pointer;transition:background .1s}
+    .item-card:hover{background:var(--laranja-claro)}
+    .item-num{width:32px;font-size:10px;color:var(--texto-leve);text-align:right;flex-shrink:0;font-weight:600}
+    .item-info{flex:1;min-width:0}
+    .item-titulo{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .item-comp{font-size:11px;color:var(--texto-leve);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .item-val{font-size:12px;font-weight:700;color:var(--laranja);flex-shrink:0;white-space:nowrap}
+    .btn-add{background:var(--laranja);color:white;border:none;border-radius:6px;width:28px;height:28px;font-size:18px;line-height:1;cursor:pointer;flex-shrink:0;transition:background .12s;display:flex;align-items:center;justify-content:center}
+    .btn-add:hover{background:var(--laranja-esc)}
+    #itens-header{background:var(--sidebar-bg);color:rgba(255,255,255,.7);font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:8px 16px;flex-shrink:0}
+    #tabela-wrap{height:190px;overflow-y:auto;background:white;border-top:1px solid var(--borda);flex-shrink:0}
+    #tab-itens{width:100%;border-collapse:collapse;font-size:11px}
+    #tab-itens thead th{background:var(--laranja);color:white;padding:7px 8px;text-align:left;font-weight:600;position:sticky;top:0;z-index:2}
+    #tab-itens tbody tr:nth-child(even){background:var(--laranja-claro)}
+    #tab-itens tbody td{padding:5px 8px;vertical-align:middle}
+    #tab-itens input[type="number"]{width:48px;padding:3px 5px;font-size:11px}
+    #tab-itens input[type="text"]{width:90px;padding:3px 5px;font-size:11px}
+    .td-titulo{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .td-val{text-align:right;font-weight:700;color:var(--laranja)}
+    .btn-rem{background:none;border:none;color:#DC2626;cursor:pointer;font-size:16px}
 
-    .nav-btn {
-      padding: 10px 16px;
-      background: none;
-      border: none;
-      border-bottom: 2px solid transparent;
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--texto-leve);
-      cursor: pointer;
-      transition: color .15s, border-color .15s;
-      white-space: nowrap;
-    }
-    .nav-btn:hover { color: var(--laranja); }
-    .nav-btn.active { color: var(--laranja); border-bottom-color: var(--laranja); font-weight: 600; }
-    .nav-btn.admin-only { display: none; }
+    /* BANCO */
+    .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+    .page-header h2{font-size:18px;font-weight:700}
+    .page-header p{font-size:12px;color:var(--texto-leve);margin-top:2px}
+    .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+    .toolbar input{flex:1;max-width:300px}
+    .btn-refresh{background:var(--laranja);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer}
+    .btn-refresh:hover{background:var(--laranja-esc)}
+    .table-card{background:white;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+    .data-table{width:100%;border-collapse:collapse;font-size:12px}
+    .data-table thead th{background:var(--sidebar-bg);color:rgba(255,255,255,.7);padding:10px 14px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+    .data-table tbody tr{border-bottom:1px solid var(--borda)}
+    .data-table tbody tr:hover td{background:var(--laranja-claro)}
+    .data-table tbody td{padding:10px 14px}
+    .td-money{text-align:right;font-weight:700;color:var(--verde)}
+    .btn-pdf{background:var(--laranja-claro);color:var(--laranja);border:none;border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer}
+    .btn-pdf:hover{background:var(--laranja);color:white}
 
-    /* ── Conteúdo ───────────────────────────────────────────────── */
-    #content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
-    .tab-panel { display: none; flex: 1; overflow: hidden; }
-    .tab-panel.active { display: flex; flex-direction: column; overflow: hidden; }
+    /* USUÁRIOS */
+    .cards-row{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .form-card{background:white;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+    .form-card h3{font-size:14px;font-weight:700;color:var(--laranja);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--borda)}
+    .form-novo{display:flex;flex-direction:column;gap:10px}
+    .btn-criar{background:var(--laranja);color:white;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px}
+    .btn-criar:hover{background:var(--laranja-esc)}
+    .users-table{width:100%;border-collapse:collapse;font-size:12px}
+    .users-table thead th{padding:8px 10px;text-align:left;font-weight:600;color:var(--texto-leve);border-bottom:2px solid var(--borda);font-size:11px}
+    .users-table tbody td{padding:10px 10px;border-bottom:1px solid var(--borda)}
+    .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;text-transform:uppercase}
+    .b-admin{background:var(--laranja-claro);color:var(--laranja)}
+    .b-user{background:#F4F4F5;color:#555}
+    .b-on{background:var(--verde-claro);color:var(--verde)}
+    .b-off{background:#FEE2E2;color:#DC2626}
+    .btn-sm{background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;font-size:11px;font-family:inherit;cursor:pointer}
+    .btn-sm:hover{border-color:var(--laranja);color:var(--laranja)}
 
-    /* ══════════════════════════════════════════════════════════════
-       ABA NOVA AP
-    ══════════════════════════════════════════════════════════════ */
-    #panel-nova { flex-direction: row !important; }
-
-    /* Coluna esquerda */
-    #col-esq {
-      width: 360px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      background: white;
-      border-right: 1px solid var(--borda);
-      padding: 16px;
-      gap: 16px;
-    }
-
-    .secao-titulo {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--laranja);
-      margin-bottom: 8px;
-      padding-bottom: 4px;
-      border-bottom: 1px solid var(--laranja-med);
-    }
-
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .form-grid.col3 { grid-template-columns: 1fr 1fr 1fr; }
-    .fg { display: flex; flex-direction: column; gap: 3px; }
-    .fg.span2 { grid-column: span 2; }
-    .fg label { font-size: 11px; font-weight: 600; color: var(--texto-leve); }
-
-    input, select, textarea {
-      border: 1.5px solid var(--borda);
-      border-radius: var(--radius);
-      padding: 7px 9px;
-      font-size: 12px;
-      font-family: inherit;
-      color: var(--texto);
-      background: white;
-      outline: none;
-      transition: border-color .15s, box-shadow .15s;
-    }
-    input:focus, select:focus, textarea:focus {
-      border-color: var(--laranja);
-      box-shadow: 0 0 0 3px rgba(230,92,0,.1);
-    }
-    textarea { resize: vertical; min-height: 60px; }
-
-    #num-ap-preview {
-      background: var(--laranja-claro);
-      border: 1.5px solid var(--laranja-med);
-      border-radius: var(--radius);
-      padding: 10px;
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--laranja);
-      text-align: center;
-      letter-spacing: 1px;
-    }
-
-    #totais {
-      background: var(--laranja-claro);
-      border: 1.5px solid var(--laranja-med);
-      border-radius: var(--radius);
-      padding: 12px;
-    }
-    .tot-linha {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: var(--texto-leve);
-      padding: 3px 0;
-    }
-    .tot-linha.destaque {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--laranja);
-      border-top: 1px solid var(--laranja-med);
-      margin-top: 6px;
-      padding-top: 8px;
-    }
-
-    #btn-gerar {
-      background: var(--laranja);
-      color: white;
-      border: none;
-      border-radius: var(--radius);
-      padding: 13px;
-      font-size: 14px;
-      font-weight: 700;
-      font-family: inherit;
-      cursor: pointer;
-      letter-spacing: .3px;
-      transition: background .15s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    #btn-gerar:hover:not(:disabled) { background: var(--laranja-esc); }
-    #btn-gerar:disabled { background: #C4C4C4; cursor: not-allowed; }
-
-    /* Coluna direita */
-    #col-dir { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--cinza-bg); }
-
-    #busca-wrap {
-      padding: 10px 12px;
-      background: white;
-      border-bottom: 1px solid var(--borda);
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-    #busca-input { flex: 1; font-size: 13px; }
-    #busca-count { font-size: 11px; color: var(--texto-leve); white-space: nowrap; }
-
-    #lista-cardapio { flex: 1; overflow-y: auto; background: white; }
-
-    .item-card {
-      display: flex;
-      align-items: center;
-      padding: 9px 12px;
-      border-bottom: 1px solid #F4F4F5;
-      gap: 10px;
-      cursor: pointer;
-      transition: background .1s;
-    }
-    .item-card:hover { background: var(--laranja-claro); }
-    .item-num { width: 30px; font-size: 10px; color: var(--texto-leve); text-align: right; flex-shrink: 0; }
-    .item-info { flex: 1; min-width: 0; }
-    .item-titulo { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .item-comp   { font-size: 10px; color: var(--texto-leve); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .item-val    { font-size: 12px; font-weight: 600; color: var(--laranja); flex-shrink: 0; white-space: nowrap; }
-    .btn-add {
-      background: var(--laranja);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      width: 26px; height: 26px;
-      font-size: 18px;
-      line-height: 1;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: background .12s;
-    }
-    .btn-add:hover { background: var(--laranja-esc); }
-
-    /* Itens adicionados */
-    #sep-itens {
-      background: var(--laranja);
-      color: white;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .8px;
-      text-transform: uppercase;
-      padding: 6px 12px;
-      flex-shrink: 0;
-    }
-
-    #tabela-wrap { height: 185px; overflow-y: auto; background: white; border-top: 1px solid var(--borda); flex-shrink: 0; }
-    #tabela-itens { width: 100%; border-collapse: collapse; font-size: 11px; }
-    #tabela-itens thead th {
-      background: var(--laranja);
-      color: white;
-      padding: 6px 8px;
-      text-align: left;
-      font-weight: 600;
-      position: sticky;
-      top: 0;
-      z-index: 2;
-    }
-    #tabela-itens tbody tr:nth-child(even) { background: var(--laranja-claro); }
-    #tabela-itens tbody td { padding: 5px 8px; vertical-align: middle; }
-    #tabela-itens input[type="number"] { width: 48px; padding: 3px 5px; font-size: 11px; }
-    #tabela-itens input[type="text"]   { width: 88px; padding: 3px 5px; font-size: 11px; }
-    .td-titulo { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .td-val { text-align: right; font-weight: 600; color: var(--laranja); }
-    .btn-rem { background: none; border: none; color: #DC2626; cursor: pointer; font-size: 16px; padding: 0 4px; }
-
-    /* ══════════════════════════════════════════════════════════════
-       ABA BANCO DE DADOS
-    ══════════════════════════════════════════════════════════════ */
-    #panel-banco { padding: 16px; overflow: hidden; flex-direction: column; }
-
-    .banco-toolbar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    #banco-busca { flex: 1; max-width: 300px; }
-    .btn-refresh {
-      background: var(--laranja);
-      color: white;
-      border: none;
-      border-radius: var(--radius);
-      padding: 8px 14px;
-      font-size: 12px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-    }
-    .btn-refresh:hover { background: var(--laranja-esc); }
-
-    .banco-table-wrap {
-      flex: 1;
-      overflow-y: auto;
-      border: 1px solid var(--borda);
-      border-radius: var(--radius);
-      background: white;
-      box-shadow: var(--shadow);
-    }
-    .banco-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .banco-table thead th {
-      background: var(--laranja);
-      color: white;
-      padding: 9px 10px;
-      text-align: left;
-      font-weight: 600;
-      position: sticky;
-      top: 0;
-      z-index: 2;
-    }
-    .banco-table tbody tr { border-bottom: 1px solid #F4F4F5; }
-    .banco-table tbody tr:hover { background: var(--laranja-claro); }
-    .banco-table tbody td { padding: 8px 10px; }
-    .td-money { text-align: right; font-weight: 600; color: var(--verde); }
-    .btn-pdf {
-      background: var(--laranja);
-      color: white;
-      border: none;
-      border-radius: 5px;
-      padding: 4px 10px;
-      font-size: 11px;
-      font-family: inherit;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .btn-pdf:hover { background: var(--laranja-esc); }
-
-    /* ══════════════════════════════════════════════════════════════
-       ABA USUÁRIOS (admin)
-    ══════════════════════════════════════════════════════════════ */
-    #panel-usuarios { padding: 16px; overflow-y: auto; flex-direction: column; gap: 16px; }
-
-    .card-secao {
-      background: white;
-      border: 1px solid var(--borda);
-      border-radius: var(--radius);
-      padding: 16px;
-      box-shadow: var(--shadow);
-    }
-    .card-secao h3 { font-size: 14px; font-weight: 700; margin-bottom: 14px; color: var(--laranja); }
-
-    .form-novo-user { display: grid; grid-template-columns: 1fr 1fr 1fr auto auto; gap: 8px; align-items: end; }
-    .form-novo-user input, .form-novo-user select { font-size: 12px; }
-
-    .btn-criar {
-      background: var(--laranja);
-      color: white;
-      border: none;
-      border-radius: var(--radius);
-      padding: 8px 14px;
-      font-size: 12px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .btn-criar:hover { background: var(--laranja-esc); }
-
-    .usuarios-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
-    .usuarios-table thead th {
-      background: var(--cinza-bg);
-      padding: 8px 10px;
-      text-align: left;
-      font-weight: 600;
-      border-bottom: 2px solid var(--borda);
-    }
-    .usuarios-table tbody td { padding: 8px 10px; border-bottom: 1px solid var(--borda); }
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 99px;
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-    .badge-admin { background: var(--laranja-claro); color: var(--laranja); }
-    .badge-user  { background: #F0F0F0; color: #555; }
-    .badge-on    { background: #DCFCE7; color: var(--verde); }
-    .badge-off   { background: #FEE2E2; color: #DC2626; }
-    .btn-sm {
-      background: none;
-      border: 1px solid var(--borda);
-      border-radius: 5px;
-      padding: 3px 8px;
-      font-size: 11px;
-      font-family: inherit;
-      cursor: pointer;
-    }
-    .btn-sm:hover { border-color: var(--laranja); color: var(--laranja); }
-    .btn-sm.danger:hover { border-color: #DC2626; color: #DC2626; }
-
-    /* ── Toast ─────────────────────────────────────────────────── */
-    #toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      padding: 12px 20px;
-      border-radius: var(--radius);
-      font-size: 13px;
-      font-weight: 500;
-      color: white;
-      z-index: 9999;
-      opacity: 0;
-      transform: translateY(8px);
-      transition: opacity .25s, transform .25s;
-      pointer-events: none;
-      max-width: 360px;
-      box-shadow: 0 4px 16px rgba(0,0,0,.2);
-    }
-    #toast.show { opacity: 1; transform: translateY(0); }
-    #toast.ok   { background: var(--verde); }
-    #toast.erro { background: #DC2626; }
-    #toast.info { background: #1D4ED8; }
-
-    /* ── Scrollbar ─────────────────────────────────────────────── */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-thumb { background: #D4D4D8; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #A1A1AA; }
+    /* TOAST */
+    #toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;color:white;z-index:9999;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s;pointer-events:none;max-width:360px;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+    #toast.show{opacity:1;transform:translateY(0)}
+    #toast.ok{background:var(--verde)}
+    #toast.erro{background:#DC2626}
+    #toast.info{background:var(--azul)}
+    ::-webkit-scrollbar{width:5px;height:5px}
+    ::-webkit-scrollbar-thumb{background:#D4D4D8;border-radius:3px}
   </style>
 </head>
 <body>
 
-  <!-- Topbar -->
-  <div id="topbar">
-    <div class="top-left">
+<div id="sidebar">
+  <div id="sidebar-logo">
+    <div class="logo-clara">clara<span>digital</span></div>
+    <div class="logo-sub">Gestão de APs · SESC-AR/DF</div>
+  </div>
+  <nav id="sidebar-nav">
+    <div class="nav-section">Principal</div>
+    <button class="nav-item active" data-page="dashboard"><span class="icon">📊</span> Dashboard</button>
+    <button class="nav-item" data-page="execucao"><span class="icon">📝</span> Execução</button>
+    <div class="nav-section">Registros</div>
+    <button class="nav-item" data-page="banco"><span class="icon">🗂</span> Banco de APs</button>
+    <div class="nav-section admin-only" style="display:none">Administração</div>
+    <button class="nav-item admin-only" data-page="usuarios" style="display:none"><span class="icon">👥</span> Usuários</button>
+  </nav>
+  <div id="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar" id="avatar-inicial">D</div>
       <div>
-        <div class="top-logo">🎬 Clara Digital</div>
-        <div class="top-sub">Gerador de APs · SESC-AR/DF Nº 018188/2024</div>
+        <div class="user-nome" id="sidebar-nome">—</div>
+        <div class="user-nivel" id="sidebar-nivel">—</div>
       </div>
-    </div>
-    <div class="top-right">
-      <span class="top-user" id="top-user-nome"></span>
-      <button class="btn-logout" id="btn-logout">Sair</button>
+      <button class="btn-logout-side" id="btn-logout" title="Sair">⏏</button>
     </div>
   </div>
+</div>
 
-  <!-- Nav -->
-  <div id="nav">
-    <button class="nav-btn active" data-tab="nova">Nova AP</button>
-    <button class="nav-btn" data-tab="banco">Banco de Dados</button>
-    <button class="nav-btn admin-only" data-tab="usuarios" id="nav-usuarios">Usuários</button>
+<div id="main">
+  <div id="topbar">
+    <div>
+      <div id="page-title">Dashboard</div>
+      <div id="page-sub">Visão geral das Autorizações de Produção</div>
+    </div>
+    <div><span class="badge-nivel" id="badge-nivel">—</span></div>
   </div>
 
-  <!-- Conteúdo -->
   <div id="content">
 
-    <!-- ═══ NOVA AP ════════════════════════════════════════════════ -->
-    <div id="panel-nova" class="tab-panel active">
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-label">APs este mês</div>
+            <div class="metric-icon" style="background:var(--laranja-claro)">📄</div>
+          </div>
+          <div class="metric-value" id="m-aps">0</div>
+          <div class="metric-sub">Autorizações geradas</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-label">Valor Bruto (mês)</div>
+            <div class="metric-icon" style="background:var(--azul-claro)">💰</div>
+          </div>
+          <div class="metric-value" id="m-bruto">R$ 0</div>
+          <div class="metric-sub">Sem desconto aplicado</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-label">Com Desconto (mês)</div>
+            <div class="metric-icon" style="background:var(--verde-claro)">✅</div>
+          </div>
+          <div class="metric-value" id="m-desc">R$ 0</div>
+          <div class="metric-sub">13,5% de desconto</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-label">Total Acumulado</div>
+            <div class="metric-icon" style="background:var(--roxo-claro)">📈</div>
+          </div>
+          <div class="metric-value" id="m-total">R$ 0</div>
+          <div class="metric-sub">Todas as APs</div>
+        </div>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">Evolução Mensal</div>
+          <div class="chart-sub">Valor com desconto por mês (últimos 6 meses)</div>
+          <canvas id="chart-mensal" height="200"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">APs Recentes</div>
+          <div class="chart-sub">Últimas autorizações geradas</div>
+          <table class="recentes-table">
+            <thead><tr><th>Número</th><th>Projeto</th><th>Valor</th></tr></thead>
+            <tbody id="tbody-recentes"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
-      <div id="col-esq">
-        <!-- Numeração -->
-        <div>
-          <div class="secao-titulo">Numeração da AP</div>
-          <div class="form-grid col3">
+    <!-- EXECUÇÃO -->
+    <div id="page-execucao">
+      <div id="exec-esq">
+        <div class="form-secao">
+          <div class="form-secao-titulo">Numeração da AP</div>
+          <div class="fgrid col3">
             <div class="fg"><label>Mês</label><select id="f-mes"></select></div>
             <div class="fg"><label>Tipo</label>
-              <select id="f-tipo">
-                <option>MENSAL</option>
-                <option>AVULSO</option>
-                <option>COMPLEMENTAR</option>
-              </select>
+              <select id="f-tipo"><option>MENSAL</option><option>AVULSO</option><option>COMPLEMENTAR</option></select>
             </div>
-            <div class="fg"><label>Sequencial</label><input type="number" id="f-seq" value="1" min="1"/></div>
+            <div class="fg"><label>Seq.</label><input type="number" id="f-seq" value="1" min="1"/></div>
           </div>
-          <div id="num-ap-preview" style="margin-top:8px">—</div>
+          <div id="num-ap">—</div>
         </div>
-
-        <!-- Identificação -->
-        <div>
-          <div class="secao-titulo">Identificação</div>
-          <div class="form-grid">
-            <div class="fg"><label>Ano</label><input type="number" id="f-ano" min="2024" max="2099"/></div>
+        <div class="form-secao">
+          <div class="form-secao-titulo">Identificação</div>
+          <div class="fgrid">
+            <div class="fg"><label>Ano</label><input type="number" id="f-ano"/></div>
             <div class="fg"><label>Data</label><input type="date" id="f-data"/></div>
-            <div class="fg span2"><label>Unidade / Departamento</label><input type="text" id="f-unidade" placeholder="Ex: SESC Ceilândia"/></div>
+            <div class="fg span2"><label>Unidade</label><input type="text" id="f-unidade" placeholder="Ex: SESC Ceilândia"/></div>
             <div class="fg span2"><label>Nome do Projeto</label><input type="text" id="f-projeto" placeholder="Ex: Campanha Verão 2025"/></div>
           </div>
         </div>
-
-        <!-- Descritivo -->
-        <div>
-          <div class="secao-titulo">Descritivo dos Serviços</div>
+        <div class="form-secao">
+          <div class="form-secao-titulo">Descritivo dos Serviços</div>
           <textarea id="f-descritivo" rows="4" placeholder="Descreva os serviços..."></textarea>
         </div>
-
-        <!-- Observação -->
-        <div>
-          <div class="secao-titulo">Observação</div>
+        <div class="form-secao">
+          <div class="form-secao-titulo">Observação</div>
           <textarea id="f-obs" rows="2" placeholder="(opcional)"></textarea>
         </div>
-
-        <!-- Totais -->
-        <div id="totais">
-          <div class="tot-linha"><span>Valor Bruto:</span><span id="tot-bruto">R$ 0,00</span></div>
-          <div class="tot-linha"><span>Desconto (13,5%):</span><span id="tot-desc">– R$ 0,00</span></div>
-          <div class="tot-linha destaque"><span>Total com Desconto:</span><span id="tot-final">R$ 0,00</span></div>
+        <div id="totais-box">
+          <div class="tot-row"><span>Valor Bruto:</span><span id="tot-bruto">R$ 0,00</span></div>
+          <div class="tot-row"><span>Desconto (13,5%):</span><span id="tot-desc">– R$ 0,00</span></div>
+          <div class="tot-row destaque"><span>Total com Desconto:</span><span id="tot-final">R$ 0,00</span></div>
         </div>
-
-        <button id="btn-gerar">
-          <span id="btn-gerar-icon">📄</span>
-          <span id="btn-gerar-txt">Gerar AP (PDF)</span>
-        </button>
+        <button id="btn-gerar"><span>📄</span><span id="btn-txt">Gerar AP (PDF)</span></button>
       </div>
-
-      <div id="col-dir">
-        <div id="busca-wrap">
+      <div id="exec-dir">
+        <div id="busca-bar">
           <input id="busca-input" type="text" placeholder="🔍  Buscar no cardápio..."/>
           <span id="busca-count">carregando...</span>
         </div>
         <div id="lista-cardapio"></div>
-        <div id="sep-itens">Itens Adicionados</div>
+        <div id="itens-header">Itens Adicionados</div>
         <div id="tabela-wrap">
-          <table id="tabela-itens">
+          <table id="tab-itens">
             <thead>
-              <tr>
-                <th>Nº</th>
-                <th>Descrição</th>
-                <th>Complexidade</th>
-                <th>Qtd</th>
-                <th>Período</th>
-                <th>Valor Unit.</th>
-                <th>Subtotal</th>
-                <th></th>
-              </tr>
+              <tr><th>Nº</th><th>Descrição</th><th>Complexidade</th><th>Qtd</th><th>Período</th><th>Valor Unit.</th><th>Subtotal</th><th></th></tr>
             </thead>
             <tbody id="tbody-itens"></tbody>
           </table>
@@ -546,25 +313,23 @@
       </div>
     </div>
 
-    <!-- ═══ BANCO DE DADOS ═════════════════════════════════════════ -->
-    <div id="panel-banco" class="tab-panel">
-      <div class="banco-toolbar">
-        <input id="banco-busca" type="text" placeholder="🔍  Filtrar..."/>
+    <!-- BANCO -->
+    <div class="page" id="page-banco">
+      <div class="page-header">
+        <div><h2>Banco de APs</h2><p>Histórico de todas as Autorizações de Produção</p></div>
+      </div>
+      <div class="toolbar">
+        <input type="text" id="banco-busca" placeholder="🔍  Filtrar APs..."/>
         <button class="btn-refresh" onclick="carregarBanco()">↻ Atualizar</button>
         <span id="banco-count" style="font-size:11px;color:var(--texto-leve)"></span>
       </div>
-      <div class="banco-table-wrap">
-        <table class="banco-table">
+      <div class="table-card">
+        <table class="data-table">
           <thead>
             <tr>
-              <th>Número AP</th>
-              <th>Projeto</th>
-              <th>Data</th>
+              <th>Número AP</th><th>Projeto</th><th>Data</th>
               <th id="col-usuario" style="display:none">Usuário</th>
-              <th>Valor Bruto</th>
-              <th>Com Desconto</th>
-              <th>Observação</th>
-              <th>PDF</th>
+              <th>Valor Bruto</th><th>Com Desconto</th><th>Observação</th><th>PDF</th>
             </tr>
           </thead>
           <tbody id="tbody-banco"></tbody>
@@ -572,373 +337,312 @@
       </div>
     </div>
 
-    <!-- ═══ USUÁRIOS (admin) ═══════════════════════════════════════ -->
-    <div id="panel-usuarios" class="tab-panel">
-      <div class="card-secao">
-        <h3>Novo Usuário</h3>
-        <div class="form-novo-user">
-          <div class="fg"><label>Nome</label><input type="text" id="u-nome" placeholder="Nome completo"/></div>
-          <div class="fg"><label>Login</label><input type="text" id="u-login" placeholder="login"/></div>
-          <div class="fg"><label>Senha</label><input type="password" id="u-senha" placeholder="senha"/></div>
-          <div class="fg"><label>Nível</label>
-            <select id="u-nivel"><option value="usuario">Usuário</option><option value="admin">Admin</option></select>
-          </div>
-          <div class="fg"><label>&nbsp;</label><button class="btn-criar" onclick="criarUsuario()">+ Criar</button></div>
-        </div>
+    <!-- USUÁRIOS -->
+    <div class="page" id="page-usuarios">
+      <div class="page-header">
+        <div><h2>Usuários</h2><p>Gerenciamento de acesso ao sistema</p></div>
       </div>
-      <div class="card-secao" style="flex:1;overflow-y:auto">
-        <h3>Usuários Cadastrados</h3>
-        <table class="usuarios-table">
-          <thead>
-            <tr><th>Nome</th><th>Login</th><th>Nível</th><th>Status</th><th>Ações</th></tr>
-          </thead>
-          <tbody id="tbody-usuarios"></tbody>
-        </table>
+      <div class="cards-row">
+        <div class="form-card">
+          <h3>Novo Usuário</h3>
+          <div class="form-novo">
+            <div class="fg"><label>Nome completo</label><input type="text" id="u-nome" placeholder="Nome"/></div>
+            <div class="fg"><label>Login</label><input type="text" id="u-login" placeholder="login"/></div>
+            <div class="fg"><label>Senha</label><input type="password" id="u-senha" placeholder="senha"/></div>
+            <div class="fg"><label>Nível</label>
+              <select id="u-nivel"><option value="usuario">Usuário</option><option value="admin">Admin</option></select>
+            </div>
+            <button class="btn-criar" onclick="criarUsuario()">+ Criar Usuário</button>
+          </div>
+        </div>
+        <div class="form-card" style="overflow-y:auto">
+          <h3>Usuários Cadastrados</h3>
+          <table class="users-table">
+            <thead><tr><th>Nome</th><th>Login</th><th>Nível</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="tbody-usuarios"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
   </div>
+</div>
 
-  <div id="toast"></div>
+<div id="toast"></div>
 
-  <script>
-  // ── Estado global ──────────────────────────────────────────────
-  const DESCONTO = 0.135;
-  const MESES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO",
-                 "JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
-  let CARDAPIO = [];
-  let itens = [];
-  let banco = [];
-  let usuario = null;
+<script>
+'use strict';
+const DESCONTO=0.135;
+const MESES=["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
+let CARDAPIO=[],itens=[],banco=[],usuario=null,chartMensal=null;
 
-  // ── Utils ──────────────────────────────────────────────────────
-  function brl(v) {
-    return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  }
+function brl(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function brlK(v){v=Number(v||0);return v>=1000?`R$ ${(v/1000).toFixed(1)}k`:brl(v)}
 
-  let toastT;
-  function toast(msg, tipo = 'info') {
-    const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.className = `show ${tipo}`;
-    clearTimeout(toastT);
-    toastT = setTimeout(() => el.className = '', 3500);
-  }
+let toastT;
+function toast(msg,tipo='info'){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className=`show ${tipo}`;
+  clearTimeout(toastT);toastT=setTimeout(()=>el.className='',3500);
+}
 
-  // ── Auth check ─────────────────────────────────────────────────
-  async function init() {
-    try {
-      const r = await fetch('/api/me');
-      if (!r.ok) { window.location.href = '/'; return; }
-      usuario = await r.json();
-      document.getElementById('top-user-nome').textContent = usuario.nome;
+const pageTitles={
+  dashboard:['Dashboard','Visão geral das Autorizações de Produção'],
+  execucao:['Execução','Preencha os dados e gere a AP em PDF'],
+  banco:['Banco de APs','Histórico de todas as autorizações'],
+  usuarios:['Usuários','Gerenciamento de acesso ao sistema'],
+};
 
-      if (usuario.nivel === 'admin') {
-        document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
-        document.getElementById('col-usuario').style.display = '';
-      }
+document.querySelectorAll('.nav-item').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const page=btn.dataset.page;
+    document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-execucao').classList.remove('active');
+    const el=document.getElementById('page-'+page);
+    if(el)el.classList.add('active');
+    const[title,sub]=pageTitles[page]||['',''];
+    document.getElementById('page-title').textContent=title;
+    document.getElementById('page-sub').textContent=sub;
+    if(page==='banco')carregarBanco();
+    if(page==='usuarios')carregarUsuarios();
+    if(page==='dashboard')carregarDashboard();
+  });
+});
 
-      initForm();
-      await carregarCardapio();
-      await carregarBanco();
-    } catch {
-      window.location.href = '/';
+async function init(){
+  try{
+    const r=await fetch('/api/me');
+    if(!r.ok){window.location.href='/';return;}
+    usuario=await r.json();
+    document.getElementById('sidebar-nome').textContent=usuario.nome;
+    document.getElementById('sidebar-nivel').textContent=usuario.nivel;
+    document.getElementById('avatar-inicial').textContent=usuario.nome[0].toUpperCase();
+    document.getElementById('badge-nivel').textContent=usuario.nivel==='admin'?'👑 Admin':'👤 Usuário';
+    if(usuario.nivel==='admin'){
+      document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
+      document.getElementById('col-usuario').style.display='';
     }
-  }
+    initForm();
+    await carregarCardapio();
+    await carregarDashboard();
+  }catch{window.location.href='/';}
+}
 
-  // ── Logout ─────────────────────────────────────────────────────
-  document.getElementById('btn-logout').addEventListener('click', async () => {
-    await fetch('/api/logout', { method: 'POST' });
-    window.location.href = '/';
-  });
+document.getElementById('btn-logout').addEventListener('click',async()=>{
+  await fetch('/api/logout',{method:'POST'});
+  window.location.href='/';
+});
 
-  // ── Abas ───────────────────────────────────────────────────────
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      const panel = document.getElementById('panel-' + btn.dataset.tab);
-      panel.classList.add('active');
-      if (btn.dataset.tab === 'banco') carregarBanco();
-      if (btn.dataset.tab === 'usuarios') carregarUsuarios();
-    });
-  });
+async function carregarDashboard(){
+  try{
+    const r=await fetch('/api/aps');
+    banco=await r.json();
+    const agora=new Date(),mesAtual=agora.getMonth(),anoAtual=agora.getFullYear();
+    const doMes=banco.filter(ap=>{const d=new Date(ap.criado_em);return d.getMonth()===mesAtual&&d.getFullYear()===anoAtual;});
+    document.getElementById('m-aps').textContent=doMes.length;
+    document.getElementById('m-bruto').textContent=brlK(doMes.reduce((s,a)=>s+Number(a.total_bruto||0),0));
+    document.getElementById('m-desc').textContent=brlK(doMes.reduce((s,a)=>s+Number(a.total_desconto||0),0));
+    document.getElementById('m-total').textContent=brlK(banco.reduce((s,a)=>s+Number(a.total_desconto||0),0));
 
-  // ── Formulário ─────────────────────────────────────────────────
-  function initForm() {
-    const sel = document.getElementById('f-mes');
-    MESES.forEach(m => { const o = document.createElement('option'); o.value = o.textContent = m; sel.appendChild(o); });
-    sel.selectedIndex = new Date().getMonth();
-    document.getElementById('f-ano').value = new Date().getFullYear();
-    document.getElementById('f-data').value = new Date().toISOString().split('T')[0];
-    atualizarNumAP();
-    ['f-mes','f-tipo','f-seq'].forEach(id => {
-      document.getElementById(id).addEventListener('input', atualizarNumAP);
-      document.getElementById(id).addEventListener('change', atualizarNumAP);
-    });
-  }
-
-  function atualizarNumAP() {
-    const mes  = document.getElementById('f-mes').value;
-    const tipo = document.getElementById('f-tipo').value;
-    const seq  = document.getElementById('f-seq').value;
-    document.getElementById('num-ap-preview').textContent = `${mes}.${tipo}.${seq}`;
-  }
-
-  // ── Cardápio ───────────────────────────────────────────────────
-  async function carregarCardapio() {
-    const r = await fetch('/api/cardapio');
-    CARDAPIO = await r.json();
-    renderCardapio(CARDAPIO);
-  }
-
-  function renderCardapio(lista) {
-    const c = document.getElementById('lista-cardapio');
-    c.innerHTML = '';
-    document.getElementById('busca-count').textContent = `${lista.length} itens`;
-    lista.forEach(item => {
-      const div = document.createElement('div');
-      div.className = 'item-card';
-      div.innerHTML = `
-        <span class="item-num">${item.id}</span>
-        <div class="item-info">
-          <div class="item-titulo" title="${item.titulo}">${item.titulo}</div>
-          <div class="item-comp" title="${item.complexidade}">${item.complexidade}</div>
-        </div>
-        <span class="item-val">${brl(item.valor)}</span>
-        <button class="btn-add" title="Adicionar">+</button>
-      `;
-      div.querySelector('.btn-add').addEventListener('click', e => { e.stopPropagation(); adicionarItem(item); });
-      div.addEventListener('dblclick', () => adicionarItem(item));
-      c.appendChild(div);
-    });
-  }
-
-  document.getElementById('busca-input').addEventListener('input', function() {
-    const q = this.value.toLowerCase().trim();
-    renderCardapio(q ? CARDAPIO.filter(i =>
-      i.titulo.toLowerCase().includes(q) ||
-      i.complexidade.toLowerCase().includes(q) ||
-      String(i.id).includes(q)
-    ) : CARDAPIO);
-  });
-
-  // ── Itens adicionados ──────────────────────────────────────────
-  function adicionarItem(item) {
-    const ex = itens.find(i => i.id === item.id);
-    if (ex) ex.qtd = (ex.qtd || 1) + 1;
-    else itens.push({ ...item, qtd: 1, periodo: '' });
-    renderItens();
-    calcTotais();
-  }
-
-  function renderItens() {
-    const tbody = document.getElementById('tbody-itens');
-    tbody.innerHTML = '';
-    itens.forEach((item, idx) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${item.id}</td>
-        <td class="td-titulo" title="${item.titulo}">${item.titulo}</td>
-        <td class="td-titulo" title="${item.complexidade}">${item.complexidade}</td>
-        <td><input type="number" value="${item.qtd||1}" min="1" data-idx="${idx}" data-field="qtd"/></td>
-        <td><input type="text" value="${item.periodo||''}" placeholder="—" data-idx="${idx}" data-field="periodo"/></td>
-        <td class="td-val">${brl(item.valor)}</td>
-        <td class="td-val">${brl(item.valor*(item.qtd||1))}</td>
-        <td><button class="btn-rem" data-idx="${idx}">×</button></td>
-      `;
+    const tbody=document.getElementById('tbody-recentes');
+    tbody.innerHTML='';
+    banco.slice(0,6).forEach(ap=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td><span class="tag-ap">${ap.numero}</span></td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ap.nome_projeto}</td><td style="text-align:right;font-weight:700;color:var(--verde)">${brl(ap.total_desconto)}</td>`;
       tbody.appendChild(tr);
     });
-    tbody.querySelectorAll('input').forEach(inp => {
-      inp.addEventListener('change', function() {
-        const idx = +this.dataset.idx, field = this.dataset.field;
-        if (field === 'qtd') itens[idx].qtd = Math.max(1, +this.value||1);
-        else itens[idx][field] = this.value;
-        renderItens(); calcTotais();
-      });
-    });
-    tbody.querySelectorAll('.btn-rem').forEach(btn => {
-      btn.addEventListener('click', function() {
-        itens.splice(+this.dataset.idx, 1);
-        renderItens(); calcTotais();
-      });
-    });
-  }
 
-  function calcTotais() {
-    const bruto = itens.reduce((s, i) => s + i.valor*(i.qtd||1), 0);
-    const final = bruto * (1 - DESCONTO);
-    document.getElementById('tot-bruto').textContent = brl(bruto);
-    document.getElementById('tot-desc').textContent  = `– ${brl(bruto - final)}`;
-    document.getElementById('tot-final').textContent = brl(final);
-  }
-
-  // ── Gerar AP ───────────────────────────────────────────────────
-  document.getElementById('btn-gerar').addEventListener('click', async () => {
-    if (!itens.length) { toast('Adicione pelo menos um item!', 'erro'); return; }
-    const nomeProjeto = document.getElementById('f-projeto').value.trim();
-    if (!nomeProjeto) { toast('Informe o Nome do Projeto!', 'erro'); document.getElementById('f-projeto').focus(); return; }
-
-    const bruto = itens.reduce((s, i) => s + i.valor*(i.qtd||1), 0);
-    const dados = {
-      numero:       document.getElementById('num-ap-preview').textContent,
-      mes:          document.getElementById('f-mes').value,
-      ano:          document.getElementById('f-ano').value,
-      tipo:         document.getElementById('f-tipo').value,
-      sequencial:   document.getElementById('f-seq').value,
-      unidade:      document.getElementById('f-unidade').value.trim(),
-      nomeProjeto,
-      descritivo:   document.getElementById('f-descritivo').value.trim(),
-      data:         fmtData(document.getElementById('f-data').value),
-      observacao:   document.getElementById('f-obs').value.trim(),
-      itens,
-      totalBruto:   bruto,
-      totalDesconto:bruto * (1 - DESCONTO),
-    };
-
-    const btn = document.getElementById('btn-gerar');
-    btn.disabled = true;
-    document.getElementById('btn-gerar-txt').textContent = 'Gerando...';
-
-    try {
-      const r = await fetch('/api/aps', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dados),
-      });
-
-      if (!r.ok) {
-        const e = await r.json();
-        toast(`Erro: ${e.erro}`, 'erro');
-        return;
-      }
-
-      // Download automático do PDF
-      const blob = await r.blob();
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href = url;
-      a.download = `AP_${dados.numero.replace(/\./g,'_')}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
-
-      toast(`✅ AP ${dados.numero} gerada e baixada!`, 'ok');
-    } catch (e) {
-      toast('Erro de conexão.', 'erro');
-    } finally {
-      btn.disabled = false;
-      document.getElementById('btn-gerar-txt').textContent = 'Gerar AP (PDF)';
+    const ultimos6=[];
+    for(let i=5;i>=0;i--){
+      const d=new Date(anoAtual,mesAtual-i,1);
+      const m=d.getMonth(),a=d.getFullYear();
+      const label=MESES[m].substring(0,3)+'/'+String(a).substring(2);
+      const valor=banco.filter(ap=>{const dd=new Date(ap.criado_em);return dd.getMonth()===m&&dd.getFullYear()===a;}).reduce((s,ap)=>s+Number(ap.total_desconto||0),0);
+      ultimos6.push({label,valor});
     }
+
+    if(chartMensal)chartMensal.destroy();
+    const ctx=document.getElementById('chart-mensal').getContext('2d');
+    chartMensal=new Chart(ctx,{
+      type:'bar',
+      data:{
+        labels:ultimos6.map(x=>x.label),
+        datasets:[{label:'Valor com Desconto',data:ultimos6.map(x=>x.valor),backgroundColor:'rgba(230,92,0,0.15)',borderColor:'#E65C00',borderWidth:2,borderRadius:6}]
+      },
+      options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v>=1000?`R$ ${(v/1000).toFixed(0)}k`:`R$ ${v}`,font:{size:10}},grid:{color:'#F4F4F5'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}
+    });
+  }catch(e){console.error(e);}
+}
+
+function initForm(){
+  const sel=document.getElementById('f-mes');
+  MESES.forEach(m=>{const o=document.createElement('option');o.value=o.textContent=m;sel.appendChild(o);});
+  sel.selectedIndex=new Date().getMonth();
+  document.getElementById('f-ano').value=new Date().getFullYear();
+  document.getElementById('f-data').value=new Date().toISOString().split('T')[0];
+  atualizarNum();
+  ['f-mes','f-tipo','f-seq'].forEach(id=>{
+    document.getElementById(id).addEventListener('input',atualizarNum);
+    document.getElementById(id).addEventListener('change',atualizarNum);
   });
+}
 
-  function fmtData(iso) {
-    if (!iso) return '';
-    const [y,m,d] = iso.split('-');
-    return `${d}/${m}/${y}`;
-  }
+function atualizarNum(){
+  const mes=document.getElementById('f-mes').value;
+  const tipo=document.getElementById('f-tipo').value;
+  const seq=document.getElementById('f-seq').value;
+  document.getElementById('num-ap').textContent=`${mes}.${tipo}.${seq}`;
+}
 
-  // ── Banco de Dados ─────────────────────────────────────────────
-  async function carregarBanco() {
-    try {
-      const r = await fetch('/api/aps');
-      banco = await r.json();
-      renderBanco(banco);
-    } catch { toast('Erro ao carregar banco.', 'erro'); }
-  }
+async function carregarCardapio(){
+  const r=await fetch('/api/cardapio');
+  CARDAPIO=await r.json();
+  renderCardapio(CARDAPIO);
+}
 
-  function renderBanco(lista) {
-    const tbody = document.getElementById('tbody-banco');
-    tbody.innerHTML = '';
-    document.getElementById('banco-count').textContent = `${lista.length} AP(s)`;
-    const isAdmin = usuario?.nivel === 'admin';
-
-    lista.forEach(ap => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong>${ap.numero}</strong></td>
-        <td>${ap.nome_projeto}</td>
-        <td>${ap.data_ap || '—'}</td>
-        ${isAdmin ? `<td>${ap.usuario_nome || '—'}</td>` : ''}
-        <td class="td-money">${brl(ap.total_bruto)}</td>
-        <td class="td-money">${brl(ap.total_desconto)}</td>
-        <td>${ap.observacao || '—'}</td>
-        <td><button class="btn-pdf" data-id="${ap.id}">📄 PDF</button></td>
-      `;
-      tr.querySelector('.btn-pdf').addEventListener('click', function() {
-        window.open(`/api/aps/${this.dataset.id}/pdf`, '_blank');
-      });
-      tbody.appendChild(tr);
-    });
-  }
-
-  document.getElementById('banco-busca').addEventListener('input', function() {
-    const q = this.value.toLowerCase();
-    renderBanco(q ? banco.filter(ap =>
-      ap.numero.toLowerCase().includes(q) ||
-      ap.nome_projeto.toLowerCase().includes(q) ||
-      (ap.observacao||'').toLowerCase().includes(q)
-    ) : banco);
+function renderCardapio(lista){
+  const c=document.getElementById('lista-cardapio');
+  c.innerHTML='';
+  document.getElementById('busca-count').textContent=`${lista.length} itens`;
+  lista.forEach(item=>{
+    const div=document.createElement('div');
+    div.className='item-card';
+    div.innerHTML=`<span class="item-num">${item.id}</span><div class="item-info"><div class="item-titulo" title="${item.titulo}">${item.titulo}</div><div class="item-comp">${item.complexidade}</div></div><span class="item-val">${brl(item.valor)}</span><button class="btn-add">+</button>`;
+    div.querySelector('.btn-add').addEventListener('click',e=>{e.stopPropagation();adicionarItem(item);});
+    div.addEventListener('dblclick',()=>adicionarItem(item));
+    c.appendChild(div);
   });
+}
 
-  // ── Usuários (admin) ───────────────────────────────────────────
-  async function carregarUsuarios() {
-    const r = await fetch('/api/usuarios');
-    const lista = await r.json();
-    const tbody = document.getElementById('tbody-usuarios');
-    tbody.innerHTML = '';
-    lista.forEach(u => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${u.nome}</td>
-        <td><code>${u.login}</code></td>
-        <td><span class="badge ${u.nivel==='admin'?'badge-admin':'badge-user'}">${u.nivel}</span></td>
-        <td><span class="badge ${u.ativo?'badge-on':'badge-off'}">${u.ativo?'Ativo':'Inativo'}</span></td>
-        <td style="display:flex;gap:6px">
-          <button class="btn-sm danger" onclick="toggleUsuario(${u.id},${u.ativo})">
-            ${u.ativo?'Desativar':'Ativar'}
-          </button>
-        </td>
-      `;
-      tbody.appendChild(tr);
+document.getElementById('busca-input').addEventListener('input',function(){
+  const q=this.value.toLowerCase().trim();
+  renderCardapio(q?CARDAPIO.filter(i=>i.titulo.toLowerCase().includes(q)||i.complexidade.toLowerCase().includes(q)||String(i.id).includes(q)):CARDAPIO);
+});
+
+function adicionarItem(item){
+  const ex=itens.find(i=>i.id===item.id);
+  if(ex)ex.qtd=(ex.qtd||1)+1;
+  else itens.push({...item,qtd:1,periodo:''});
+  renderItens();calcTotais();
+}
+
+function renderItens(){
+  const tbody=document.getElementById('tbody-itens');
+  tbody.innerHTML='';
+  itens.forEach((item,idx)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${item.id}</td><td class="td-titulo" title="${item.titulo}">${item.titulo}</td><td class="td-titulo">${item.complexidade}</td><td><input type="number" value="${item.qtd||1}" min="1" data-idx="${idx}" data-field="qtd"/></td><td><input type="text" value="${item.periodo||''}" placeholder="—" data-idx="${idx}" data-field="periodo"/></td><td class="td-val">${brl(item.valor)}</td><td class="td-val">${brl(item.valor*(item.qtd||1))}</td><td><button class="btn-rem" data-idx="${idx}">×</button></td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('input').forEach(inp=>{
+    inp.addEventListener('change',function(){
+      const idx=+this.dataset.idx,field=this.dataset.field;
+      if(field==='qtd')itens[idx].qtd=Math.max(1,+this.value||1);
+      else itens[idx][field]=this.value;
+      renderItens();calcTotais();
     });
-  }
+  });
+  tbody.querySelectorAll('.btn-rem').forEach(btn=>{
+    btn.addEventListener('click',function(){itens.splice(+this.dataset.idx,1);renderItens();calcTotais();});
+  });
+}
 
-  async function criarUsuario() {
-    const body = {
-      nome:  document.getElementById('u-nome').value.trim(),
-      login: document.getElementById('u-login').value.trim(),
-      senha: document.getElementById('u-senha').value,
-      nivel: document.getElementById('u-nivel').value,
-    };
-    if (!body.nome || !body.login || !body.senha) { toast('Preencha todos os campos.', 'erro'); return; }
+function calcTotais(){
+  const bruto=itens.reduce((s,i)=>s+i.valor*(i.qtd||1),0);
+  const final=bruto*(1-DESCONTO);
+  document.getElementById('tot-bruto').textContent=brl(bruto);
+  document.getElementById('tot-desc').textContent=`– ${brl(bruto-final)}`;
+  document.getElementById('tot-final').textContent=brl(final);
+}
 
-    const r = await fetch('/api/usuarios', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const d = await r.json();
-    if (r.ok) {
-      toast(`Usuário ${body.nome} criado!`, 'ok');
-      ['u-nome','u-login','u-senha'].forEach(id => document.getElementById(id).value = '');
-      carregarUsuarios();
-    } else {
-      toast(d.erro || 'Erro ao criar usuário.', 'erro');
-    }
-  }
+document.getElementById('btn-gerar').addEventListener('click',async()=>{
+  if(!itens.length){toast('Adicione pelo menos um item!','erro');return;}
+  const nomeProjeto=document.getElementById('f-projeto').value.trim();
+  if(!nomeProjeto){toast('Informe o Nome do Projeto!','erro');document.getElementById('f-projeto').focus();return;}
+  const bruto=itens.reduce((s,i)=>s+i.valor*(i.qtd||1),0);
+  const dados={
+    numero:document.getElementById('num-ap').textContent,
+    mes:document.getElementById('f-mes').value,
+    ano:document.getElementById('f-ano').value,
+    tipo:document.getElementById('f-tipo').value,
+    sequencial:document.getElementById('f-seq').value,
+    unidade:document.getElementById('f-unidade').value.trim(),
+    nomeProjeto,
+    descritivo:document.getElementById('f-descritivo').value.trim(),
+    data:fmtData(document.getElementById('f-data').value),
+    observacao:document.getElementById('f-obs').value.trim(),
+    itens,totalBruto:bruto,totalDesconto:bruto*(1-DESCONTO),
+  };
+  const btn=document.getElementById('btn-gerar');
+  btn.disabled=true;document.getElementById('btn-txt').textContent='Gerando...';
+  try{
+    const r=await fetch('/api/aps',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)});
+    if(!r.ok){const e=await r.json();toast(`Erro: ${e.erro}`,'erro');return;}
+    const blob=await r.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=`AP_${dados.numero.replace(/\./g,'_')}.pdf`;a.click();
+    URL.revokeObjectURL(url);
+    toast(`✅ AP ${dados.numero} gerada!`,'ok');
+  }catch{toast('Erro de conexão.','erro');}
+  finally{btn.disabled=false;document.getElementById('btn-txt').textContent='Gerar AP (PDF)';}
+});
 
-  async function toggleUsuario(id, ativo) {
-    await fetch(`/api/usuarios/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ativo: !ativo }),
-    });
-    carregarUsuarios();
-  }
+function fmtData(iso){if(!iso)return'';const[y,m,d]=iso.split('-');return`${d}/${m}/${y}`;}
 
-  // ── Start ──────────────────────────────────────────────────────
-  init();
-  </script>
+async function carregarBanco(){
+  try{
+    const r=await fetch('/api/aps');banco=await r.json();renderBanco(banco);
+  }catch{toast('Erro ao carregar banco.','erro');}
+}
+
+function renderBanco(lista){
+  const tbody=document.getElementById('tbody-banco');
+  tbody.innerHTML='';
+  document.getElementById('banco-count').textContent=`${lista.length} AP(s)`;
+  const isAdmin=usuario?.nivel==='admin';
+  lista.forEach(ap=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><span class="tag-ap">${ap.numero}</span></td><td>${ap.nome_projeto}</td><td>${ap.data_ap||'—'}</td>${isAdmin?`<td>${ap.usuario_nome||'—'}</td>`:''}<td class="td-money">${brl(ap.total_bruto)}</td><td class="td-money">${brl(ap.total_desconto)}</td><td>${ap.observacao||'—'}</td><td><button class="btn-pdf" data-id="${ap.id}">📄 PDF</button></td>`;
+    tr.querySelector('.btn-pdf').addEventListener('click',function(){window.open(`/api/aps/${this.dataset.id}/pdf`,'_blank');});
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById('banco-busca').addEventListener('input',function(){
+  const q=this.value.toLowerCase();
+  renderBanco(q?banco.filter(ap=>ap.numero.toLowerCase().includes(q)||ap.nome_projeto.toLowerCase().includes(q)||(ap.observacao||'').toLowerCase().includes(q)):banco);
+});
+
+async function carregarUsuarios(){
+  const r=await fetch('/api/usuarios');
+  const lista=await r.json();
+  const tbody=document.getElementById('tbody-usuarios');
+  tbody.innerHTML='';
+  lista.forEach(u=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${u.nome}</td><td><code>${u.login}</code></td><td><span class="badge ${u.nivel==='admin'?'b-admin':'b-user'}">${u.nivel}</span></td><td><span class="badge ${u.ativo?'b-on':'b-off'}">${u.ativo?'Ativo':'Inativo'}</span></td><td><button class="btn-sm" onclick="toggleUsuario(${u.id},${u.ativo})">${u.ativo?'Desativar':'Ativar'}</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+async function criarUsuario(){
+  const body={nome:document.getElementById('u-nome').value.trim(),login:document.getElementById('u-login').value.trim(),senha:document.getElementById('u-senha').value,nivel:document.getElementById('u-nivel').value};
+  if(!body.nome||!body.login||!body.senha){toast('Preencha todos os campos.','erro');return;}
+  const r=await fetch('/api/usuarios',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json();
+  if(r.ok){toast(`Usuário ${body.nome} criado!`,'ok');['u-nome','u-login','u-senha'].forEach(id=>document.getElementById(id).value='');carregarUsuarios();}
+  else toast(d.erro||'Erro ao criar.','erro');
+}
+
+async function toggleUsuario(id,ativo){
+  await fetch(`/api/usuarios/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({ativo:!ativo})});
+  carregarUsuarios();
+}
+
+init();
+</script>
 </body>
 </html>
