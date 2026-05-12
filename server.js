@@ -15,9 +15,6 @@ const PORT = process.env.PORT || 3000;
 // Necessário para cookies no Render (proxy reverso)
 app.set('trust proxy', 1);
 
-app.set("trust proxy", 1);
-const PORT = process.env.PORT || 3000;
-
 // ── Middlewares ──────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
