@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clara Digital — APs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --laranja:       #E65C00;
+      --laranja-esc:   #B84800;
+      --laranja-claro: #FFF3EC;
+      --laranja-med:   #FFD6B8;
+      --cinza-bg:      #F4F4F5;
+      --borda:         #E4E4E7;
+      --texto:         #18181B;
+      --texto-leve:    #71717A;
+      --branco:        #FFFFFF;
+      --verde:         #16A34A;
+      --radius:        8px;
+      --shadow:        0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      background: var(--cinza-bg);
+      color: var(--texto);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Topbar ─────────────────────────────────────────────────── */
+    #topbar {
+      background: var(--laranja);
+      color: white;
+      padding: 0 20px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+      flex-shrink: 0;
+    }
+
+    .top-left { display: flex; align-items: center; gap: 12px; }
+    .top-logo  { font-size: 17px; font-weight: 700; letter-spacing: .3px; }
+    .top-sub   { font-size: 11px; opacity: .8; }
+    .top-right { display: flex; align-items: center; gap: 10px; }
+    .top-user  { font-size: 12px; opacity: .9; }
+
+    .btn-logout {
+      background: rgba(255,255,255,.2);
+      border: 1px solid rgba(255,255,255,.3);
+      color: white;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,.3); }
+
+    /* ── Nav abas ───────────────────────────────────────────────── */
+    #nav {
+      background: white;
+      border-bottom: 1px solid var(--borda);
+      display: flex;
+      padding: 0 16px;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .nav-btn {
+      padding: 10px 16px;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--texto-leve);
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .nav-btn:hover { color: var(--laranja); }
+    .nav-btn.active { color: var(--laranja); border-bottom-color: var(--laranja); font-weight: 600; }
+    .nav-btn.admin-only { display: none; }
+
+    /* ── Conteúdo ───────────────────────────────────────────────── */
+    #content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+    .tab-panel { display: none; flex: 1; overflow: hidden; }
+    .tab-panel.active { display: flex; flex-direction: column; overflow: hidden; }
+
+    /* ══════════════════════════════════════════════════════════════
+       ABA NOVA AP
+    ══════════════════════════════════════════════════════════════ */
+    #panel-nova { flex-direction: row !important; }
+
+    /* Coluna esquerda */
+    #col-esq {
+      width: 360px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      background: white;
+      border-right: 1px solid var(--borda);
+      padding: 16px;
+      gap: 16px;
+    }
+
+    .secao-titulo {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--laranja);
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--laranja-med);
+    }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .form-grid.col3 { grid-template-columns: 1fr 1fr 1fr; }
+    .fg { display: flex; flex-direction: column; gap: 3px; }
+    .fg.span2 { grid-column: span 2; }
+    .fg label { font-size: 11px; font-weight: 600; color: var(--texto-leve); }
+
+    input, select, textarea {
+      border: 1.5px solid var(--borda);
+      border-radius: var(--radius);
+      padding: 7px 9px;
+      font-size: 12px;
+      font-family: inherit;
+      color: var(--texto);
+      background: white;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--laranja);
+      box-shadow: 0 0 0 3px rgba(230,92,0,.1);
+    }
+    textarea { resize: vertical; min-height: 60px; }
+
+    #num-ap-preview {
+      background: var(--laranja-claro);
+      border: 1.5px solid var(--laranja-med);
+      border-radius: var(--radius);
+      padding: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--laranja);
+      text-align: center;
+      letter-spacing: 1px;
+    }
+
+    #totais {
+      background: var(--laranja-claro);
+      border: 1.5px solid var(--laranja-med);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+    .tot-linha {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--texto-leve);
+      padding: 3px 0;
+    }
+    .tot-linha.destaque {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--laranja);
+      border-top: 1px solid var(--laranja-med);
+      margin-top: 6px;
+      padding-top: 8px;
+    }
+
+    #btn-gerar {
+      background: var(--laranja);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      padding: 13px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: .3px;
+      transition: background .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    #btn-gerar:hover:not(:disabled) { background: var(--laranja-esc); }
+    #btn-gerar:disabled { background: #C4C4C4; cursor: not-allowed; }
+
+    /* Coluna direita */
+    #col-dir { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--cinza-bg); }
+
+    #busca-wrap {
+      padding: 10px 12px;
+      background: white;
+      border-bottom: 1px solid var(--borda);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    #busca-input { flex: 1; font-size: 13px; }
+    #busca-count { font-size: 11px; color: var(--texto-leve); white-space: nowrap; }
+
+    #lista-cardapio { flex: 1; overflow-y: auto; background: white; }
+
+    .item-card {
+      display: flex;
+      align-items: center;
+      padding: 9px 12px;
+      border-bottom: 1px solid #F4F4F5;
+      gap: 10px;
+      cursor: pointer;
+      transition: background .1s;
+    }
+    .item-card:hover { background: var(--laranja-claro); }
+    .item-num { width: 30px; font-size: 10px; color: var(--texto-leve); text-align: right; flex-shrink: 0; }
+    .item-info { flex: 1; min-width: 0; }
+    .item-titulo { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-comp   { font-size: 10px; color: var(--texto-leve); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-val    { font-size: 12px; font-weight: 600; color: var(--laranja); flex-shrink: 0; white-space: nowrap; }
+    .btn-add {
+      background: var(--laranja);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      width: 26px; height: 26px;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background .12s;
+    }
+    .btn-add:hover { background: var(--laranja-esc); }
+
+    /* Itens adicionados */
+    #sep-itens {
+      background: var(--laranja);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      padding: 6px 12px;
+      flex-shrink: 0;
+    }
+
+    #tabela-wrap { height: 185px; overflow-y: auto; background: white; border-top: 1px solid var(--borda); flex-shrink: 0; }
+    #tabela-itens { width: 100%; border-collapse: collapse; font-size: 11px; }
+    #tabela-itens thead th {
+      background: var(--laranja);
+      color: white;
+      padding: 6px 8px;
+      text-align: left;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    #tabela-itens tbody tr:nth-child(even) { background: var(--laranja-claro); }
+    #tabela-itens tbody td { padding: 5px 8px; vertical-align: middle; }
+    #tabela-itens input[type="number"] { width: 48px; padding: 3px 5px; font-size: 11px; }
+    #tabela-itens input[type="text"]   { width: 88px; padding: 3px 5px; font-size: 11px; }
+    .td-titulo { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .td-val { text-align: right; font-weight: 600; color: var(--laranja); }
+    .btn-rem { background: none; border: none; color: #DC2626; cursor: pointer; font-size: 16px; padding: 0 4px; }
+
+    /* ══════════════════════════════════════════════════════════════
+       ABA BANCO DE DADOS
+    ══════════════════════════════════════════════════════════════ */
+    #panel-banco { padding: 16px; overflow: hidden; flex-direction: column; }
+
+    .banco-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    #banco-busca { flex: 1; max-width: 300px; }
+    .btn-refresh {
+      background: var(--laranja);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .btn-refresh:hover { background: var(--laranja-esc); }
+
+    .banco-table-wrap {
+      flex: 1;
+      overflow-y: auto;
+      border: 1px solid var(--borda);
+      border-radius: var(--radius);
+      background: white;
+      box-shadow: var(--shadow);
+    }
+    .banco-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .banco-table thead th {
+      background: var(--laranja);
+      color: white;
+      padding: 9px 10px;
+      text-align: left;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    .banco-table tbody tr { border-bottom: 1px solid #F4F4F5; }
+    .banco-table tbody tr:hover { background: var(--laranja-claro); }
+    .banco-table tbody td { padding: 8px 10px; }
+    .td-money { text-align: right; font-weight: 600; color: var(--verde); }
+    .btn-pdf {
+      background: var(--laranja);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-pdf:hover { background: var(--laranja-esc); }
+
+    /* ══════════════════════════════════════════════════════════════
+       ABA USUÁRIOS (admin)
+    ══════════════════════════════════════════════════════════════ */
+    #panel-usuarios { padding: 16px; overflow-y: auto; flex-direction: column; gap: 16px; }
+
+    .card-secao {
+      background: white;
+      border: 1px solid var(--borda);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    .card-secao h3 { font-size: 14px; font-weight: 700; margin-bottom: 14px; color: var(--laranja); }
+
+    .form-novo-user { display: grid; grid-template-columns: 1fr 1fr 1fr auto auto; gap: 8px; align-items: end; }
+    .form-novo-user input, .form-novo-user select { font-size: 12px; }
+
+    .btn-criar {
+      background: var(--laranja);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-criar:hover { background: var(--laranja-esc); }
+
+    .usuarios-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
+    .usuarios-table thead th {
+      background: var(--cinza-bg);
+      padding: 8px 10px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid var(--borda);
+    }
+    .usuarios-table tbody td { padding: 8px 10px; border-bottom: 1px solid var(--borda); }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-admin { background: var(--laranja-claro); color: var(--laranja); }
+    .badge-user  { background: #F0F0F0; color: #555; }
+    .badge-on    { background: #DCFCE7; color: var(--verde); }
+    .badge-off   { background: #FEE2E2; color: #DC2626; }
+    .btn-sm {
+      background: none;
+      border: 1px solid var(--borda);
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .btn-sm:hover { border-color: var(--laranja); color: var(--laranja); }
+    .btn-sm.danger:hover { border-color: #DC2626; color: #DC2626; }
+
+    /* ── Toast ─────────────────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      color: white;
+      z-index: 9999;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .25s, transform .25s;
+      pointer-events: none;
+      max-width: 360px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.2);
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.ok   { background: var(--verde); }
+    #toast.erro { background: #DC2626; }
+    #toast.info { background: #1D4ED8; }
+
+    /* ── Scrollbar ─────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-thumb { background: #D4D4D8; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #A1A1AA; }
+  </style>
+</head>
+<body>
+
+  <!-- Topbar -->
+  <div id="topbar">
+    <div class="top-left">
+      <div>
+        <div class="top-logo">🎬 Clara Digital</div>
+        <div class="top-sub">Gerador de APs · SESC-AR/DF Nº 018188/2024</div>
+      </div>
+    </div>
+    <div class="top-right">
+      <span class="top-user" id="top-user-nome"></span>
+      <button class="btn-logout" id="btn-logout">Sair</button>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <div id="nav">
+    <button class="nav-btn active" data-tab="nova">Nova AP</button>
+    <button class="nav-btn" data-tab="banco">Banco de Dados</button>
+    <button class="nav-btn admin-only" data-tab="usuarios" id="nav-usuarios">Usuários</button>
+  </div>
+
+  <!-- Conteúdo -->
+  <div id="content">
+
+    <!-- ═══ NOVA AP ════════════════════════════════════════════════ -->
+    <div id="panel-nova" class="tab-panel active">
+
+      <div id="col-esq">
+        <!-- Numeração -->
+        <div>
+          <div class="secao-titulo">Numeração da AP</div>
+          <div class="form-grid col3">
+            <div class="fg"><label>Mês</label><select id="f-mes"></select></div>
+            <div class="fg"><label>Tipo</label>
+              <select id="f-tipo">
+                <option>MENSAL</option>
+                <option>AVULSO</option>
+                <option>COMPLEMENTAR</option>
+              </select>
+            </div>
+            <div class="fg"><label>Sequencial</label><input type="number" id="f-seq" value="1" min="1"/></div>
+          </div>
+          <div id="num-ap-preview" style="margin-top:8px">—</div>
+        </div>
+
+        <!-- Identificação -->
+        <div>
+          <div class="secao-titulo">Identificação</div>
+          <div class="form-grid">
+            <div class="fg"><label>Ano</label><input type="number" id="f-ano" min="2024" max="2099"/></div>
+            <div class="fg"><label>Data</label><input type="date" id="f-data"/></div>
+            <div class="fg span2"><label>Unidade / Departamento</label><input type="text" id="f-unidade" placeholder="Ex: SESC Ceilândia"/></div>
+            <div class="fg span2"><label>Nome do Projeto</label><input type="text" id="f-projeto" placeholder="Ex: Campanha Verão 2025"/></div>
+          </div>
+        </div>
+
+        <!-- Descritivo -->
+        <div>
+          <div class="secao-titulo">Descritivo dos Serviços</div>
+          <textarea id="f-descritivo" rows="4" placeholder="Descreva os serviços..."></textarea>
+        </div>
+
+        <!-- Observação -->
+        <div>
+          <div class="secao-titulo">Observação</div>
+          <textarea id="f-obs" rows="2" placeholder="(opcional)"></textarea>
+        </div>
+
+        <!-- Totais -->
+        <div id="totais">
+          <div class="tot-linha"><span>Valor Bruto:</span><span id="tot-bruto">R$ 0,00</span></div>
+          <div class="tot-linha"><span>Desconto (13,5%):</span><span id="tot-desc">– R$ 0,00</span></div>
+          <div class="tot-linha destaque"><span>Total com Desconto:</span><span id="tot-final">R$ 0,00</span></div>
+        </div>
+
+        <button id="btn-gerar">
+          <span id="btn-gerar-icon">📄</span>
+          <span id="btn-gerar-txt">Gerar AP (PDF)</span>
+        </button>
+      </div>
+
+      <div id="col-dir">
+        <div id="busca-wrap">
+          <input id="busca-input" type="text" placeholder="🔍  Buscar no cardápio..."/>
+          <span id="busca-count">carregando...</span>
+        </div>
+        <div id="lista-cardapio"></div>
+        <div id="sep-itens">Itens Adicionados</div>
+        <div id="tabela-wrap">
+          <table id="tabela-itens">
+            <thead>
+              <tr>
+                <th>Nº</th>
+                <th>Descrição</th>
+                <th>Complexidade</th>
+                <th>Qtd</th>
+                <th>Período</th>
+                <th>Valor Unit.</th>
+                <th>Subtotal</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-itens"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ BANCO DE DADOS ═════════════════════════════════════════ -->
+    <div id="panel-banco" class="tab-panel">
+      <div class="banco-toolbar">
+        <input id="banco-busca" type="text" placeholder="🔍  Filtrar..."/>
+        <button class="btn-refresh" onclick="carregarBanco()">↻ Atualizar</button>
+        <span id="banco-count" style="font-size:11px;color:var(--texto-leve)"></span>
+      </div>
+      <div class="banco-table-wrap">
+        <table class="banco-table">
+          <thead>
+            <tr>
+              <th>Número AP</th>
+              <th>Projeto</th>
+              <th>Data</th>
+              <th id="col-usuario" style="display:none">Usuário</th>
+              <th>Valor Bruto</th>
+              <th>Com Desconto</th>
+              <th>Observação</th>
+              <th>PDF</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-banco"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ USUÁRIOS (admin) ═══════════════════════════════════════ -->
+    <div id="panel-usuarios" class="tab-panel">
+      <div class="card-secao">
+        <h3>Novo Usuário</h3>
+        <div class="form-novo-user">
+          <div class="fg"><label>Nome</label><input type="text" id="u-nome" placeholder="Nome completo"/></div>
+          <div class="fg"><label>Login</label><input type="text" id="u-login" placeholder="login"/></div>
+          <div class="fg"><label>Senha</label><input type="password" id="u-senha" placeholder="senha"/></div>
+          <div class="fg"><label>Nível</label>
+            <select id="u-nivel"><option value="usuario">Usuário</option><option value="admin">Admin</option></select>
+          </div>
+          <div class="fg"><label>&nbsp;</label><button class="btn-criar" onclick="criarUsuario()">+ Criar</button></div>
+        </div>
+      </div>
+      <div class="card-secao" style="flex:1;overflow-y:auto">
+        <h3>Usuários Cadastrados</h3>
+        <table class="usuarios-table">
+          <thead>
+            <tr><th>Nome</th><th>Login</th><th>Nível</th><th>Status</th><th>Ações</th></tr>
+          </thead>
+          <tbody id="tbody-usuarios"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+  // ── Estado global ──────────────────────────────────────────────
+  const DESCONTO = 0.135;
+  const MESES = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO",
+                 "JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
+  let CARDAPIO = [];
+  let itens = [];
+  let banco = [];
+  let usuario = null;
+
+  // ── Utils ──────────────────────────────────────────────────────
+  function brl(v) {
+    return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  let toastT;
+  function toast(msg, tipo = 'info') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `show ${tipo}`;
+    clearTimeout(toastT);
+    toastT = setTimeout(() => el.className = '', 3500);
+  }
+
+  // ── Auth check ─────────────────────────────────────────────────
+  async function init() {
+    try {
+      const r = await fetch('/api/me');
+      if (!r.ok) { window.location.href = '/'; return; }
+      usuario = await r.json();
+      document.getElementById('top-user-nome').textContent = usuario.nome;
+
+      if (usuario.nivel === 'admin') {
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+        document.getElementById('col-usuario').style.display = '';
+      }
+
+      initForm();
+      await carregarCardapio();
+      await carregarBanco();
+    } catch {
+      window.location.href = '/';
+    }
+  }
+
+  // ── Logout ─────────────────────────────────────────────────────
+  document.getElementById('btn-logout').addEventListener('click', async () => {
+    await fetch('/api/logout', { method: 'POST' });
+    window.location.href = '/';
+  });
+
+  // ── Abas ───────────────────────────────────────────────────────
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      const panel = document.getElementById('panel-' + btn.dataset.tab);
+      panel.classList.add('active');
+      if (btn.dataset.tab === 'banco') carregarBanco();
+      if (btn.dataset.tab === 'usuarios') carregarUsuarios();
+    });
+  });
+
+  // ── Formulário ─────────────────────────────────────────────────
+  function initForm() {
+    const sel = document.getElementById('f-mes');
+    MESES.forEach(m => { const o = document.createElement('option'); o.value = o.textContent = m; sel.appendChild(o); });
+    sel.selectedIndex = new Date().getMonth();
+    document.getElementById('f-ano').value = new Date().getFullYear();
+    document.getElementById('f-data').value = new Date().toISOString().split('T')[0];
+    atualizarNumAP();
+    ['f-mes','f-tipo','f-seq'].forEach(id => {
+      document.getElementById(id).addEventListener('input', atualizarNumAP);
+      document.getElementById(id).addEventListener('change', atualizarNumAP);
+    });
+  }
+
+  function atualizarNumAP() {
+    const mes  = document.getElementById('f-mes').value;
+    const tipo = document.getElementById('f-tipo').value;
+    const seq  = document.getElementById('f-seq').value;
+    document.getElementById('num-ap-preview').textContent = `${mes}.${tipo}.${seq}`;
+  }
+
+  // ── Cardápio ───────────────────────────────────────────────────
+  async function carregarCardapio() {
+    const r = await fetch('/api/cardapio');
+    CARDAPIO = await r.json();
+    renderCardapio(CARDAPIO);
+  }
+
+  function renderCardapio(lista) {
+    const c = document.getElementById('lista-cardapio');
+    c.innerHTML = '';
+    document.getElementById('busca-count').textContent = `${lista.length} itens`;
+    lista.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'item-card';
+      div.innerHTML = `
+        <span class="item-num">${item.id}</span>
+        <div class="item-info">
+          <div class="item-titulo" title="${item.titulo}">${item.titulo}</div>
+          <div class="item-comp" title="${item.complexidade}">${item.complexidade}</div>
+        </div>
+        <span class="item-val">${brl(item.valor)}</span>
+        <button class="btn-add" title="Adicionar">+</button>
+      `;
+      div.querySelector('.btn-add').addEventListener('click', e => { e.stopPropagation(); adicionarItem(item); });
+      div.addEventListener('dblclick', () => adicionarItem(item));
+      c.appendChild(div);
+    });
+  }
+
+  document.getElementById('busca-input').addEventListener('input', function() {
+    const q = this.value.toLowerCase().trim();
+    renderCardapio(q ? CARDAPIO.filter(i =>
+      i.titulo.toLowerCase().includes(q) ||
+      i.complexidade.toLowerCase().includes(q) ||
+      String(i.id).includes(q)
+    ) : CARDAPIO);
+  });
+
+  // ── Itens adicionados ──────────────────────────────────────────
+  function adicionarItem(item) {
+    const ex = itens.find(i => i.id === item.id);
+    if (ex) ex.qtd = (ex.qtd || 1) + 1;
+    else itens.push({ ...item, qtd: 1, periodo: '' });
+    renderItens();
+    calcTotais();
+  }
+
+  function renderItens() {
+    const tbody = document.getElementById('tbody-itens');
+    tbody.innerHTML = '';
+    itens.forEach((item, idx) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${item.id}</td>
+        <td class="td-titulo" title="${item.titulo}">${item.titulo}</td>
+        <td class="td-titulo" title="${item.complexidade}">${item.complexidade}</td>
+        <td><input type="number" value="${item.qtd||1}" min="1" data-idx="${idx}" data-field="qtd"/></td>
+        <td><input type="text" value="${item.periodo||''}" placeholder="—" data-idx="${idx}" data-field="periodo"/></td>
+        <td class="td-val">${brl(item.valor)}</td>
+        <td class="td-val">${brl(item.valor*(item.qtd||1))}</td>
+        <td><button class="btn-rem" data-idx="${idx}">×</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('input').forEach(inp => {
+      inp.addEventListener('change', function() {
+        const idx = +this.dataset.idx, field = this.dataset.field;
+        if (field === 'qtd') itens[idx].qtd = Math.max(1, +this.value||1);
+        else itens[idx][field] = this.value;
+        renderItens(); calcTotais();
+      });
+    });
+    tbody.querySelectorAll('.btn-rem').forEach(btn => {
+      btn.addEventListener('click', function() {
+        itens.splice(+this.dataset.idx, 1);
+        renderItens(); calcTotais();
+      });
+    });
+  }
+
+  function calcTotais() {
+    const bruto = itens.reduce((s, i) => s + i.valor*(i.qtd||1), 0);
+    const final = bruto * (1 - DESCONTO);
+    document.getElementById('tot-bruto').textContent = brl(bruto);
+    document.getElementById('tot-desc').textContent  = `– ${brl(bruto - final)}`;
+    document.getElementById('tot-final').textContent = brl(final);
+  }
+
+  // ── Gerar AP ───────────────────────────────────────────────────
+  document.getElementById('btn-gerar').addEventListener('click', async () => {
+    if (!itens.length) { toast('Adicione pelo menos um item!', 'erro'); return; }
+    const nomeProjeto = document.getElementById('f-projeto').value.trim();
+    if (!nomeProjeto) { toast('Informe o Nome do Projeto!', 'erro'); document.getElementById('f-projeto').focus(); return; }
+
+    const bruto = itens.reduce((s, i) => s + i.valor*(i.qtd||1), 0);
+    const dados = {
+      numero:       document.getElementById('num-ap-preview').textContent,
+      mes:          document.getElementById('f-mes').value,
+      ano:          document.getElementById('f-ano').value,
+      tipo:         document.getElementById('f-tipo').value,
+      sequencial:   document.getElementById('f-seq').value,
+      unidade:      document.getElementById('f-unidade').value.trim(),
+      nomeProjeto,
+      descritivo:   document.getElementById('f-descritivo').value.trim(),
+      data:         fmtData(document.getElementById('f-data').value),
+      observacao:   document.getElementById('f-obs').value.trim(),
+      itens,
+      totalBruto:   bruto,
+      totalDesconto:bruto * (1 - DESCONTO),
+    };
+
+    const btn = document.getElementById('btn-gerar');
+    btn.disabled = true;
+    document.getElementById('btn-gerar-txt').textContent = 'Gerando...';
+
+    try {
+      const r = await fetch('/api/aps', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados),
+      });
+
+      if (!r.ok) {
+        const e = await r.json();
+        toast(`Erro: ${e.erro}`, 'erro');
+        return;
+      }
+
+      // Download automático do PDF
+      const blob = await r.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url;
+      a.download = `AP_${dados.numero.replace(/\./g,'_')}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      toast(`✅ AP ${dados.numero} gerada e baixada!`, 'ok');
+    } catch (e) {
+      toast('Erro de conexão.', 'erro');
+    } finally {
+      btn.disabled = false;
+      document.getElementById('btn-gerar-txt').textContent = 'Gerar AP (PDF)';
+    }
+  });
+
+  function fmtData(iso) {
+    if (!iso) return '';
+    const [y,m,d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  // ── Banco de Dados ─────────────────────────────────────────────
+  async function carregarBanco() {
+    try {
+      const r = await fetch('/api/aps');
+      banco = await r.json();
+      renderBanco(banco);
+    } catch { toast('Erro ao carregar banco.', 'erro'); }
+  }
+
+  function renderBanco(lista) {
+    const tbody = document.getElementById('tbody-banco');
+    tbody.innerHTML = '';
+    document.getElementById('banco-count').textContent = `${lista.length} AP(s)`;
+    const isAdmin = usuario?.nivel === 'admin';
+
+    lista.forEach(ap => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${ap.numero}</strong></td>
+        <td>${ap.nome_projeto}</td>
+        <td>${ap.data_ap || '—'}</td>
+        ${isAdmin ? `<td>${ap.usuario_nome || '—'}</td>` : ''}
+        <td class="td-money">${brl(ap.total_bruto)}</td>
+        <td class="td-money">${brl(ap.total_desconto)}</td>
+        <td>${ap.observacao || '—'}</td>
+        <td><button class="btn-pdf" data-id="${ap.id}">📄 PDF</button></td>
+      `;
+      tr.querySelector('.btn-pdf').addEventListener('click', function() {
+        window.open(`/api/aps/${this.dataset.id}/pdf`, '_blank');
+      });
+      tbody.appendChild(tr);
+    });
+  }
+
+  document.getElementById('banco-busca').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    renderBanco(q ? banco.filter(ap =>
+      ap.numero.toLowerCase().includes(q) ||
+      ap.nome_projeto.toLowerCase().includes(q) ||
+      (ap.observacao||'').toLowerCase().includes(q)
+    ) : banco);
+  });
+
+  // ── Usuários (admin) ───────────────────────────────────────────
+  async function carregarUsuarios() {
+    const r = await fetch('/api/usuarios');
+    const lista = await r.json();
+    const tbody = document.getElementById('tbody-usuarios');
+    tbody.innerHTML = '';
+    lista.forEach(u => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${u.nome}</td>
+        <td><code>${u.login}</code></td>
+        <td><span class="badge ${u.nivel==='admin'?'badge-admin':'badge-user'}">${u.nivel}</span></td>
+        <td><span class="badge ${u.ativo?'badge-on':'badge-off'}">${u.ativo?'Ativo':'Inativo'}</span></td>
+        <td style="display:flex;gap:6px">
+          <button class="btn-sm danger" onclick="toggleUsuario(${u.id},${u.ativo})">
+            ${u.ativo?'Desativar':'Ativar'}
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function criarUsuario() {
+    const body = {
+      nome:  document.getElementById('u-nome').value.trim(),
+      login: document.getElementById('u-login').value.trim(),
+      senha: document.getElementById('u-senha').value,
+      nivel: document.getElementById('u-nivel').value,
+    };
+    if (!body.nome || !body.login || !body.senha) { toast('Preencha todos os campos.', 'erro'); return; }
+
+    const r = await fetch('/api/usuarios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    if (r.ok) {
+      toast(`Usuário ${body.nome} criado!`, 'ok');
+      ['u-nome','u-login','u-senha'].forEach(id => document.getElementById(id).value = '');
+      carregarUsuarios();
+    } else {
+      toast(d.erro || 'Erro ao criar usuário.', 'erro');
+    }
+  }
+
+  async function toggleUsuario(id, ativo) {
+    await fetch(`/api/usuarios/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ativo: !ativo }),
+    });
+    carregarUsuarios();
+  }
+
+  // ── Start ──────────────────────────────────────────────────────
+  init();
+  </script>
+</body>
+</html>
