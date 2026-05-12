@@ -180,6 +180,47 @@
     .ec-item-sub{text-align:right;font-weight:700;color:var(--laranja);font-size:12px}
     #ec-itens-empty{padding:14px;text-align:center;font-size:12px;color:var(--texto-leve);background:var(--bg)}
 
+    /* EXECUÇÕES SALVAS — cards */
+    .exec-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));gap:16px}
+    .exec-card{background:white;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+    .exec-card-top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--borda);flex-shrink:0}
+    .exec-card-badges{display:flex;gap:6px;flex-wrap:wrap}
+    .badge-ec{padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+    .badge-ec-unidade{background:var(--azul-claro);color:var(--azul)}
+    .badge-ec-projeto{background:var(--roxo-claro);color:var(--roxo)}
+    .exec-card-btns{display:flex;gap:6px;flex-shrink:0}
+    .btn-edit-card,.btn-del-card{border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s}
+    .btn-edit-card{background:var(--laranja-claro);color:var(--laranja)}
+    .btn-edit-card:hover{background:var(--laranja);color:white}
+    .btn-del-card{background:#FEE2E2;color:#DC2626}
+    .btn-del-card:hover{background:#DC2626;color:white}
+    .exec-card-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
+    .exec-card-nome{font-size:14px;font-weight:700}
+    .exec-card-desc{font-size:12px;color:var(--texto-leve);line-height:1.5}
+    .exec-card-itens{width:100%;border-collapse:collapse;font-size:11px}
+    .exec-card-itens thead th{background:var(--bg);padding:5px 8px;text-align:left;font-weight:600;font-size:10px;text-transform:uppercase;color:var(--texto-leve)}
+    .exec-card-itens tbody td{padding:5px 8px;border-top:1px solid var(--borda)}
+    .exec-card-itens .td-right{text-align:right;font-weight:700;color:var(--laranja)}
+    .exec-card-total{background:var(--laranja-claro);border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center}
+    .exec-card-total-label{font-size:11px;color:var(--laranja);font-weight:600}
+    .exec-card-total-val{font-size:17px;font-weight:800;color:var(--laranja)}
+    .exec-card-info{display:flex;flex-wrap:wrap;gap:12px}
+    .exec-card-field{display:flex;flex-direction:column;gap:2px;min-width:0}
+    .exec-card-field label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--texto-leve)}
+    .exec-card-field span{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .exec-card-links{display:flex;gap:12px;flex-wrap:wrap}
+    .exec-card-links a{font-size:12px;color:var(--azul);text-decoration:none;font-weight:500}
+    .exec-card-links a:hover{text-decoration:underline}
+    .exec-edit-form{padding:16px;display:flex;flex-direction:column;gap:14px}
+    .exec-edit-tag{font-size:11px;color:var(--texto-leve);font-weight:600;font-style:italic}
+    .exec-edit-actions{display:flex;gap:8px}
+    .btn-save-edit{background:var(--laranja);color:white;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;flex:1;transition:background .15s}
+    .btn-save-edit:hover{background:var(--laranja-esc)}
+    .btn-cancel-edit{background:var(--bg);color:var(--texto);border:1px solid var(--borda);border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+    .ec-total-edit-box{background:var(--sidebar-bg);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
+    .ec-total-edit-box span{font-size:11px;color:rgba(255,255,255,.45)}
+    .ec-total-edit-val{font-size:18px;font-weight:800;color:var(--laranja)!important}
+
     /* TOAST */
     #toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;color:white;z-index:9999;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s;pointer-events:none;max-width:360px;box-shadow:0 4px 20px rgba(0,0,0,.2)}
     #toast.show{opacity:1;transform:translateY(0)}
@@ -202,6 +243,7 @@
     <button class="nav-item active" data-page="dashboard"><span class="icon">📊</span> Dashboard</button>
     <button class="nav-item" data-page="execucao"><span class="icon">📝</span> Gerador de AP</button>
     <button class="nav-item" data-page="execucao-controle"><span class="icon">📋</span> Execução</button>
+    <button class="nav-item" data-page="execucoes-salvas"><span class="icon">📁</span> Execuções Salvas</button>
     <div class="nav-section">Registros</div>
     <button class="nav-item" data-page="banco"><span class="icon">🗂</span> Banco de APs</button>
     <div class="nav-section admin-only" style="display:none">Administração</div>
@@ -406,6 +448,15 @@
       </div>
     </div>
 
+    <!-- EXECUÇÕES SALVAS -->
+    <div class="page" id="page-execucoes-salvas">
+      <div class="page-header">
+        <div><h2>Execuções Salvas</h2><p>Histórico e edição de todas as execuções</p></div>
+        <span id="exec-salvas-count" style="font-size:11px;color:var(--texto-leve)"></span>
+      </div>
+      <div class="exec-cards-grid" id="exec-cards-grid"></div>
+    </div>
+
     <!-- BANCO -->
     <div class="page" id="page-banco">
       <div class="page-header">
@@ -483,6 +534,7 @@ const pageTitles={
   dashboard:['Dashboard','Visão geral das Autorizações de Produção'],
   execucao:['Gerador de AP','Preencha os dados e gere a AP em PDF'],
   'execucao-controle':['Execução','Controle de execução dos projetos'],
+  'execucoes-salvas':['Execuções Salvas','Histórico e edição das execuções salvas'],
   banco:['Banco de APs','Histórico de todas as autorizações'],
   usuarios:['Usuários','Gerenciamento de acesso ao sistema'],
 };
@@ -503,6 +555,7 @@ document.querySelectorAll('.nav-item').forEach(btn=>{
     if(page==='usuarios')carregarUsuarios();
     if(page==='dashboard')carregarDashboard();
     if(page==='execucao-controle')carregarExecucao();
+    if(page==='execucoes-salvas')carregarExecucoesSalvas();
   });
 });
 
@@ -866,8 +919,252 @@ document.getElementById('btn-salvar-exec').addEventListener('click',async()=>{
     document.getElementById('ec-obs').value='';
     document.getElementById('ec-link-comp').value='';
     await carregarExecucao();
+    document.querySelector('[data-page="execucoes-salvas"]').click();
   }catch{toast('Erro de conexão.','erro');}
 });
+
+// ── Execuções Salvas ─────────────────────────────────────────────────────────
+let execSalvasData=[];
+
+async function carregarExecucoesSalvas(){
+  try{
+    const r=await fetch('/api/execucao');
+    execSalvasData=await r.json();
+    renderExecCards();
+  }catch{toast('Erro ao carregar execuções.','erro');}
+}
+
+function renderExecCards(){
+  const grid=document.getElementById('exec-cards-grid');
+  const count=document.getElementById('exec-salvas-count');
+  if(!grid)return;
+  count.textContent=`${execSalvasData.length} registro(s)`;
+  grid.innerHTML='';
+  if(!execSalvasData.length){
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--texto-leve)">Nenhuma execução salva ainda.</div>';
+    return;
+  }
+  execSalvasData.forEach(row=>{
+    const card=document.createElement('div');
+    card.className='exec-card';
+    card.dataset.id=row.id;
+    renderCardView(card,row);
+    grid.appendChild(card);
+  });
+}
+
+function renderCardView(card,row){
+  const itens=Array.isArray(row.itens)?row.itens:[];
+  const total=parseFloat(row.valor_total)||itens.reduce((s,i)=>s+i.valor*(i.qtd||1),0);
+
+  const itensHtml=itens.length?`
+    <table class="exec-card-itens">
+      <thead><tr><th>Nº</th><th>Produto</th><th>Compl.</th><th style="text-align:right">Unit.</th><th style="text-align:center">Qtd</th><th style="text-align:right">Subtotal</th></tr></thead>
+      <tbody>${itens.map(i=>`<tr>
+        <td>${i.id}</td>
+        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.titulo}</td>
+        <td>${i.complexidade}</td>
+        <td style="text-align:right">${brl(i.valor)}</td>
+        <td style="text-align:center">${i.qtd}</td>
+        <td class="td-right">${brl(i.valor*i.qtd)}</td>
+      </tr>`).join('')}</tbody>
+    </table>`
+    :'<div style="font-size:12px;color:var(--texto-leve)">Sem itens cadastrados</div>';
+
+  card.innerHTML=`
+    <div class="exec-card-top">
+      <div class="exec-card-badges">
+        <span class="badge-ec badge-ec-unidade">${row.unidade_req||'—'}</span>
+        <span class="badge-ec badge-ec-projeto">${row.projeto||'—'}</span>
+      </div>
+      <div class="exec-card-btns">
+        <button class="btn-edit-card">✏️ Editar</button>
+        <button class="btn-del-card">🗑 Excluir</button>
+      </div>
+    </div>
+    <div class="exec-card-body">
+      <div class="exec-card-nome">${row.nome_projeto||'(sem nome)'}</div>
+      ${row.descricao?`<div class="exec-card-desc">${row.descricao}</div>`:''}
+      ${itensHtml}
+      <div class="exec-card-total">
+        <span class="exec-card-total-label">Valor Total (desc. 13,5%)</span>
+        <span class="exec-card-total-val">${brl(total)}</span>
+      </div>
+      <div class="exec-card-info">
+        ${row.numero_ap?`<div class="exec-card-field"><label>Número AP</label><span>${row.numero_ap}</span></div>`:''}
+        ${row.obs?`<div class="exec-card-field"><label>Obs</label><span>${row.obs}</span></div>`:''}
+      </div>
+      <div class="exec-card-links">
+        ${row.link_trello?`<a href="${row.link_trello}" target="_blank">🔗 Trello do Projeto</a>`:''}
+        ${row.link_comprovacao?`<a href="${row.link_comprovacao}" target="_blank">✅ Trello Comprovação</a>`:''}
+      </div>
+    </div>`;
+
+  card.querySelector('.btn-del-card').addEventListener('click',async()=>{
+    if(!confirm('Excluir esta execução?'))return;
+    await fetch(`/api/execucao/${row.id}`,{method:'DELETE'});
+    execSalvasData=execSalvasData.filter(r=>r.id!==row.id);
+    execucaoData=execSalvasData;
+    renderExecCards();
+    renderTabelaExecucao();
+  });
+  card.querySelector('.btn-edit-card').addEventListener('click',()=>renderCardEdit(card,row));
+}
+
+function renderCardEdit(card,row){
+  let editItens=Array.isArray(row.itens)?row.itens.map(i=>({...i})):[];
+
+  function buildItemSel(){
+    const sel=document.createElement('select');
+    sel.style.cssText='flex:1;border:1.5px solid var(--borda);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit';
+    const def=document.createElement('option');
+    def.value='';def.textContent='— selecione um item —';
+    sel.appendChild(def);
+    CARDAPIO.forEach(item=>{
+      const opt=document.createElement('option');
+      opt.value=item.id;
+      opt.textContent=`${item.id} — ${item.titulo} (${item.complexidade})`;
+      opt.dataset.titulo=item.titulo;
+      opt.dataset.complexidade=item.complexidade;
+      opt.dataset.valor=item.valor;
+      sel.appendChild(opt);
+    });
+    return sel;
+  }
+
+  function renderEditItens(wrap){
+    if(!editItens.length){wrap.innerHTML='<div id="ec-itens-empty">Nenhum item adicionado</div>';updateEditTotal();return;}
+    let html=`<div class="ec-item-header"><span>Nº</span><span>Produto / Complexidade</span><span style="text-align:right">Unit.</span><span style="text-align:center">Qtd</span><span style="text-align:right">Subtotal</span><span></span></div>`;
+    editItens.forEach((item,idx)=>{
+      html+=`<div class="ec-item-row">
+        <span class="ec-item-num">${item.id}</span>
+        <div class="ec-item-info"><div class="titulo">${item.titulo}</div><div class="comp">${item.complexidade}</div></div>
+        <span class="ec-item-unit">${brl(item.valor)}</span>
+        <input type="number" class="ec-item-qtdinp" value="${item.qtd}" min="1" data-idx="${idx}"/>
+        <span class="ec-item-sub">${brl(item.valor*item.qtd)}</span>
+        <button class="btn-rem" data-idx="${idx}">×</button>
+      </div>`;
+    });
+    wrap.innerHTML=html;
+    wrap.querySelectorAll('.ec-item-qtdinp').forEach(inp=>{
+      inp.addEventListener('input',function(){
+        editItens[+this.dataset.idx].qtd=Math.max(1,+this.value||1);
+        renderEditItens(wrap);
+      });
+    });
+    wrap.querySelectorAll('.btn-rem').forEach(btn=>{
+      btn.addEventListener('click',function(){
+        editItens.splice(+this.dataset.idx,1);
+        renderEditItens(wrap);
+      });
+    });
+    updateEditTotal();
+  }
+
+  function updateEditTotal(){
+    const lbl=card.querySelector('.ec-total-edit-val');
+    if(lbl)lbl.textContent=brl(editItens.reduce((s,i)=>s+i.valor*i.qtd,0));
+  }
+
+  // Monta estrutura do card em modo edição
+  card.innerHTML=`
+    <div class="exec-card-top">
+      <div class="exec-card-badges">
+        <span class="badge-ec badge-ec-unidade">${row.unidade_req||'—'}</span>
+        <span class="badge-ec badge-ec-projeto">${row.projeto||'—'}</span>
+      </div>
+      <span class="exec-edit-tag">✏️ Modo Edição</span>
+    </div>
+    <div class="exec-edit-form">
+      <div class="fgrid">
+        <div class="fg"><label>Unidade Requisitante</label>
+          <select class="edit-f" data-f="unidade_req">
+            <option ${row.unidade_req==='Interno'?'selected':''}>Interno</option>
+            <option ${row.unidade_req==='Geral'?'selected':''}>Geral</option>
+          </select></div>
+        <div class="fg"><label>Projeto</label>
+          <select class="edit-f" data-f="projeto">
+            <option ${row.projeto==='Especial'?'selected':''}>Especial</option>
+            <option ${row.projeto==='Mensal'?'selected':''}>Mensal</option>
+          </select></div>
+        <div class="fg span2"><label>Nome do Projeto</label><input type="text" class="edit-f" data-f="nome_projeto" value="${row.nome_projeto||''}"/></div>
+        <div class="fg span2"><label>Descrição do Projeto</label><textarea class="edit-f" data-f="descricao" rows="2">${row.descricao||''}</textarea></div>
+        <div class="fg span2"><label>Link do Trello</label><input type="text" class="edit-f" data-f="link_trello" value="${row.link_trello||''}"/></div>
+      </div>
+      <div class="form-secao-titulo">Itens do Cardápio</div>
+      <div class="edit-add-bar" style="display:flex;gap:8px;align-items:center"></div>
+      <div class="ec-itens-wrap" style="border-radius:8px;overflow:hidden;border:1px solid var(--borda)"></div>
+      <div class="ec-total-edit-box">
+        <span>Valor Total (desc. 13,5%)</span>
+        <span class="ec-total-edit-val">${brl(row.valor_total||0)}</span>
+      </div>
+      <div class="fgrid">
+        <div class="fg span2"><label>Número AP</label><input type="text" class="edit-f" data-f="numero_ap" value="${row.numero_ap||''}"/></div>
+        <div class="fg span2"><label>Obs</label><textarea class="edit-f" data-f="obs" rows="2">${row.obs||''}</textarea></div>
+        <div class="fg span2"><label>Link Trello Comprovação</label><input type="text" class="edit-f" data-f="link_comprovacao" value="${row.link_comprovacao||''}"/></div>
+      </div>
+      <div class="exec-edit-actions">
+        <button class="btn-save-edit">💾 Salvar alterações</button>
+        <button class="btn-cancel-edit">Cancelar</button>
+      </div>
+    </div>`;
+
+  // Insere o select de itens programaticamente (evita escaping de HTML)
+  const addBar=card.querySelector('.edit-add-bar');
+  const itemSel=buildItemSel();
+  const btnAdd=document.createElement('button');
+  btnAdd.textContent='+ Adicionar';
+  btnAdd.style.cssText='background:var(--laranja);color:white;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0';
+  addBar.appendChild(itemSel);addBar.appendChild(btnAdd);
+
+  const itensWrap=card.querySelector('.ec-itens-wrap');
+  renderEditItens(itensWrap);
+
+  btnAdd.addEventListener('click',()=>{
+    const opt=itemSel.options[itemSel.selectedIndex];
+    if(!opt||!opt.value)return;
+    const id=+opt.value;
+    const ex=editItens.find(i=>i.id===id);
+    if(ex){ex.qtd++;}
+    else{editItens.push({id,titulo:opt.dataset.titulo||'',complexidade:opt.dataset.complexidade||'',valor:parseFloat(opt.dataset.valor)||0,qtd:1});}
+    renderEditItens(itensWrap);
+  });
+
+  card.querySelector('.btn-cancel-edit').addEventListener('click',()=>renderCardView(card,row));
+
+  card.querySelector('.btn-save-edit').addEventListener('click',async()=>{
+    if(!editItens.length){toast('Adicione pelo menos um item.','erro');return;}
+    const valorTotal=editItens.reduce((s,i)=>s+i.valor*i.qtd,0);
+    const getF=f=>card.querySelector(`[data-f="${f}"]`);
+    const dados={
+      unidade_req:getF('unidade_req').value,
+      projeto:getF('projeto').value,
+      nome_projeto:getF('nome_projeto').value.trim(),
+      descricao:getF('descricao').value.trim(),
+      link_trello:getF('link_trello').value.trim(),
+      num_item:editItens.map(i=>i.id).join(', '),
+      produtos_servicos:editItens.map(i=>i.titulo).join('; '),
+      complexidade:editItens.map(i=>i.complexidade).join('; '),
+      valor_unitario:editItens[0]?.valor||0,
+      quantidade:editItens.reduce((s,i)=>s+i.qtd,0),
+      valor_total:valorTotal,
+      itens:editItens,
+      numero_ap:getF('numero_ap').value.trim(),
+      obs:getF('obs').value.trim(),
+      link_comprovacao:getF('link_comprovacao').value.trim(),
+    };
+    try{
+      const r=await fetch(`/api/execucao/${row.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)});
+      if(!r.ok){toast('Erro ao salvar alterações.','erro');return;}
+      toast('✅ Execução atualizada!','ok');
+      const updated={...row,...dados};
+      execSalvasData=execSalvasData.map(x=>x.id===row.id?updated:x);
+      execucaoData=execSalvasData;
+      renderCardView(card,updated);
+      renderTabelaExecucao();
+    }catch{toast('Erro de conexão.','erro');}
+  });
+}
 
 init();
 </script>
