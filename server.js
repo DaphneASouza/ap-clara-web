@@ -12,6 +12,12 @@ const { CARDAPIO }      = require('./cardapio');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
+// Necessário para cookies no Render (proxy reverso)
+app.set('trust proxy', 1);
+
+app.set("trust proxy", 1);
+const PORT = process.env.PORT || 3000;
+
 // ── Middlewares ──────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -28,7 +34,8 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: true,
+    sameSite: 'none',
     maxAge: 8 * 60 * 60 * 1000,
   },
 }));
