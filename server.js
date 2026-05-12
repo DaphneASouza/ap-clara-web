@@ -2,6 +2,7 @@
 require('dotenv').config();
 const express    = require('express');
 const session    = require('express-session');
+const pgSession  = require('connect-pg-simple')(session);
 const bcrypt     = require('bcrypt');
 const path       = require('path');
 const { pool, setupDB } = require('./db');
@@ -18,12 +19,17 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Sessão com store em memória (simples para Render free tier)
 app.use(session({
+  store: new pgSession({
+    pool,
+    tableName: 'sessoes',
+    createTableIfMissing: true,
+  }),
   secret: process.env.SESSION_SECRET || 'clara-digital-secret-2024',
   resave: false,
   saveUninitialized: false,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 8 * 60 * 60 * 1000, // 8 horas
+    maxAge: 8 * 60 * 60 * 1000,
   },
 }));
 
