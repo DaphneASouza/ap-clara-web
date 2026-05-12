@@ -156,16 +156,13 @@
     .btn-sm:hover{border-color:var(--laranja);color:var(--laranja)}
 
     /* EXECUÇÃO CONTROLE */
-    .exec-ctrl-wrap{overflow-x:auto;background:white;border-radius:var(--radius);box-shadow:var(--shadow)}
-    .exec-ctrl-table{border-collapse:collapse;font-size:11px;white-space:nowrap;width:100%}
-    .exec-ctrl-table thead th{background:var(--sidebar-bg);color:rgba(255,255,255,.7);padding:8px 10px;text-align:left;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.5px;position:sticky;top:0;z-index:2}
-    .exec-ctrl-table tbody tr:nth-child(even){background:var(--laranja-claro)}
-    .exec-ctrl-table tbody tr:hover td{background:var(--laranja-med)}
-    .exec-ctrl-table tbody td{padding:2px 4px;border-bottom:1px solid var(--borda)}
-    .exec-ctrl-table input{border:1px solid transparent;border-radius:4px;padding:4px 6px;font-size:11px;font-family:inherit;width:100%;min-width:90px;background:transparent;box-shadow:none}
-    .exec-ctrl-table input:focus{border-color:var(--laranja);background:white;box-shadow:0 0 0 2px rgba(230,92,0,.1);outline:none}
-    .exec-ctrl-table input[type="number"]{min-width:70px}
-    .exec-calc{background:var(--laranja-claro)!important;color:var(--laranja)!important;font-weight:700}
+    #exec-ctrl-form{max-width:820px;display:flex;flex-direction:column;gap:18px;background:white;border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)}
+    #btn-salvar-exec{background:var(--laranja);color:white;border:none;border-radius:8px;padding:13px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s}
+    #btn-salvar-exec:hover{background:var(--laranja-esc)}
+    .ec-auto{background:var(--laranja-claro)!important;border-color:var(--laranja-med)!important;color:var(--laranja);font-weight:600}
+    #ec-valor-total-box{background:var(--sidebar-bg);border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+    #ec-valor-total-box span:first-child{font-size:12px;color:rgba(255,255,255,.5)}
+    #ec-valor-total-label{font-size:20px;font-weight:800;color:var(--laranja)}
 
     /* TOAST */
     #toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;color:white;z-index:9999;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s;pointer-events:none;max-width:360px;box-shadow:0 4px 20px rgba(0,0,0,.2)}
@@ -328,23 +325,77 @@
 
     <!-- EXECUÇÃO CONTROLE -->
     <div class="page" id="page-execucao-controle">
-      <div class="page-header">
-        <div><h2>Execução</h2><p>Controle de execução dos projetos</p></div>
-        <button class="btn-refresh" onclick="novaLinhaExecucao()">+ Nova Linha</button>
+      <div id="exec-ctrl-form">
+
+        <div class="form-secao">
+          <div class="form-secao-titulo">Identificação</div>
+          <div class="fgrid">
+            <div class="fg">
+              <label>Unidade Requisitante</label>
+              <select id="ec-unidade"><option>Interno</option><option>Geral</option></select>
+            </div>
+            <div class="fg">
+              <label>Projeto</label>
+              <select id="ec-projeto"><option>Especial</option><option>Mensal</option></select>
+            </div>
+            <div class="fg span2"><label>Nome do Projeto</label><input type="text" id="ec-nome-projeto" placeholder="Ex: Campanha Verão 2025"/></div>
+            <div class="fg span2"><label>Descrição do Projeto</label><textarea id="ec-descricao" rows="3" placeholder="Descreva o projeto..."></textarea></div>
+            <div class="fg span2"><label>Link do Trello</label><input type="text" id="ec-link-trello" placeholder="https://trello.com/..."/></div>
+          </div>
+        </div>
+
+        <div class="form-secao">
+          <div class="form-secao-titulo">Item do Cardápio</div>
+          <div class="fgrid">
+            <div class="fg span2">
+              <label>Nº Item da Proposta de Preço</label>
+              <select id="ec-item"><option value="">— selecione um item —</option></select>
+            </div>
+            <div class="fg span2"><label>Produtos e Serviços</label><input type="text" id="ec-produtos" class="ec-auto" readonly placeholder="Preenchido automaticamente"/></div>
+            <div class="fg"><label>Complexidade</label><input type="text" id="ec-complexidade" class="ec-auto" readonly placeholder="Auto"/></div>
+            <div class="fg"><label>Valor Unitário (desc. 13,5%)</label><input type="text" id="ec-valor-unit" class="ec-auto" readonly placeholder="Auto"/></div>
+          </div>
+        </div>
+
+        <div class="form-secao">
+          <div class="form-secao-titulo">Quantidade e Total</div>
+          <div class="fgrid">
+            <div class="fg"><label>Quantidade</label><input type="number" id="ec-qtd" value="1" min="1"/></div>
+          </div>
+          <div id="ec-valor-total-box">
+            <span>Valor Total (desc. 13,5%)</span>
+            <span id="ec-valor-total-label">R$ 0,00</span>
+          </div>
+        </div>
+
+        <div class="form-secao">
+          <div class="form-secao-titulo">Autorização de Produção</div>
+          <div class="fgrid">
+            <div class="fg span2"><label>Número AP</label><input type="text" id="ec-numero-ap" placeholder="Ex: MARÇO.MENSAL.1"/></div>
+            <div class="fg span2"><label>Obs</label><textarea id="ec-obs" rows="2" placeholder="(opcional)"></textarea></div>
+            <div class="fg span2"><label>Link Trello Comprovação</label><input type="text" id="ec-link-comp" placeholder="https://trello.com/..."/></div>
+          </div>
+        </div>
+
+        <button id="btn-salvar-exec"><span>💾</span> Salvar Execução</button>
       </div>
-      <div class="exec-ctrl-wrap">
-        <table class="exec-ctrl-table">
-          <thead>
-            <tr>
-              <th>Unidade Requisitante</th><th>Projeto</th><th>Nome do Projeto</th>
-              <th>Descrição do Projeto</th><th>Link do Trello</th><th>Nº Item Proposta de Preço</th>
-              <th>Produtos e Serviços</th><th>Complexidade</th><th>Valor Unit. (desc.13,5%)</th>
-              <th>Quantidade</th><th>Valor Total (desc.13,5%)</th><th>Número AP</th>
-              <th>Obs</th><th>Link Trello Comprovação</th><th></th>
-            </tr>
-          </thead>
-          <tbody id="tbody-execucao"></tbody>
-        </table>
+
+      <div style="margin-top:24px;max-width:820px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:14px;font-weight:700">Registros Salvos</div>
+          <span id="exec-count" style="font-size:11px;color:var(--texto-leve)"></span>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Unidade</th><th>Projeto</th><th>Nome do Projeto</th>
+                <th>Nº Item</th><th>Valor Total</th><th>Número AP</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-execucao"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -680,85 +731,119 @@ async function toggleUsuario(id,ativo){
 }
 
 // ── Execução Controle ────────────────────────────────────────────────────────
-const EXEC_COLS=[
-  {key:'unidade_req',type:'text'},{key:'projeto',type:'text'},{key:'nome_projeto',type:'text'},
-  {key:'descricao',type:'text'},{key:'link_trello',type:'text'},{key:'num_item',type:'text'},
-  {key:'produtos_servicos',type:'text'},{key:'complexidade',type:'text'},
-  {key:'valor_unitario',type:'number'},{key:'quantidade',type:'number'},
-  {key:'valor_total',type:'number',readonly:true},
-  {key:'numero_ap',type:'text'},{key:'obs',type:'text'},{key:'link_comprovacao',type:'text'},
-];
 let execucaoData=[];
+let ecValorUnitario=0;
+
+function popularSelectCardapio(){
+  const sel=document.getElementById('ec-item');
+  if(!sel||sel.options.length>1)return;
+  CARDAPIO.forEach(item=>{
+    const opt=document.createElement('option');
+    opt.value=item.id;
+    opt.textContent=`${item.id} — ${item.titulo} (${item.complexidade})`;
+    opt.dataset.titulo=item.titulo;
+    opt.dataset.complexidade=item.complexidade;
+    opt.dataset.valor=item.valor;
+    sel.appendChild(opt);
+  });
+}
+
+document.getElementById('ec-item').addEventListener('change',function(){
+  const opt=this.options[this.selectedIndex];
+  if(!opt.value){
+    document.getElementById('ec-produtos').value='';
+    document.getElementById('ec-complexidade').value='';
+    document.getElementById('ec-valor-unit').value='';
+    ecValorUnitario=0;
+  }else{
+    document.getElementById('ec-produtos').value=opt.dataset.titulo||'';
+    document.getElementById('ec-complexidade').value=opt.dataset.complexidade||'';
+    ecValorUnitario=parseFloat(opt.dataset.valor)||0;
+    document.getElementById('ec-valor-unit').value=brl(ecValorUnitario);
+  }
+  calcValorTotalExec();
+});
+
+document.getElementById('ec-qtd').addEventListener('input',calcValorTotalExec);
+
+function calcValorTotalExec(){
+  const qt=parseFloat(document.getElementById('ec-qtd').value)||0;
+  const total=ecValorUnitario*qt;
+  document.getElementById('ec-valor-total-label').textContent=brl(total);
+}
 
 async function carregarExecucao(){
+  popularSelectCardapio();
   try{
     const r=await fetch('/api/execucao');
     execucaoData=await r.json();
-    const tbody=document.getElementById('tbody-execucao');
-    tbody.innerHTML='';
-    execucaoData.forEach(row=>tbody.appendChild(criarLinhaExecucao(row)));
-  }catch(e){toast('Erro ao carregar execução.','erro');}
+    renderTabelaExecucao();
+  }catch{toast('Erro ao carregar execução.','erro');}
 }
 
-function criarLinhaExecucao(row={}){
-  const tr=document.createElement('tr');
-  tr.dataset.id=row.id||'';
-  EXEC_COLS.forEach(col=>{
-    const td=document.createElement('td');
-    const inp=document.createElement('input');
-    inp.type=col.type;
-    inp.value=row[col.key]!=null?row[col.key]:'';
-    inp.dataset.col=col.key;
-    if(col.readonly){inp.readOnly=true;inp.className='exec-calc';}
-    inp.addEventListener('input',()=>{
-      if(col.key==='valor_unitario'||col.key==='quantidade')atualizarValorTotal(tr);
+function renderTabelaExecucao(){
+  const tbody=document.getElementById('tbody-execucao');
+  tbody.innerHTML='';
+  document.getElementById('exec-count').textContent=`${execucaoData.length} registro(s)`;
+  execucaoData.forEach(row=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${row.unidade_req||'—'}</td>
+      <td>${row.projeto||'—'}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${row.nome_projeto||'—'}</td>
+      <td>${row.num_item||'—'}</td>
+      <td class="td-money">${brl(row.valor_total)}</td>
+      <td>${row.numero_ap||'—'}</td>
+      <td><button class="btn-pdf" data-id="${row.id}">× Excluir</button></td>`;
+    tr.querySelector('[data-id]').addEventListener('click',async function(){
+      if(!confirm('Excluir este registro?'))return;
+      await fetch(`/api/execucao/${this.dataset.id}`,{method:'DELETE'});
+      execucaoData=execucaoData.filter(r=>r.id!==+this.dataset.id);
+      renderTabelaExecucao();
     });
-    inp.addEventListener('change',()=>salvarLinhaExecucao(tr));
-    td.appendChild(inp);tr.appendChild(td);
+    tbody.appendChild(tr);
   });
-  const tdDel=document.createElement('td');
-  const btnDel=document.createElement('button');
-  btnDel.textContent='×';btnDel.className='btn-rem';
-  btnDel.addEventListener('click',()=>deletarLinhaExecucao(tr));
-  tdDel.appendChild(btnDel);tr.appendChild(tdDel);
-  return tr;
 }
 
-function atualizarValorTotal(tr){
-  const vu=parseFloat(tr.querySelector('[data-col="valor_unitario"]').value)||0;
-  const qt=parseFloat(tr.querySelector('[data-col="quantidade"]').value)||0;
-  tr.querySelector('[data-col="valor_total"]').value=(vu*qt).toFixed(2);
-}
-
-async function salvarLinhaExecucao(tr){
-  const id=tr.dataset.id;
-  const dados={};
-  EXEC_COLS.forEach(col=>{
-    const inp=tr.querySelector(`[data-col="${col.key}"]`);
-    dados[col.key]=col.type==='number'?(parseFloat(inp.value)||0):inp.value;
-  });
+document.getElementById('btn-salvar-exec').addEventListener('click',async()=>{
+  const numItem=document.getElementById('ec-item').value;
+  if(!numItem){toast('Selecione um item do cardápio.','erro');return;}
+  const qt=parseFloat(document.getElementById('ec-qtd').value)||0;
+  if(!qt){toast('Informe a quantidade.','erro');return;}
+  const dados={
+    unidade_req:document.getElementById('ec-unidade').value,
+    projeto:document.getElementById('ec-projeto').value,
+    nome_projeto:document.getElementById('ec-nome-projeto').value.trim(),
+    descricao:document.getElementById('ec-descricao').value.trim(),
+    link_trello:document.getElementById('ec-link-trello').value.trim(),
+    num_item:numItem,
+    produtos_servicos:document.getElementById('ec-produtos').value,
+    complexidade:document.getElementById('ec-complexidade').value,
+    valor_unitario:ecValorUnitario,
+    quantidade:qt,
+    valor_total:ecValorUnitario*qt,
+    numero_ap:document.getElementById('ec-numero-ap').value.trim(),
+    obs:document.getElementById('ec-obs').value.trim(),
+    link_comprovacao:document.getElementById('ec-link-comp').value.trim(),
+  };
   try{
-    if(id){
-      await fetch(`/api/execucao/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)});
-    }else{
-      const r=await fetch('/api/execucao',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)});
-      const d=await r.json();
-      if(d.id)tr.dataset.id=d.id;
-    }
-  }catch{toast('Erro ao salvar linha.','erro');}
-}
-
-async function deletarLinhaExecucao(tr){
-  const id=tr.dataset.id;
-  if(id)await fetch(`/api/execucao/${id}`,{method:'DELETE'});
-  tr.remove();
-}
-
-function novaLinhaExecucao(){
-  const tr=criarLinhaExecucao({});
-  document.getElementById('tbody-execucao').appendChild(tr);
-  tr.querySelector('input').focus();
-}
+    const r=await fetch('/api/execucao',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)});
+    if(!r.ok){const e=await r.json();toast(e.erro||'Erro ao salvar.','erro');return;}
+    toast('✅ Execução salva!','ok');
+    // Limpa campos de item/qtd/obs mas mantém unidade/projeto/nome
+    document.getElementById('ec-item').value='';
+    document.getElementById('ec-produtos').value='';
+    document.getElementById('ec-complexidade').value='';
+    document.getElementById('ec-valor-unit').value='';
+    document.getElementById('ec-qtd').value='1';
+    document.getElementById('ec-numero-ap').value='';
+    document.getElementById('ec-obs').value='';
+    document.getElementById('ec-link-comp').value='';
+    ecValorUnitario=0;
+    calcValorTotalExec();
+    await carregarExecucao();
+  }catch{toast('Erro de conexão.','erro');}
+});
 
 init();
 </script>
