@@ -75,6 +75,13 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// GET /api/test-session
+app.get('/api/test-session', (req, res) => {
+  if (!req.session.contador) req.session.contador = 0;
+  req.session.contador++;
+  res.json({ contador: req.session.contador, sessionID: req.sessionID, cookie: req.session.cookie });
+});
+
 // POST /api/logout
 app.post('/api/logout', (req, res) => {
   req.session.destroy(() => res.json({ ok: true }));
