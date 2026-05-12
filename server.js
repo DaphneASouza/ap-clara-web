@@ -251,6 +251,51 @@ app.delete('/api/usuarios/:id', requireAdmin, async (req, res) => {
   res.json({ ok: true });
 });
 
+// ════════════════════════════════════════════════════════════════════════════
+// EXECUÇÃO CONTROLE
+// ════════════════════════════════════════════════════════════════════════════
+
+const EXEC_FIELDS = [
+  'unidade_req','projeto','nome_projeto','descricao','link_trello','num_item',
+  'produtos_servicos','complexidade','valor_unitario','quantidade','valor_total',
+  'numero_ap','obs','link_comprovacao',
+];
+
+app.get('/api/execucao', requireAuth, async (req, res) => {
+  try {
+    const r = await pool.query(`SELECT * FROM execucao ORDER BY id`);
+    res.json(r.rows);
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+app.post('/api/execucao', requireAuth, async (req, res) => {
+  const vals = EXEC_FIELDS.map(f => req.body[f] ?? null);
+  const cols = EXEC_FIELDS.join(',');
+  const params = EXEC_FIELDS.map((_,i) => `$${i+1}`).join(',');
+  try {
+    const r = await pool.query(
+      `INSERT INTO execucao (${cols}) VALUES (${params}) RETURNING id`, vals
+    );
+    res.json({ id: r.rows[0].id });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+app.put('/api/execucao/:id', requireAuth, async (req, res) => {
+  const sets = EXEC_FIELDS.map((f,i) => `${f}=$${i+1}`).join(',');
+  const vals = [...EXEC_FIELDS.map(f => req.body[f] ?? null), req.params.id];
+  try {
+    await pool.query(`UPDATE execucao SET ${sets} WHERE id=$${EXEC_FIELDS.length+1}`, vals);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+app.delete('/api/execucao/:id', requireAuth, async (req, res) => {
+  try {
+    await pool.query(`DELETE FROM execucao WHERE id=$1`, [req.params.id]);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
 // ── Rota catch-all (SPA) ─────────────────────────────────────────────────────
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

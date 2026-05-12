@@ -155,6 +155,18 @@
     .btn-sm{background:none;border:1px solid var(--borda);border-radius:5px;padding:3px 8px;font-size:11px;font-family:inherit;cursor:pointer}
     .btn-sm:hover{border-color:var(--laranja);color:var(--laranja)}
 
+    /* EXECUÇÃO CONTROLE */
+    .exec-ctrl-wrap{overflow-x:auto;background:white;border-radius:var(--radius);box-shadow:var(--shadow)}
+    .exec-ctrl-table{border-collapse:collapse;font-size:11px;white-space:nowrap;width:100%}
+    .exec-ctrl-table thead th{background:var(--sidebar-bg);color:rgba(255,255,255,.7);padding:8px 10px;text-align:left;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.5px;position:sticky;top:0;z-index:2}
+    .exec-ctrl-table tbody tr:nth-child(even){background:var(--laranja-claro)}
+    .exec-ctrl-table tbody tr:hover td{background:var(--laranja-med)}
+    .exec-ctrl-table tbody td{padding:2px 4px;border-bottom:1px solid var(--borda)}
+    .exec-ctrl-table input{border:1px solid transparent;border-radius:4px;padding:4px 6px;font-size:11px;font-family:inherit;width:100%;min-width:90px;background:transparent;box-shadow:none}
+    .exec-ctrl-table input:focus{border-color:var(--laranja);background:white;box-shadow:0 0 0 2px rgba(230,92,0,.1);outline:none}
+    .exec-ctrl-table input[type="number"]{min-width:70px}
+    .exec-calc{background:var(--laranja-claro)!important;color:var(--laranja)!important;font-weight:700}
+
     /* TOAST */
     #toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;color:white;z-index:9999;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s;pointer-events:none;max-width:360px;box-shadow:0 4px 20px rgba(0,0,0,.2)}
     #toast.show{opacity:1;transform:translateY(0)}
@@ -175,7 +187,8 @@
   <nav id="sidebar-nav">
     <div class="nav-section">Principal</div>
     <button class="nav-item active" data-page="dashboard"><span class="icon">📊</span> Dashboard</button>
-    <button class="nav-item" data-page="execucao"><span class="icon">📝</span> Execução</button>
+    <button class="nav-item" data-page="execucao"><span class="icon">📝</span> Gerador de AP</button>
+    <button class="nav-item" data-page="execucao-controle"><span class="icon">📋</span> Execução</button>
     <div class="nav-section">Registros</div>
     <button class="nav-item" data-page="banco"><span class="icon">🗂</span> Banco de APs</button>
     <div class="nav-section admin-only" style="display:none">Administração</div>
@@ -313,6 +326,28 @@
       </div>
     </div>
 
+    <!-- EXECUÇÃO CONTROLE -->
+    <div class="page" id="page-execucao-controle">
+      <div class="page-header">
+        <div><h2>Execução</h2><p>Controle de execução dos projetos</p></div>
+        <button class="btn-refresh" onclick="novaLinhaExecucao()">+ Nova Linha</button>
+      </div>
+      <div class="exec-ctrl-wrap">
+        <table class="exec-ctrl-table">
+          <thead>
+            <tr>
+              <th>Unidade Requisitante</th><th>Projeto</th><th>Nome do Projeto</th>
+              <th>Descrição do Projeto</th><th>Link do Trello</th><th>Nº Item Proposta de Preço</th>
+              <th>Produtos e Serviços</th><th>Complexidade</th><th>Valor Unit. (desc.13,5%)</th>
+              <th>Quantidade</th><th>Valor Total (desc.13,5%)</th><th>Número AP</th>
+              <th>Obs</th><th>Link Trello Comprovação</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody-execucao"></tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- BANCO -->
     <div class="page" id="page-banco">
       <div class="page-header">
@@ -388,7 +423,8 @@ function toast(msg,tipo='info'){
 
 const pageTitles={
   dashboard:['Dashboard','Visão geral das Autorizações de Produção'],
-  execucao:['Execução','Preencha os dados e gere a AP em PDF'],
+  execucao:['Gerador de AP','Preencha os dados e gere a AP em PDF'],
+  'execucao-controle':['Execução','Controle de execução dos projetos'],
   banco:['Banco de APs','Histórico de todas as autorizações'],
   usuarios:['Usuários','Gerenciamento de acesso ao sistema'],
 };
@@ -408,6 +444,7 @@ document.querySelectorAll('.nav-item').forEach(btn=>{
     if(page==='banco')carregarBanco();
     if(page==='usuarios')carregarUsuarios();
     if(page==='dashboard')carregarDashboard();
+    if(page==='execucao-controle')carregarExecucao();
   });
 });
 
@@ -640,6 +677,87 @@ async function criarUsuario(){
 async function toggleUsuario(id,ativo){
   await fetch(`/api/usuarios/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({ativo:!ativo})});
   carregarUsuarios();
+}
+
+// ── Execução Controle ────────────────────────────────────────────────────────
+const EXEC_COLS=[
+  {key:'unidade_req',type:'text'},{key:'projeto',type:'text'},{key:'nome_projeto',type:'text'},
+  {key:'descricao',type:'text'},{key:'link_trello',type:'text'},{key:'num_item',type:'text'},
+  {key:'produtos_servicos',type:'text'},{key:'complexidade',type:'text'},
+  {key:'valor_unitario',type:'number'},{key:'quantidade',type:'number'},
+  {key:'valor_total',type:'number',readonly:true},
+  {key:'numero_ap',type:'text'},{key:'obs',type:'text'},{key:'link_comprovacao',type:'text'},
+];
+let execucaoData=[];
+
+async function carregarExecucao(){
+  try{
+    const r=await fetch('/api/execucao');
+    execucaoData=await r.json();
+    const tbody=document.getElementById('tbody-execucao');
+    tbody.innerHTML='';
+    execucaoData.forEach(row=>tbody.appendChild(criarLinhaExecucao(row)));
+  }catch(e){toast('Erro ao carregar execução.','erro');}
+}
+
+function criarLinhaExecucao(row={}){
+  const tr=document.createElement('tr');
+  tr.dataset.id=row.id||'';
+  EXEC_COLS.forEach(col=>{
+    const td=document.createElement('td');
+    const inp=document.createElement('input');
+    inp.type=col.type;
+    inp.value=row[col.key]!=null?row[col.key]:'';
+    inp.dataset.col=col.key;
+    if(col.readonly){inp.readOnly=true;inp.className='exec-calc';}
+    inp.addEventListener('input',()=>{
+      if(col.key==='valor_unitario'||col.key==='quantidade')atualizarValorTotal(tr);
+    });
+    inp.addEventListener('change',()=>salvarLinhaExecucao(tr));
+    td.appendChild(inp);tr.appendChild(td);
+  });
+  const tdDel=document.createElement('td');
+  const btnDel=document.createElement('button');
+  btnDel.textContent='×';btnDel.className='btn-rem';
+  btnDel.addEventListener('click',()=>deletarLinhaExecucao(tr));
+  tdDel.appendChild(btnDel);tr.appendChild(tdDel);
+  return tr;
+}
+
+function atualizarValorTotal(tr){
+  const vu=parseFloat(tr.querySelector('[data-col="valor_unitario"]').value)||0;
+  const qt=parseFloat(tr.querySelector('[data-col="quantidade"]').value)||0;
+  tr.querySelector('[data-col="valor_total"]').value=(vu*qt).toFixed(2);
+}
+
+async function salvarLinhaExecucao(tr){
+  const id=tr.dataset.id;
+  const dados={};
+  EXEC_COLS.forEach(col=>{
+    const inp=tr.querySelector(`[data-col="${col.key}"]`);
+    dados[col.key]=col.type==='number'?(parseFloat(inp.value)||0):inp.value;
+  });
+  try{
+    if(id){
+      await fetch(`/api/execucao/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)});
+    }else{
+      const r=await fetch('/api/execucao',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)});
+      const d=await r.json();
+      if(d.id)tr.dataset.id=d.id;
+    }
+  }catch{toast('Erro ao salvar linha.','erro');}
+}
+
+async function deletarLinhaExecucao(tr){
+  const id=tr.dataset.id;
+  if(id)await fetch(`/api/execucao/${id}`,{method:'DELETE'});
+  tr.remove();
+}
+
+function novaLinhaExecucao(){
+  const tr=criarLinhaExecucao({});
+  document.getElementById('tbody-execucao').appendChild(tr);
+  tr.querySelector('input').focus();
 }
 
 init();

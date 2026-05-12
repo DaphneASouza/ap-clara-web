@@ -18,6 +18,25 @@ async function setupDB() {
       criado_em  TIMESTAMPTZ DEFAULT NOW()
     );
 
+    CREATE TABLE IF NOT EXISTS execucao (
+      id                 SERIAL PRIMARY KEY,
+      unidade_req        TEXT,
+      projeto            TEXT,
+      nome_projeto       TEXT,
+      descricao          TEXT,
+      link_trello        TEXT,
+      num_item           TEXT,
+      produtos_servicos  TEXT,
+      complexidade       TEXT,
+      valor_unitario     NUMERIC(14,2),
+      quantidade         NUMERIC(14,2),
+      valor_total        NUMERIC(14,2),
+      numero_ap          TEXT,
+      obs                TEXT,
+      link_comprovacao   TEXT,
+      criado_em          TIMESTAMPTZ DEFAULT NOW()
+    );
+
     CREATE TABLE IF NOT EXISTS aps (
       id             SERIAL PRIMARY KEY,
       numero         TEXT NOT NULL,
