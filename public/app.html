@@ -197,6 +197,20 @@
     .ec-total-edit-box>span:first-child{font-size:11px;color:rgba(255,255,255,.45)}
     .ec-total-edit-val{font-size:18px;font-weight:800;color:var(--laranja)!important}
 
+    /* MODAL */
+    #modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:none;align-items:center;justify-content:center}
+    #modal-overlay.show{display:flex}
+    #modal-card{background:white;border-radius:14px;padding:28px 32px;box-shadow:0 8px 40px rgba(0,0,0,.22);width:100%;max-width:400px;display:flex;flex-direction:column;gap:20px;animation:modalIn .18s ease}
+    @keyframes modalIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+    #modal-titulo{font-size:17px;font-weight:800;color:var(--texto)}
+    #modal-subtitulo{font-size:13px;color:var(--laranja);font-weight:600;margin-top:2px}
+    .modal-field{display:flex;flex-direction:column;gap:5px}
+    .modal-field label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--texto-leve)}
+    #modal-actions{display:flex;gap:10px;margin-top:4px}
+    #modal-btn-gerar{flex:1;background:var(--laranja);color:white;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s}
+    #modal-btn-gerar:hover{background:var(--laranja-esc)}
+    #modal-btn-cancelar{background:var(--bg);color:var(--texto);border:1px solid var(--borda);border-radius:8px;padding:12px 18px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
+
     /* TOAST */
     #toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;color:white;z-index:9999;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s;pointer-events:none;max-width:360px;box-shadow:0 4px 20px rgba(0,0,0,.2)}
     #toast.show{opacity:1;transform:translateY(0)}
@@ -399,6 +413,23 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<div id="modal-overlay">
+  <div id="modal-card">
+    <div>
+      <div id="modal-titulo">Gerar Autorização de Produção</div>
+      <div id="modal-subtitulo"></div>
+    </div>
+    <div class="modal-field">
+      <label>Data da AP</label>
+      <input type="date" id="modal-data"/>
+    </div>
+    <div id="modal-actions">
+      <button id="modal-btn-cancelar">Cancelar</button>
+      <button id="modal-btn-gerar">📄 Gerar PDF</button>
+    </div>
   </div>
 </div>
 
@@ -1071,6 +1102,38 @@ function renderCardView(card,row){
   card.querySelector('.btn-gerar-ap').addEventListener('click',()=>gerarAPdaExecucao(row));
 }
 
+// ── Modal de confirmação de geração de AP ────────────────────────────────────
+(function(){
+  const overlay  = document.getElementById('modal-overlay');
+  const btnGerar = document.getElementById('modal-btn-gerar');
+  const btnCanc  = document.getElementById('modal-btn-cancelar');
+
+  // Fecha ao clicar no overlay fora do card
+  overlay.addEventListener('click', e => { if(e.target===overlay) fecharModal(); });
+  btnCanc.addEventListener('click', fecharModal);
+
+  function fecharModal(){ overlay.classList.remove('show'); }
+
+  // Expõe abrirModal globalmente para gerarAPdaExecucao
+  window._abrirModalAP = function(numero, onConfirm){
+    document.getElementById('modal-subtitulo').textContent = numero ? `AP ${numero}` : '';
+    const hoje = new Date().toISOString().split('T')[0];
+    document.getElementById('modal-data').value = hoje;
+    overlay.classList.add('show');
+    // Remove listener anterior e adiciona novo
+    const novo = btnGerar.cloneNode(true);
+    btnGerar.parentNode.replaceChild(novo, btnGerar);
+    // Reatribui referência local para poder substituir no próximo clique
+    document.getElementById('modal-btn-gerar').addEventListener('click', async () => {
+      const dataIso = document.getElementById('modal-data').value;
+      if(!dataIso){ toast('Selecione a data da AP.','erro'); return; }
+      const dataBr = dataIso.split('-').reverse().join('/');
+      fecharModal();
+      await onConfirm(dataBr);
+    });
+  };
+})();
+
 async function gerarAPdaExecucao(row){
   const itensExec=Array.isArray(row.itens)?row.itens:[];
   if(!itensExec.length){toast('Esta execução não tem itens.','erro');return;}
@@ -1096,35 +1159,37 @@ async function gerarAPdaExecucao(row){
   const totalBruto=itens.reduce((s,i)=>s+i.valor*i.qtd,0);
   const totalDesconto=totalBruto*(1-0.135);
 
-  const dados={
-    numero,
-    mes,
-    ano,
-    tipo,
-    sequencial :seq,
-    unidade    :row.unidade||'',
-    nomeProjeto:row.nome_projeto||'',
-    descritivo :'',
-    data       :'',
-    observacao :row.obs||'',
-    itens,
-    totalBruto,
-    totalDesconto,
-  };
-
-  try{
-    toast('Gerando AP...','info');
-    const r=await fetch('/api/aps',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)});
-    if(!r.ok){const e=await r.json();toast(e.erro||'Erro ao gerar AP.','erro');return;}
-    const blob=await r.blob();
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;
-    a.download=`AP_${numero.replace(/\./g,'_')||'execucao'}.pdf`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast('✅ AP gerada e baixada!','ok');
-  }catch(e){toast('Erro de conexão.','erro');}
+  // Abre modal de confirmação — a geração acontece no callback
+  window._abrirModalAP(numero, async (dataBr)=>{
+    const dados={
+      numero,
+      mes,
+      ano,
+      tipo,
+      sequencial :seq,
+      unidade    :row.unidade||'',
+      nomeProjeto:row.nome_projeto||'',
+      descritivo :'',
+      data       :dataBr,
+      observacao :row.obs||'',
+      itens,
+      totalBruto,
+      totalDesconto,
+    };
+    try{
+      toast('Gerando AP...','info');
+      const r=await fetch('/api/aps',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)});
+      if(!r.ok){const e=await r.json();toast(e.erro||'Erro ao gerar AP.','erro');return;}
+      const blob=await r.blob();
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url;
+      a.download=`AP_${numero.replace(/\./g,'_')||'execucao'}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast('✅ AP gerada e baixada!','ok');
+    }catch{toast('Erro de conexão.','erro');}
+  });
 }
 
 function renderCardEdit(card,row){
