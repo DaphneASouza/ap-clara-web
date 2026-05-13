@@ -69,55 +69,16 @@
     .recentes-table tbody tr:hover td{background:var(--laranja-claro)}
     .tag-ap{background:var(--laranja-claro);color:var(--laranja);padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
 
-    /* EXECUÇÃO */
-    #page-execucao{display:none;height:100%;overflow:hidden;padding:0}
-    #page-execucao.active{display:flex;flex-direction:row}
-    #exec-esq{width:340px;flex-shrink:0;background:white;border-right:1px solid var(--borda);display:flex;flex-direction:column;overflow-y:auto;padding:20px;gap:18px}
+    /* FORMULÁRIOS */
     .form-secao{display:flex;flex-direction:column;gap:10px}
     .form-secao-titulo{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--laranja);padding-bottom:6px;border-bottom:1px solid var(--laranja-med)}
     .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    .fgrid.col3{grid-template-columns:1fr 1fr 1fr}
     .fg{display:flex;flex-direction:column;gap:3px}
     .fg.span2{grid-column:span 2}
     .fg label{font-size:11px;font-weight:600;color:var(--texto-leve)}
     input,select,textarea{border:1.5px solid var(--borda);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;color:var(--texto);background:white;outline:none;transition:border-color .15s,box-shadow .15s}
     input:focus,select:focus,textarea:focus{border-color:var(--laranja);box-shadow:0 0 0 3px rgba(230,92,0,.1)}
     textarea{resize:vertical;min-height:56px}
-    #num-ap{background:var(--laranja-claro);border:1.5px solid var(--laranja-med);border-radius:8px;padding:10px;font-size:20px;font-weight:800;color:var(--laranja);text-align:center;letter-spacing:1px}
-    #totais-box{background:var(--sidebar-bg);border-radius:8px;padding:14px}
-    .tot-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px;color:rgba(255,255,255,.5)}
-    .tot-row span:last-child{font-weight:600;color:rgba(255,255,255,.8)}
-    .tot-row.destaque{border-top:1px solid rgba(255,255,255,.1);margin-top:6px;padding-top:10px;font-size:15px;font-weight:700}
-    .tot-row.destaque span{color:var(--laranja)!important}
-    #btn-gerar{background:var(--laranja);color:white;border:none;border-radius:8px;padding:13px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s}
-    #btn-gerar:hover:not(:disabled){background:var(--laranja-esc)}
-    #btn-gerar:disabled{background:#C4C4C4;cursor:not-allowed}
-    #exec-dir{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
-    #busca-bar{padding:12px 16px;background:white;border-bottom:1px solid var(--borda);display:flex;gap:10px;align-items:center;flex-shrink:0}
-    #busca-input{flex:1;background:var(--bg);border-color:transparent}
-    #busca-input:focus{background:white;border-color:var(--laranja)}
-    #busca-count{font-size:11px;color:var(--texto-leve);white-space:nowrap}
-    #lista-cardapio{flex:1;overflow-y:auto;background:white}
-    .item-card{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid #F4F4F5;gap:12px;cursor:pointer;transition:background .1s}
-    .item-card:hover{background:var(--laranja-claro)}
-    .item-num{width:32px;font-size:10px;color:var(--texto-leve);text-align:right;flex-shrink:0;font-weight:600}
-    .item-info{flex:1;min-width:0}
-    .item-titulo{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .item-comp{font-size:11px;color:var(--texto-leve);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .item-val{font-size:12px;font-weight:700;color:var(--laranja);flex-shrink:0;white-space:nowrap}
-    .btn-add{background:var(--laranja);color:white;border:none;border-radius:6px;width:28px;height:28px;font-size:18px;line-height:1;cursor:pointer;flex-shrink:0;transition:background .12s;display:flex;align-items:center;justify-content:center}
-    .btn-add:hover{background:var(--laranja-esc)}
-    #itens-header{background:var(--sidebar-bg);color:rgba(255,255,255,.7);font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:8px 16px;flex-shrink:0}
-    #tabela-wrap{height:190px;overflow-y:auto;background:white;border-top:1px solid var(--borda);flex-shrink:0}
-    #tab-itens{width:100%;border-collapse:collapse;font-size:11px}
-    #tab-itens thead th{background:var(--laranja);color:white;padding:7px 8px;text-align:left;font-weight:600;position:sticky;top:0;z-index:2}
-    #tab-itens tbody tr:nth-child(even){background:var(--laranja-claro)}
-    #tab-itens tbody td{padding:5px 8px;vertical-align:middle}
-    #tab-itens input[type="number"]{width:48px;padding:3px 5px;font-size:11px}
-    #tab-itens input[type="text"]{width:90px;padding:3px 5px;font-size:11px}
-    .td-titulo{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .td-val{text-align:right;font-weight:700;color:var(--laranja)}
-    .btn-rem{background:none;border:none;color:#DC2626;cursor:pointer;font-size:16px}
 
     /* BANCO */
     .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
@@ -248,7 +209,6 @@
   <nav id="sidebar-nav">
     <div class="nav-section">Principal</div>
     <button class="nav-item active" data-page="dashboard"><span class="icon">📊</span> Dashboard</button>
-    <button class="nav-item" data-page="execucao"><span class="icon">📝</span> Gerador de AP</button>
     <button class="nav-item" data-page="execucao-controle"><span class="icon">📋</span> Execução</button>
     <button class="nav-item" data-page="execucoes-salvas"><span class="icon">📁</span> Execuções Salvas</button>
     <div class="nav-section">Registros</div>
@@ -332,61 +292,6 @@
       </div>
     </div>
 
-    <!-- EXECUÇÃO -->
-    <div id="page-execucao">
-      <div id="exec-esq">
-        <div class="form-secao">
-          <div class="form-secao-titulo">Numeração da AP</div>
-          <div class="fgrid col3">
-            <div class="fg"><label>Mês</label><select id="f-mes"></select></div>
-            <div class="fg"><label>Tipo</label>
-              <select id="f-tipo"><option>MENSAL</option><option>AVULSO</option><option>COMPLEMENTAR</option></select>
-            </div>
-            <div class="fg"><label>Seq.</label><input type="number" id="f-seq" value="1" min="1"/></div>
-          </div>
-          <div id="num-ap">—</div>
-        </div>
-        <div class="form-secao">
-          <div class="form-secao-titulo">Identificação</div>
-          <div class="fgrid">
-            <div class="fg"><label>Ano</label><input type="number" id="f-ano"/></div>
-            <div class="fg"><label>Data</label><input type="date" id="f-data"/></div>
-            <div class="fg span2"><label>Unidade</label><input type="text" id="f-unidade" placeholder="Ex: SESC Ceilândia"/></div>
-            <div class="fg span2"><label>Nome do Projeto</label><input type="text" id="f-projeto" placeholder="Ex: Campanha Verão 2025"/></div>
-          </div>
-        </div>
-        <div class="form-secao">
-          <div class="form-secao-titulo">Descritivo dos Serviços</div>
-          <textarea id="f-descritivo" rows="4" placeholder="Descreva os serviços..."></textarea>
-        </div>
-        <div class="form-secao">
-          <div class="form-secao-titulo">Observação</div>
-          <textarea id="f-obs" rows="2" placeholder="(opcional)"></textarea>
-        </div>
-        <div id="totais-box">
-          <div class="tot-row"><span>Valor Bruto:</span><span id="tot-bruto">R$ 0,00</span></div>
-          <div class="tot-row"><span>Desconto (13,5%):</span><span id="tot-desc">– R$ 0,00</span></div>
-          <div class="tot-row destaque"><span>Total com Desconto:</span><span id="tot-final">R$ 0,00</span></div>
-        </div>
-        <button id="btn-gerar"><span>📄</span><span id="btn-txt">Gerar AP (PDF)</span></button>
-      </div>
-      <div id="exec-dir">
-        <div id="busca-bar">
-          <input id="busca-input" type="text" placeholder="🔍  Buscar no cardápio..."/>
-          <span id="busca-count">carregando...</span>
-        </div>
-        <div id="lista-cardapio"></div>
-        <div id="itens-header">Itens Adicionados</div>
-        <div id="tabela-wrap">
-          <table id="tab-itens">
-            <thead>
-              <tr><th>Nº</th><th>Descrição</th><th>Complexidade</th><th>Qtd</th><th>Período</th><th>Valor Unit.</th><th>Subtotal</th><th></th></tr>
-            </thead>
-            <tbody id="tbody-itens"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
 
     <!-- EXECUÇÃO CONTROLE -->
     <div class="page" id="page-execucao-controle">
@@ -504,9 +409,7 @@
 
 <script>
 'use strict';
-const DESCONTO=0.135;
-const MESES=["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
-let CARDAPIO=[],itens=[],banco=[],usuario=null,chartMensal=null;
+let CARDAPIO=[],banco=[],usuario=null,chartMensal=null;
 
 function brl(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
 function brlK(v){v=Number(v||0);return v>=1000?`R$ ${(v/1000).toFixed(1)}k`:brl(v)}
@@ -520,7 +423,6 @@ function toast(msg,tipo='info'){
 
 const pageTitles={
   dashboard:['Dashboard','Visão geral das Autorizações de Produção'],
-  execucao:['Gerador de AP','Preencha os dados e gere a AP em PDF'],
   'execucao-controle':['Execução','Controle de execução dos projetos'],
   'execucoes-salvas':['Execuções Salvas','Histórico e edição das execuções salvas'],
   banco:['Banco de APs','Histórico de todas as autorizações'],
@@ -533,7 +435,6 @@ document.querySelectorAll('.nav-item').forEach(btn=>{
     document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    document.getElementById('page-execucao').classList.remove('active');
     const el=document.getElementById('page-'+page);
     if(el)el.classList.add('active');
     const[title,sub]=pageTitles[page]||['',''];
@@ -560,7 +461,6 @@ async function init(){
       document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
       document.getElementById('col-usuario').style.display='';
     }
-    initForm();
     await carregarCardapio();
     await carregarDashboard();
   }catch{window.location.href='/';}
@@ -612,121 +512,10 @@ async function carregarDashboard(){
   }catch(e){console.error(e);}
 }
 
-function initForm(){
-  const sel=document.getElementById('f-mes');
-  MESES.forEach(m=>{const o=document.createElement('option');o.value=o.textContent=m;sel.appendChild(o);});
-  sel.selectedIndex=new Date().getMonth();
-  document.getElementById('f-ano').value=new Date().getFullYear();
-  document.getElementById('f-data').value=new Date().toISOString().split('T')[0];
-  atualizarNum();
-  ['f-mes','f-tipo','f-seq'].forEach(id=>{
-    document.getElementById(id).addEventListener('input',atualizarNum);
-    document.getElementById(id).addEventListener('change',atualizarNum);
-  });
-}
-
-function atualizarNum(){
-  const mes=document.getElementById('f-mes').value;
-  const tipo=document.getElementById('f-tipo').value;
-  const seq=document.getElementById('f-seq').value;
-  document.getElementById('num-ap').textContent=`${mes}.${tipo}.${seq}`;
-}
-
 async function carregarCardapio(){
   const r=await fetch('/api/cardapio');
   CARDAPIO=await r.json();
-  renderCardapio(CARDAPIO);
 }
-
-function renderCardapio(lista){
-  const c=document.getElementById('lista-cardapio');
-  c.innerHTML='';
-  document.getElementById('busca-count').textContent=`${lista.length} itens`;
-  lista.forEach(item=>{
-    const div=document.createElement('div');
-    div.className='item-card';
-    div.innerHTML=`<span class="item-num">${item.id}</span><div class="item-info"><div class="item-titulo" title="${item.titulo}">${item.titulo}</div><div class="item-comp">${item.complexidade}</div></div><span class="item-val">${brl(item.valor)}</span><button class="btn-add">+</button>`;
-    div.querySelector('.btn-add').addEventListener('click',e=>{e.stopPropagation();adicionarItem(item);});
-    div.addEventListener('dblclick',()=>adicionarItem(item));
-    c.appendChild(div);
-  });
-}
-
-document.getElementById('busca-input').addEventListener('input',function(){
-  const q=this.value.toLowerCase().trim();
-  renderCardapio(q?CARDAPIO.filter(i=>i.titulo.toLowerCase().includes(q)||i.complexidade.toLowerCase().includes(q)||String(i.id).includes(q)):CARDAPIO);
-});
-
-function adicionarItem(item){
-  const ex=itens.find(i=>i.id===item.id);
-  if(ex)ex.qtd=(ex.qtd||1)+1;
-  else itens.push({...item,qtd:1,periodo:''});
-  renderItens();calcTotais();
-}
-
-function renderItens(){
-  const tbody=document.getElementById('tbody-itens');
-  tbody.innerHTML='';
-  itens.forEach((item,idx)=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${item.id}</td><td class="td-titulo" title="${item.titulo}">${item.titulo}</td><td class="td-titulo">${item.complexidade}</td><td><input type="number" value="${item.qtd||1}" min="1" data-idx="${idx}" data-field="qtd"/></td><td><input type="text" value="${item.periodo||''}" placeholder="—" data-idx="${idx}" data-field="periodo"/></td><td class="td-val">${brl(item.valor)}</td><td class="td-val">${brl(item.valor*(item.qtd||1))}</td><td><button class="btn-rem" data-idx="${idx}">×</button></td>`;
-    tbody.appendChild(tr);
-  });
-  tbody.querySelectorAll('input').forEach(inp=>{
-    inp.addEventListener('change',function(){
-      const idx=+this.dataset.idx,field=this.dataset.field;
-      if(field==='qtd')itens[idx].qtd=Math.max(1,+this.value||1);
-      else itens[idx][field]=this.value;
-      renderItens();calcTotais();
-    });
-  });
-  tbody.querySelectorAll('.btn-rem').forEach(btn=>{
-    btn.addEventListener('click',function(){itens.splice(+this.dataset.idx,1);renderItens();calcTotais();});
-  });
-}
-
-function calcTotais(){
-  const bruto=itens.reduce((s,i)=>s+i.valor*(i.qtd||1),0);
-  const final=bruto*(1-DESCONTO);
-  document.getElementById('tot-bruto').textContent=brl(bruto);
-  document.getElementById('tot-desc').textContent=`– ${brl(bruto-final)}`;
-  document.getElementById('tot-final').textContent=brl(final);
-}
-
-document.getElementById('btn-gerar').addEventListener('click',async()=>{
-  if(!itens.length){toast('Adicione pelo menos um item!','erro');return;}
-  const nomeProjeto=document.getElementById('f-projeto').value.trim();
-  if(!nomeProjeto){toast('Informe o Nome do Projeto!','erro');document.getElementById('f-projeto').focus();return;}
-  const bruto=itens.reduce((s,i)=>s+i.valor*(i.qtd||1),0);
-  const dados={
-    numero:document.getElementById('num-ap').textContent,
-    mes:document.getElementById('f-mes').value,
-    ano:document.getElementById('f-ano').value,
-    tipo:document.getElementById('f-tipo').value,
-    sequencial:document.getElementById('f-seq').value,
-    unidade:document.getElementById('f-unidade').value.trim(),
-    nomeProjeto,
-    descritivo:document.getElementById('f-descritivo').value.trim(),
-    data:fmtData(document.getElementById('f-data').value),
-    observacao:document.getElementById('f-obs').value.trim(),
-    itens,totalBruto:bruto,totalDesconto:bruto*(1-DESCONTO),
-  };
-  const btn=document.getElementById('btn-gerar');
-  btn.disabled=true;document.getElementById('btn-txt').textContent='Gerando...';
-  try{
-    const r=await fetch('/api/aps',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)});
-    if(!r.ok){const e=await r.json();toast(`Erro: ${e.erro}`,'erro');return;}
-    const blob=await r.blob();
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');
-    a.href=url;a.download=`AP_${dados.numero.replace(/\./g,'_')}.pdf`;a.click();
-    URL.revokeObjectURL(url);
-    toast(`✅ AP ${dados.numero} gerada!`,'ok');
-  }catch{toast('Erro de conexão.','erro');}
-  finally{btn.disabled=false;document.getElementById('btn-txt').textContent='Gerar AP (PDF)';}
-});
-
-function fmtData(iso){if(!iso)return'';const[y,m,d]=iso.split('-');return`${d}/${m}/${y}`;}
 
 async function carregarBanco(){
   try{
