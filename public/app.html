@@ -178,7 +178,14 @@
     .btn-del-card:hover{background:#DC2626;color:white}
     .btn-gerar-ap{background:#DCFCE7;color:#16A34A}
     .btn-gerar-ap:hover{background:#16A34A;color:white}
-    .exec-card-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
+    .exec-card-toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer;user-select:none;background:white;transition:background .15s;border-top:1px solid var(--borda)}
+    .exec-card-toggle:hover{background:var(--bg)}
+    .exec-card-toggle-nome{font-size:13px;font-weight:700;color:var(--texto);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:8px}
+    .exec-card-chevron{font-size:11px;color:var(--texto-leve);transition:transform .25s ease;flex-shrink:0}
+    .exec-card-chevron.open{transform:rotate(180deg)}
+    .exec-card-collapse{max-height:0;overflow:hidden;transition:max-height .35s ease}
+    .exec-card-collapse.open{max-height:4000px}
+    .exec-card-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
     .exec-card-nome{font-size:14px;font-weight:700}
     .exec-card-itens-list{display:flex;flex-direction:column;gap:6px}
     .exec-card-item-row{background:var(--bg);border-radius:6px;padding:8px 12px;font-size:12px}
@@ -1077,19 +1084,32 @@ function renderCardView(card,row){
         <button class="btn-del-card">🗑 Excluir</button>
       </div>
     </div>
-    <div class="exec-card-body">
-      <div class="exec-card-nome">${row.nome_projeto||'(sem nome)'}</div>
-      ${itensHtml}
-      <div class="exec-card-total">
-        <span class="exec-card-total-label">Valor Total (desc. 13,5%)</span>
-        <span class="exec-card-total-val">${brl(total)}</span>
+    <div class="exec-card-toggle">
+      <span class="exec-card-toggle-nome">${row.nome_projeto||'(sem nome)'}</span>
+      <span class="exec-card-chevron">▼</span>
+    </div>
+    <div class="exec-card-collapse">
+      <div class="exec-card-body">
+        ${itensHtml}
+        <div class="exec-card-total">
+          <span class="exec-card-total-label">Valor Total (desc. 13,5%)</span>
+          <span class="exec-card-total-val">${brl(total)}</span>
+        </div>
+        ${(row.numero_ap||row.obs)?`<div style="display:flex;flex-direction:column;gap:4px;padding:8px 12px;background:var(--bg);border-radius:6px;font-size:12px">
+          ${row.numero_ap?`<div><span style="font-weight:700;color:var(--texto-leve);font-size:10px;text-transform:uppercase">Número AP</span> <span style="font-weight:600">${row.numero_ap}</span></div>`:''}
+          ${row.obs?`<div><span style="font-weight:700;color:var(--texto-leve);font-size:10px;text-transform:uppercase">Obs</span> <span>${row.obs}</span></div>`:''}
+        </div>`:''}
+        <div style="font-size:10px;color:var(--texto-leve);text-align:right;margin-top:2px">${row.usuario_nome?'Por '+row.usuario_nome:''} ${row.criado_em?'· '+new Date(row.criado_em).toLocaleDateString('pt-BR'):''}</div>
       </div>
-      ${(row.numero_ap||row.obs)?`<div style="display:flex;flex-direction:column;gap:4px;padding:8px 12px;background:var(--bg);border-radius:6px;font-size:12px">
-        ${row.numero_ap?`<div><span style="font-weight:700;color:var(--texto-leve);font-size:10px;text-transform:uppercase">Número AP</span> <span style="font-weight:600">${row.numero_ap}</span></div>`:''}
-        ${row.obs?`<div><span style="font-weight:700;color:var(--texto-leve);font-size:10px;text-transform:uppercase">Obs</span> <span>${row.obs}</span></div>`:''}
-      </div>`:''}
-      <div style="font-size:10px;color:var(--texto-leve);text-align:right;margin-top:2px">${row.usuario_nome?'Por '+row.usuario_nome:''} ${row.criado_em?'· '+new Date(row.criado_em).toLocaleDateString('pt-BR'):''}</div>
     </div>`;
+
+  // Toggle colapso ao clicar na linha do nome
+  card.querySelector('.exec-card-toggle').addEventListener('click',()=>{
+    const collapse=card.querySelector('.exec-card-collapse');
+    const chevron =card.querySelector('.exec-card-chevron');
+    const open=collapse.classList.toggle('open');
+    chevron.classList.toggle('open',open);
+  });
 
   card.querySelector('.btn-del-card').addEventListener('click',async()=>{
     if(!confirm('Excluir esta execução?'))return;
