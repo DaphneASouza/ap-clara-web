@@ -163,6 +163,36 @@ app.get('/api/aps', requireAuth, async (req, res) => {
   }
 });
 
+// PUT /api/aps/:id — edita campos básicos de uma AP
+app.put('/api/aps/:id', requireAuth, async (req, res) => {
+  const u = req.session.usuario;
+  const { numero, nome_projeto, data_ap, observacao } = req.body;
+  try {
+    const check = await pool.query(`SELECT usuario_id FROM aps WHERE id = $1`, [req.params.id]);
+    if (!check.rows.length) return res.status(404).json({ erro: 'AP não encontrada' });
+    if (u.nivel !== 'admin' && check.rows[0].usuario_id !== u.id)
+      return res.status(403).json({ erro: 'Sem permissão' });
+    await pool.query(
+      `UPDATE aps SET numero=$1, nome_projeto=$2, data_ap=$3, observacao=$4 WHERE id=$5`,
+      [numero, nome_projeto, data_ap || null, observacao || null, req.params.id]
+    );
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ erro: e.message }); }
+});
+
+// DELETE /api/aps/:id
+app.delete('/api/aps/:id', requireAuth, async (req, res) => {
+  const u = req.session.usuario;
+  try {
+    const check = await pool.query(`SELECT usuario_id FROM aps WHERE id = $1`, [req.params.id]);
+    if (!check.rows.length) return res.status(404).json({ erro: 'AP não encontrada' });
+    if (u.nivel !== 'admin' && check.rows[0].usuario_id !== u.id)
+      return res.status(403).json({ erro: 'Sem permissão' });
+    await pool.query(`DELETE FROM aps WHERE id = $1`, [req.params.id]);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ erro: e.message }); }
+});
+
 // GET /api/aps/:id/pdf — baixa PDF de AP já existente
 app.get('/api/aps/:id/pdf', requireAuth, async (req, res) => {
   const u = req.session.usuario;
