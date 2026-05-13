@@ -266,7 +266,7 @@ async function gerarPDF(dados, destino) {
 
     browser = await puppeteer.launch({
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-      headless: true,
+      headless: 'new',
     });
     const page = await browser.newPage();
 
