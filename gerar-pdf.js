@@ -284,8 +284,9 @@ async function gerarPDF(dados, destino) {
         const qtd   = Number(item.qtd) || 1;
         const per   = item.periodo || `${dados.mes}/${dados.ano}`;
 
-        // valor do cardápio já é o preço com desconto (13,5%)
-        const vDsc  = Number(ci.valor || item.valor || 0);
+        // item.valor já vem com desconto de 13,5% aplicado
+        // vEst = preço SEM desconto (estimado) = valor / 0.865
+        const vDsc  = Number(item.valor || ci.valor || 0);
         const vEst  = vDsc > 0 ? vDsc / (1 - 0.135) : 0;
         const vTDsc = vDsc * qtd;
         const vTEst = vEst * qtd;

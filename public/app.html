@@ -1156,8 +1156,9 @@ async function gerarAPdaExecucao(row){
     periodo     :'',
   }));
 
-  const totalBruto=itens.reduce((s,i)=>s+i.valor*i.qtd,0);
-  const totalDesconto=totalBruto*(1-0.135);
+  // i.valor já tem desconto de 13,5% aplicado
+  const totalDesconto=itens.reduce((s,i)=>s+i.valor*i.qtd,0);          // soma dos valores COM desconto
+  const totalBruto   =itens.reduce((s,i)=>s+(i.valor/(1-0.135))*i.qtd,0); // soma dos valores SEM desconto (estimado)
 
   // Abre modal de confirmação — a geração acontece no callback
   window._abrirModalAP(numero, async (dataBr)=>{
