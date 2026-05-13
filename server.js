@@ -281,13 +281,13 @@ app.get('/api/execucao', requireAuth, async (req, res) => {
 
 // POST /api/execucao
 app.post('/api/execucao', requireAuth, async (req, res) => {
-  const { unidade, projeto, nome_projeto, itens } = req.body;
+  const { unidade, projeto, nome_projeto, itens, numero_ap, obs } = req.body;
   const usuario_id = req.session.usuario.id;
   try {
     const r = await pool.query(
-      `INSERT INTO execucao (unidade, projeto, nome_projeto, itens, usuario_id)
-       VALUES ($1,$2,$3,$4,$5) RETURNING id`,
-      [unidade, projeto, nome_projeto, JSON.stringify(itens || []), usuario_id]
+      `INSERT INTO execucao (unidade, projeto, nome_projeto, itens, numero_ap, obs, usuario_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
+      [unidade, projeto, nome_projeto, JSON.stringify(itens || []), numero_ap || null, obs || null, usuario_id]
     );
     res.json({ id: r.rows[0].id });
   } catch(e) { res.status(500).json({ erro: e.message }); }
@@ -296,15 +296,15 @@ app.post('/api/execucao', requireAuth, async (req, res) => {
 // PUT /api/execucao/:id
 app.put('/api/execucao/:id', requireAuth, async (req, res) => {
   const u = req.session.usuario;
-  const { unidade, projeto, nome_projeto, itens } = req.body;
+  const { unidade, projeto, nome_projeto, itens, numero_ap, obs } = req.body;
   try {
     const check = await pool.query(`SELECT usuario_id FROM execucao WHERE id=$1`, [req.params.id]);
     if (!check.rows.length) return res.status(404).json({ erro: 'Não encontrado' });
     if (u.nivel !== 'admin' && check.rows[0].usuario_id !== u.id)
       return res.status(403).json({ erro: 'Sem permissão' });
     await pool.query(
-      `UPDATE execucao SET unidade=$1, projeto=$2, nome_projeto=$3, itens=$4 WHERE id=$5`,
-      [unidade, projeto, nome_projeto, JSON.stringify(itens || []), req.params.id]
+      `UPDATE execucao SET unidade=$1, projeto=$2, nome_projeto=$3, itens=$4, numero_ap=$5, obs=$6 WHERE id=$7`,
+      [unidade, projeto, nome_projeto, JSON.stringify(itens || []), numero_ap || null, obs || null, req.params.id]
     );
     res.json({ ok: true });
   } catch(e) { res.status(500).json({ erro: e.message }); }

@@ -38,19 +38,22 @@ async function setupDB() {
     );
   `);
 
-  // Recria tabela execucao com nova estrutura (header + itens JSONB)
-  await pool.query(`DROP TABLE IF EXISTS execucao`);
+  // Setup tabela execucao com migrações seguras
   await pool.query(`
-    CREATE TABLE execucao (
+    CREATE TABLE IF NOT EXISTS execucao (
       id           SERIAL PRIMARY KEY,
       unidade      TEXT,
       projeto      TEXT,
       nome_projeto TEXT,
       itens        JSONB DEFAULT '[]',
+      numero_ap    TEXT,
+      obs          TEXT,
       usuario_id   INTEGER REFERENCES usuarios(id),
       criado_em    TIMESTAMPTZ DEFAULT NOW()
     )
   `);
+  await pool.query(`ALTER TABLE execucao ADD COLUMN IF NOT EXISTS numero_ap TEXT`);
+  await pool.query(`ALTER TABLE execucao ADD COLUMN IF NOT EXISTS obs TEXT`);
 
   // Cria admin Daphne se não existir
   const bcrypt = require('bcrypt');

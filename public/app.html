@@ -396,10 +396,19 @@
             <button id="btn-add-item-exec">+ Adicionar Item</button>
           </div>
           <div id="ec-itens-container"></div>
-          <div id="ec-total-box">
-            <span>Valor Total (desc. 13,5%)</span>
-            <span id="ec-total-label">R$ 0,00</span>
+        </div>
+
+        <div class="form-secao" style="background:white;border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)">
+          <div class="form-secao-titulo">Autorização de Produção</div>
+          <div class="fgrid">
+            <div class="fg span2"><label>Número AP</label><input type="text" id="ec-numero-ap" placeholder="Ex: MAIO.MENSAL.853"/></div>
+            <div class="fg span2"><label>Observações</label><textarea id="ec-obs" rows="2" placeholder="(opcional)"></textarea></div>
           </div>
+        </div>
+
+        <div id="ec-total-box">
+          <span>Valor Total (desc. 13,5%)</span>
+          <span id="ec-total-label">R$ 0,00</span>
         </div>
 
         <button id="btn-salvar-exec"><span>💾</span> Salvar Execução</button>
@@ -796,8 +805,6 @@ function criarCardItem(item,idx,itensArr,onUpdate){
         <div class="fg span2"><label>Link do Trello</label><input type="text" data-f="link_trello" value="${item.link_trello||''}" placeholder="https://trello.com/..."/></div>
         <div class="fg"><label>Quantidade</label><input type="number" data-f="quantidade" value="${item.quantidade||1}" min="1" style="text-align:center"/></div>
         <div class="fg"><label>Valor Total</label><input type="text" data-f="valor_total_disp" value="${brl((item.valor_unitario||0)*(item.quantidade||1))}" readonly style="background:var(--laranja-claro);color:var(--laranja);font-weight:700"/></div>
-        <div class="fg span2"><label>Número AP</label><input type="text" data-f="numero_ap" value="${item.numero_ap||''}" placeholder="Ex: MARÇO.MENSAL.1"/></div>
-        <div class="fg span2"><label>Observações</label><textarea data-f="obs" rows="2" placeholder="(opcional)">${item.obs||''}</textarea></div>
         <div class="fg span2"><label>Link Trello Comprovação</label><input type="text" data-f="link_trello_comprovacao" value="${item.link_trello_comprovacao||''}" placeholder="https://trello.com/..."/></div>
       </div>
     </div>`;
@@ -868,7 +875,7 @@ function atualizarTotalizador(){
 }
 
 document.getElementById('btn-add-item-exec').addEventListener('click',()=>{
-  ecItens.push({descricao_projeto:'',link_trello:'',item_id:'',produto:'',complexidade:'',valor_unitario:0,quantidade:1,valor_total:0,numero_ap:'',obs:'',link_trello_comprovacao:''});
+  ecItens.push({descricao_projeto:'',link_trello:'',item_id:'',produto:'',complexidade:'',valor_unitario:0,quantidade:1,valor_total:0,link_trello_comprovacao:''});
   renderFormItens();
   const container=document.getElementById('ec-itens-container');
   if(container)container.lastElementChild?.scrollIntoView({behavior:'smooth',block:'start'});
@@ -886,6 +893,8 @@ document.getElementById('btn-salvar-exec').addEventListener('click',async()=>{
     unidade:document.getElementById('ec-unidade').value,
     projeto:document.getElementById('ec-projeto').value,
     nome_projeto:nomeProjeto,
+    numero_ap:document.getElementById('ec-numero-ap').value.trim(),
+    obs:document.getElementById('ec-obs').value.trim(),
     itens:ecItens,
   };
   try{
@@ -894,6 +903,8 @@ document.getElementById('btn-salvar-exec').addEventListener('click',async()=>{
     toast('✅ Execução salva!','ok');
     ecItens=[];
     document.getElementById('ec-nome-projeto').value='';
+    document.getElementById('ec-numero-ap').value='';
+    document.getElementById('ec-obs').value='';
     renderFormItens();
     document.querySelector('[data-page="execucoes-salvas"]').click();
   }catch{toast('Erro de conexão.','erro');}
@@ -942,7 +953,6 @@ function renderCardView(card,row){
             ${it.item_id?`<span>Nº ${it.item_id}</span>`:''}
             <span>Qtd: ${it.quantidade||1}</span>
             <span style="color:var(--laranja);font-weight:700">${brl(it.valor_total||0)}</span>
-            ${it.numero_ap?`<span>AP: ${it.numero_ap}</span>`:''}
           </div>
           <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
             ${it.link_trello?`<a href="${it.link_trello}" target="_blank" style="font-size:11px;color:var(--azul);text-decoration:none">🔗 Trello</a>`:''}
@@ -969,6 +979,10 @@ function renderCardView(card,row){
         <span class="exec-card-total-label">Valor Total (desc. 13,5%)</span>
         <span class="exec-card-total-val">${brl(total)}</span>
       </div>
+      ${(row.numero_ap||row.obs)?`<div style="display:flex;flex-direction:column;gap:4px;padding:8px 12px;background:var(--bg);border-radius:6px;font-size:12px">
+        ${row.numero_ap?`<div><span style="font-weight:700;color:var(--texto-leve);font-size:10px;text-transform:uppercase">Número AP</span> <span style="font-weight:600">${row.numero_ap}</span></div>`:''}
+        ${row.obs?`<div><span style="font-weight:700;color:var(--texto-leve);font-size:10px;text-transform:uppercase">Obs</span> <span>${row.obs}</span></div>`:''}
+      </div>`:''}
       <div style="font-size:10px;color:var(--texto-leve);text-align:right;margin-top:2px">${row.usuario_nome?'Por '+row.usuario_nome:''} ${row.criado_em?'· '+new Date(row.criado_em).toLocaleDateString('pt-BR'):''}</div>
     </div>`;
 
@@ -1029,6 +1043,11 @@ function renderCardEdit(card,row){
         <button class="btn-add-edit-item" style="background:var(--laranja);color:white;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">+ Adicionar Item</button>
       </div>
       <div class="edit-itens-container" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div class="form-secao-titulo" style="margin-top:8px">Autorização de Produção</div>
+      <div class="fgrid">
+        <div class="fg span2"><label>Número AP</label><input type="text" class="edit-f" data-f="numero_ap" value="${row.numero_ap||''}" placeholder="Ex: MAIO.MENSAL.853"/></div>
+        <div class="fg span2"><label>Observações</label><textarea class="edit-f" data-f="obs" rows="2" placeholder="(opcional)">${row.obs||''}</textarea></div>
+      </div>
       <div class="ec-total-edit-box">
         <span>Valor Total (desc. 13,5%)</span>
         <span class="ec-total-edit-val">R$ 0,00</span>
@@ -1042,7 +1061,7 @@ function renderCardEdit(card,row){
   renderEditItens();
 
   card.querySelector('.btn-add-edit-item').addEventListener('click',()=>{
-    editItens.push({descricao_projeto:'',link_trello:'',item_id:'',produto:'',complexidade:'',valor_unitario:0,quantidade:1,valor_total:0,numero_ap:'',obs:'',link_trello_comprovacao:''});
+    editItens.push({descricao_projeto:'',link_trello:'',item_id:'',produto:'',complexidade:'',valor_unitario:0,quantidade:1,valor_total:0,link_trello_comprovacao:''});
     renderEditItens();
   });
 
@@ -1054,6 +1073,8 @@ function renderCardEdit(card,row){
       unidade:getF('unidade').value,
       projeto:getF('projeto').value,
       nome_projeto:getF('nome_projeto').value.trim(),
+      numero_ap:getF('numero_ap').value.trim(),
+      obs:getF('obs').value.trim(),
       itens:editItens,
     };
     try{
