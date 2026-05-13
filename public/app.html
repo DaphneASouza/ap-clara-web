@@ -125,6 +125,7 @@
     .page-header p{font-size:12px;color:var(--texto-leve);margin-top:2px}
     .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
     .toolbar input{flex:1;max-width:300px}
+    #exec-busca{flex:1;max-width:none}
     .btn-refresh{background:var(--laranja);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer}
     .btn-refresh:hover{background:var(--laranja-esc)}
     .table-card{background:white;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
@@ -436,6 +437,10 @@
       <div class="page-header">
         <div><h2>Execuções Salvas</h2><p>Histórico e edição de todas as execuções</p></div>
         <span id="exec-salvas-count" style="font-size:11px;color:var(--texto-leve)"></span>
+      </div>
+      <div class="toolbar">
+        <input type="text" id="exec-busca" placeholder="🔍  Buscar em todas as execuções..."/>
+        <span id="exec-busca-count" style="font-size:11px;color:var(--texto-leve);white-space:nowrap"></span>
       </div>
       <div class="exec-cards-grid" id="exec-cards-grid"></div>
     </div>
@@ -929,11 +934,74 @@ document.getElementById('btn-salvar-exec').addEventListener('click',async()=>{
 // ── Execuções Salvas ─────────────────────────────────────────────────────────
 let execSalvasData=[];
 
+function filtrarExecucoes(q){
+  const t=q.toLowerCase();
+  return execSalvasData.filter(row=>{
+    if((row.unidade||'').toLowerCase().includes(t))return true;
+    if((row.projeto||'').toLowerCase().includes(t))return true;
+    if((row.nome_projeto||'').toLowerCase().includes(t))return true;
+    if((row.numero_ap||'').toLowerCase().includes(t))return true;
+    if((row.obs||'').toLowerCase().includes(t))return true;
+    const itens=Array.isArray(row.itens)?row.itens:[];
+    return itens.some(i=>
+      (i.descricao_projeto||'').toLowerCase().includes(t)||
+      (i.link_trello||'').toLowerCase().includes(t)||
+      (i.produto||'').toLowerCase().includes(t)||
+      (i.complexidade||'').toLowerCase().includes(t)||
+      (i.link_trello_comprovacao||'').toLowerCase().includes(t)
+    );
+  });
+}
+
+function renderResultadosBusca(resultados,termo){
+  const grid=document.getElementById('exec-cards-grid');
+  grid.innerHTML='';
+  if(!resultados.length){
+    grid.innerHTML=`<div style="text-align:center;padding:48px;color:var(--texto-leve)">Nenhuma execução encontrada para "<strong>${termo}</strong>"</div>`;
+    return;
+  }
+  const header=document.createElement('div');
+  header.style.cssText='font-size:13px;font-weight:600;color:var(--texto-leve);padding:2px 0 8px';
+  header.textContent=`${resultados.length} resultado(s) para "${termo}"`;
+  grid.appendChild(header);
+  const cardsGrid=document.createElement('div');
+  cardsGrid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:14px';
+  resultados.forEach(row=>{
+    const card=document.createElement('div');
+    card.className='exec-card';
+    card.dataset.id=row.id;
+    renderCardView(card,row);
+    cardsGrid.appendChild(card);
+  });
+  grid.appendChild(cardsGrid);
+}
+
+document.getElementById('exec-busca').addEventListener('input',function(){
+  const q=this.value.trim();
+  const countEl=document.getElementById('exec-busca-count');
+  if(!q){
+    countEl.textContent='';
+    renderExecCards();
+    return;
+  }
+  const resultados=filtrarExecucoes(q);
+  countEl.textContent=`${resultados.length} resultado(s)`;
+  renderResultadosBusca(resultados,q);
+});
+
 async function carregarExecucoesSalvas(){
   try{
     const r=await fetch('/api/execucao');
     execSalvasData=await r.json();
-    renderExecCards();
+    document.getElementById('exec-salvas-count').textContent=`${execSalvasData.length} registro(s)`;
+    const q=(document.getElementById('exec-busca')?.value||'').trim();
+    if(q){
+      const resultados=filtrarExecucoes(q);
+      document.getElementById('exec-busca-count').textContent=`${resultados.length} resultado(s)`;
+      renderResultadosBusca(resultados,q);
+    }else{
+      renderExecCards();
+    }
   }catch{toast('Erro ao carregar execuções.','erro');}
 }
 
@@ -947,9 +1015,7 @@ function extrairMes(numero_ap){
 
 function renderExecCards(){
   const grid=document.getElementById('exec-cards-grid');
-  const count=document.getElementById('exec-salvas-count');
   if(!grid)return;
-  count.textContent=`${execSalvasData.length} registro(s)`;
   grid.innerHTML='';
   if(!execSalvasData.length){
     grid.innerHTML='<div style="text-align:center;padding:48px;color:var(--texto-leve)">Nenhuma execução salva ainda.</div>';
