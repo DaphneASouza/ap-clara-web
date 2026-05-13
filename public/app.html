@@ -187,11 +187,13 @@
     .badge-ec-unidade{background:var(--azul-claro);color:var(--azul)}
     .badge-ec-projeto{background:var(--roxo-claro);color:var(--roxo)}
     .exec-card-btns{display:flex;gap:6px;flex-shrink:0}
-    .btn-edit-card,.btn-del-card{border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s}
+    .btn-edit-card,.btn-del-card,.btn-gerar-ap{border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s}
     .btn-edit-card{background:var(--laranja-claro);color:var(--laranja)}
     .btn-edit-card:hover{background:var(--laranja);color:white}
     .btn-del-card{background:#FEE2E2;color:#DC2626}
     .btn-del-card:hover{background:#DC2626;color:white}
+    .btn-gerar-ap{background:#DCFCE7;color:#16A34A}
+    .btn-gerar-ap:hover{background:#16A34A;color:white}
     .exec-card-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
     .exec-card-nome{font-size:14px;font-weight:700}
     .exec-card-itens-list{display:flex;flex-direction:column;gap:6px}
@@ -968,6 +970,7 @@ function renderCardView(card,row){
         <span class="badge-ec badge-ec-projeto">${row.projeto||'—'}</span>
       </div>
       <div class="exec-card-btns">
+        <button class="btn-gerar-ap">📄 Gerar AP</button>
         <button class="btn-edit-card">✏️ Editar</button>
         <button class="btn-del-card">🗑 Excluir</button>
       </div>
@@ -994,6 +997,63 @@ function renderCardView(card,row){
     renderExecCards();
   });
   card.querySelector('.btn-edit-card').addEventListener('click',()=>renderCardEdit(card,row));
+  card.querySelector('.btn-gerar-ap').addEventListener('click',()=>gerarAPdaExecucao(row));
+}
+
+async function gerarAPdaExecucao(row){
+  const itensExec=Array.isArray(row.itens)?row.itens:[];
+  if(!itensExec.length){toast('Esta execução não tem itens.','erro');return;}
+
+  // Parseia numero_ap no formato MES.TIPO.SEQ (ex: MAIO.MENSAL.853)
+  const numero=row.numero_ap||'';
+  const partes=numero.split('.');
+  const mes  =partes[0]||'';
+  const tipo =partes[1]||'MENSAL';
+  const seq  =partes[2]||'1';
+  const ano  =String(new Date().getFullYear());
+
+  // Mapeia itens para o formato do Gerador de AP
+  const itens=itensExec.map(i=>({
+    id          :i.item_id||'',
+    titulo      :i.produto||'',
+    complexidade:i.complexidade||'',
+    valor       :parseFloat(i.valor_unitario)||0,
+    qtd         :parseInt(i.quantidade)||1,
+    periodo     :'',
+  }));
+
+  const totalBruto=itens.reduce((s,i)=>s+i.valor*i.qtd,0);
+  const totalDesconto=totalBruto*(1-0.135);
+
+  const dados={
+    numero,
+    mes,
+    ano,
+    tipo,
+    sequencial :seq,
+    unidade    :row.unidade||'',
+    nomeProjeto:row.nome_projeto||'',
+    descritivo :'',
+    data       :'',
+    observacao :row.obs||'',
+    itens,
+    totalBruto,
+    totalDesconto,
+  };
+
+  try{
+    toast('Gerando AP...','info');
+    const r=await fetch('/api/aps',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)});
+    if(!r.ok){const e=await r.json();toast(e.erro||'Erro ao gerar AP.','erro');return;}
+    const blob=await r.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`AP_${numero.replace(/\./g,'_')||'execucao'}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('✅ AP gerada e baixada!','ok');
+  }catch(e){toast('Erro de conexão.','erro');}
 }
 
 function renderCardEdit(card,row){
