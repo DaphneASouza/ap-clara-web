@@ -18,25 +18,6 @@ async function setupDB() {
       criado_em  TIMESTAMPTZ DEFAULT NOW()
     );
 
-    CREATE TABLE IF NOT EXISTS execucao (
-      id                 SERIAL PRIMARY KEY,
-      unidade_req        TEXT,
-      projeto            TEXT,
-      nome_projeto       TEXT,
-      descricao          TEXT,
-      link_trello        TEXT,
-      num_item           TEXT,
-      produtos_servicos  TEXT,
-      complexidade       TEXT,
-      valor_unitario     NUMERIC(14,2),
-      quantidade         NUMERIC(14,2),
-      valor_total        NUMERIC(14,2),
-      numero_ap          TEXT,
-      obs                TEXT,
-      link_comprovacao   TEXT,
-      criado_em          TIMESTAMPTZ DEFAULT NOW()
-    );
-
     CREATE TABLE IF NOT EXISTS aps (
       id             SERIAL PRIMARY KEY,
       numero         TEXT NOT NULL,
@@ -57,8 +38,19 @@ async function setupDB() {
     );
   `);
 
-  // Garante coluna itens na tabela execucao (migracao segura)
-  await pool.query(`ALTER TABLE execucao ADD COLUMN IF NOT EXISTS itens JSONB DEFAULT '[]'`);
+  // Recria tabela execucao com nova estrutura (header + itens JSONB)
+  await pool.query(`DROP TABLE IF EXISTS execucao`);
+  await pool.query(`
+    CREATE TABLE execucao (
+      id           SERIAL PRIMARY KEY,
+      unidade      TEXT,
+      projeto      TEXT,
+      nome_projeto TEXT,
+      itens        JSONB DEFAULT '[]',
+      usuario_id   INTEGER REFERENCES usuarios(id),
+      criado_em    TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
 
   // Cria admin Daphne se não existir
   const bcrypt = require('bcrypt');

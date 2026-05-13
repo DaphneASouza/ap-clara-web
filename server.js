@@ -255,52 +255,69 @@ app.delete('/api/usuarios/:id', requireAdmin, async (req, res) => {
 // EXECUÇÃO CONTROLE
 // ════════════════════════════════════════════════════════════════════════════
 
-const EXEC_FIELDS = [
-  'unidade_req','projeto','nome_projeto','descricao','link_trello','num_item',
-  'produtos_servicos','complexidade','valor_unitario','quantidade','valor_total',
-  'numero_ap','obs','link_comprovacao','itens',
-];
-
-function prepExecBody(body) {
-  const b = { ...body };
-  if (b.itens !== undefined && typeof b.itens !== 'string') {
-    b.itens = JSON.stringify(b.itens);
-  }
-  return b;
-}
-
+// GET /api/execucao — admin vê todas, usuário vê as suas
 app.get('/api/execucao', requireAuth, async (req, res) => {
+  const u = req.session.usuario;
   try {
-    const r = await pool.query(`SELECT * FROM execucao ORDER BY id`);
+    let r;
+    if (u.nivel === 'admin') {
+      r = await pool.query(
+        `SELECT e.*, u.nome as usuario_nome
+         FROM execucao e LEFT JOIN usuarios u ON e.usuario_id = u.id
+         ORDER BY e.criado_em DESC`
+      );
+    } else {
+      r = await pool.query(
+        `SELECT e.*, u.nome as usuario_nome
+         FROM execucao e LEFT JOIN usuarios u ON e.usuario_id = u.id
+         WHERE e.usuario_id = $1
+         ORDER BY e.criado_em DESC`,
+        [u.id]
+      );
+    }
     res.json(r.rows);
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
+// POST /api/execucao
 app.post('/api/execucao', requireAuth, async (req, res) => {
-  const b = prepExecBody(req.body);
-  const vals = EXEC_FIELDS.map(f => b[f] ?? null);
-  const cols = EXEC_FIELDS.join(',');
-  const params = EXEC_FIELDS.map((_,i) => `$${i+1}`).join(',');
+  const { unidade, projeto, nome_projeto, itens } = req.body;
+  const usuario_id = req.session.usuario.id;
   try {
     const r = await pool.query(
-      `INSERT INTO execucao (${cols}) VALUES (${params}) RETURNING id`, vals
+      `INSERT INTO execucao (unidade, projeto, nome_projeto, itens, usuario_id)
+       VALUES ($1,$2,$3,$4,$5) RETURNING id`,
+      [unidade, projeto, nome_projeto, JSON.stringify(itens || []), usuario_id]
     );
     res.json({ id: r.rows[0].id });
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
+// PUT /api/execucao/:id
 app.put('/api/execucao/:id', requireAuth, async (req, res) => {
-  const b = prepExecBody(req.body);
-  const sets = EXEC_FIELDS.map((f,i) => `${f}=$${i+1}`).join(',');
-  const vals = [...EXEC_FIELDS.map(f => b[f] ?? null), req.params.id];
+  const u = req.session.usuario;
+  const { unidade, projeto, nome_projeto, itens } = req.body;
   try {
-    await pool.query(`UPDATE execucao SET ${sets} WHERE id=$${EXEC_FIELDS.length+1}`, vals);
+    const check = await pool.query(`SELECT usuario_id FROM execucao WHERE id=$1`, [req.params.id]);
+    if (!check.rows.length) return res.status(404).json({ erro: 'Não encontrado' });
+    if (u.nivel !== 'admin' && check.rows[0].usuario_id !== u.id)
+      return res.status(403).json({ erro: 'Sem permissão' });
+    await pool.query(
+      `UPDATE execucao SET unidade=$1, projeto=$2, nome_projeto=$3, itens=$4 WHERE id=$5`,
+      [unidade, projeto, nome_projeto, JSON.stringify(itens || []), req.params.id]
+    );
     res.json({ ok: true });
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
+// DELETE /api/execucao/:id
 app.delete('/api/execucao/:id', requireAuth, async (req, res) => {
+  const u = req.session.usuario;
   try {
+    const check = await pool.query(`SELECT usuario_id FROM execucao WHERE id=$1`, [req.params.id]);
+    if (!check.rows.length) return res.status(404).json({ erro: 'Não encontrado' });
+    if (u.nivel !== 'admin' && check.rows[0].usuario_id !== u.id)
+      return res.status(403).json({ erro: 'Sem permissão' });
     await pool.query(`DELETE FROM execucao WHERE id=$1`, [req.params.id]);
     res.json({ ok: true });
   } catch(e) { res.status(500).json({ erro: e.message }); }
