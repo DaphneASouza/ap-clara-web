@@ -800,9 +800,9 @@ function criarCardItem(item,idx,itensArr,onUpdate){
     </div>
     <div class="ec-item-card-body open">
       <div class="fgrid">
-        <div class="fg span2"><label>Item do Cardápio</label><div class="cardapio-sel-wrap"></div></div>
         <div class="fg span2"><label>Descrição do Projeto</label><input type="text" data-f="descricao_projeto" value="${item.descricao_projeto||''}" placeholder="Descreva este item..."/></div>
         <div class="fg span2"><label>Link do Trello</label><input type="text" data-f="link_trello" value="${item.link_trello||''}" placeholder="https://trello.com/..."/></div>
+        <div class="fg span2"><label>Item do Cardápio</label><div class="cardapio-sel-wrap"></div></div>
         <div class="fg"><label>Quantidade</label><input type="number" data-f="quantidade" value="${item.quantidade||1}" min="1" style="text-align:center"/></div>
         <div class="fg"><label>Valor Total</label><input type="text" data-f="valor_total_disp" value="${brl((item.valor_unitario||0)*(item.quantidade||1))}" readonly style="background:var(--laranja-claro);color:var(--laranja);font-weight:700"/></div>
         <div class="fg span2"><label>Link Trello Comprovação</label><input type="text" data-f="link_trello_comprovacao" value="${item.link_trello_comprovacao||''}" placeholder="https://trello.com/..."/></div>
