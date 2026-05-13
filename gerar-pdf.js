@@ -264,21 +264,10 @@ async function gerarPDF(dados, destino) {
   try {
     const puppeteer = require('puppeteer');
 
-    const launchOpts = {
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-      ],
-    };
-
-    // Em produção, usa o Chromium do sistema (variável de ambiente no Render)
-    if (process.env.PUPPETEER_EXECUTABLE_PATH) {
-      launchOpts.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
-    }
-
-    browser = await puppeteer.launch(launchOpts);
+    browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      headless: true,
+    });
     const page = await browser.newPage();
 
     const html = buildHTML(dados);
