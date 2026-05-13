@@ -139,13 +139,12 @@ async function gerarPDF(dados, destino) {
         const tit  = ci.titulo       || item.titulo       || '—';
         const comp = ci.complexidade || item.complexidade || '';
         // descrição completa: titulo + complexidade (se aplicável)
-        const descricao = comp && comp !== 'Não se aplica'
-          ? `${tit} – ${comp}`
-          : tit;
         const header = `${item.id}.${tit}`; // sem espaço após o ponto
-        const hh = strH(doc, header,   9,   true,  W-10);
-        const dh = strH(doc, descricao, 7.5, false, W-14);
-        const itemH = hh + dh + 10;
+        const hh = strH(doc, header, 9, true, W-10);
+        // linha abaixo: apenas complexidade (sem repetir título)
+        const showComp = comp && comp !== 'Não se aplica' && comp !== '—';
+        const dh = showComp ? strH(doc, comp, 7.5, false, W-14) : 0;
+        const itemH = hh + (showComp ? dh + 4 : 0) + 8;
         if (idx > 0) {
           checkPage(6 + itemH);
           y += 6; // linha em branco entre itens
@@ -154,8 +153,10 @@ async function gerarPDF(dados, destino) {
         }
         doc.font('Helvetica-Bold').fontSize(9).fillColor(PRETO)
            .text(header, L+4, y+2, {width:W-8});
-        doc.font('Helvetica').fontSize(7.5).fillColor(PRETO)
-           .text(descricao, L+8, y+2+hh+2, {width:W-14});
+        if (showComp) {
+          doc.font('Helvetica').fontSize(7.5).fillColor(PRETO)
+             .text(comp, L+8, y+2+hh+2, {width:W-14});
+        }
         y += itemH;
       });
       y += 5;
@@ -213,7 +214,7 @@ async function gerarPDF(dados, destino) {
           {k:'pr', l:'Produto/\nServiço'},
           {k:'cp', l:'Complexidade'},
           {k:'ue', l:'Valor Unitário\n(estimado)'},
-          {k:'te', l:'Valor Total\n(estimado)'},
+          {k:'te', l:'Valor Total'},
           {k:'ud', l:'Valor Unitário\n(desc.13,5%)'},
           {k:'td', l:'Valor Total\n(desc.13,5%)'},
         ].forEach(({k, l}) => {
