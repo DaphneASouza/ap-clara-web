@@ -13,10 +13,10 @@ const ASSINATURA_PATH = path.join(__dirname, 'public', 'assinatura.png');
 
 // Paleta
 const PRETO           = '#000000';
-const BG_CINZA        = '#DDDDDD'; // título DESCRITIVO
-const BG_AMARELO      = '#FFD580'; // título TABELA DE PRODUTOS
-const BG_LABEL        = '#F0F0F0'; // células de label na tabela de identificação
-const BG_HDR_TABELA   = '#F5F5F5'; // cabeçalho da tabela de produtos
+const BG_CINZA        = '#D9D9D9'; // título DESCRITIVO
+const BG_AMARELO      = '#FFE699'; // título TABELA DE PRODUTOS
+const BG_LABEL        = '#D9D9D9'; // células de label na tabela de identificação
+const BG_HDR_TABELA   = '#D9D9D9'; // cabeçalho da tabela de produtos
 const BORDA_W         = 0.5;
 
 function brl(v) {
@@ -202,24 +202,37 @@ async function gerarPDF(dados, destino) {
         const tit  = ci.titulo       || item.titulo       || '—';
         const comp = ci.complexidade || item.complexidade || '—';
 
+        // Descrição completa: usa ci.descricao se existir, senão monta padrão
+        const desc = ci.descricao
+          ? ci.descricao
+          : `${tit}${comp && comp !== 'Não se aplica' ? ' – ' + comp : ''}`;
+
         const idTxt = `${item.id || ''}. ${tit}`;
-        const titH  = strH(doc, idTxt, 9, true,  W - 12);
-        const cmpH  = strH(doc, comp,  8, false, W - 12);
-        const rowH  = titH + cmpH + 12;
+        const titH  = strH(doc, idTxt, 9,   true,  W - 12);
+        const dscH  = strH(doc, desc,  7.5, false, W - 12);
+        const cmpH  = strH(doc, comp,  8,   false, W - 12);
+        const blkH  = titH + dscH + cmpH + 14;
 
-        checkPage(rowH);
+        checkPage(blkH);
 
-        strokeRect(doc, L, y, W, rowH);
+        // Sem borda — texto corrido com espaçamento
+        let ty = y + 2;
 
         // N. Título em negrito 9pt
         doc.font('Helvetica-Bold').fontSize(9).fillColor(PRETO)
-           .text(idTxt, L + 6, y + 4, { width: W - 12 });
+           .text(idTxt, L + 4, ty, { width: W - 8 });
+        ty += titH + 2;
+
+        // Descrição em 7.5pt regular
+        doc.font('Helvetica').fontSize(7.5).fillColor(PRETO)
+           .text(desc, L + 4, ty, { width: W - 8 });
+        ty += dscH + 2;
 
         // Complexidade em 8pt regular
         doc.font('Helvetica').fontSize(8).fillColor(PRETO)
-           .text(comp, L + 6, y + 4 + titH + 1, { width: W - 12 });
+           .text(comp, L + 4, ty, { width: W - 8 });
 
-        y += rowH;
+        y += blkH;
       });
 
       y += 8;
@@ -264,18 +277,21 @@ async function gerarPDF(dados, destino) {
         doc.rect(L, yH, W, H1 + H2).fill(BG_HDR_TABELA);
 
         // — Item (span H1+H2, centrado) —
+        doc.rect(col('item').x, yH, col('item').w, H1 + H2).fill(BG_HDR_TABELA);
         strokeRect(doc, col('item').x, yH, col('item').w, H1 + H2);
         txtLine(doc, 'Item',
           col('item').x + 1, yH + (H1 + H2 - 7) / 2, col('item').w - 2,
           { fontSize: 7, bold: true });
 
         // — Produto/Serviço (span H1+H2) —
+        doc.rect(col('prod').x, yH, col('prod').w, H1 + H2).fill(BG_HDR_TABELA);
         strokeRect(doc, col('prod').x, yH, col('prod').w, H1 + H2);
         txtLine(doc, 'Produto/Serviço',
           col('prod').x + 2, yH + (H1 + H2 - 7) / 2, col('prod').w - 4,
           { fontSize: 7, bold: true });
 
         // — Complexidade (span H1+H2) —
+        doc.rect(col('comp').x, yH, col('comp').w, H1 + H2).fill(BG_HDR_TABELA);
         strokeRect(doc, col('comp').x, yH, col('comp').w, H1 + H2);
         txtLine(doc, 'Complexidade',
           col('comp').x + 2, yH + (H1 + H2 - 7) / 2, col('comp').w - 4,
@@ -284,19 +300,22 @@ async function gerarPDF(dados, destino) {
         // — Resumo do Cronograma (colspan qtd+per, apenas linha 1) —
         const resumoX = col('qtd').x;
         const resumoW = col('qtd').w + col('per').w;
+        doc.rect(resumoX, yH, resumoW, H1 + H2).fill(BG_HDR_TABELA);
         strokeRect(doc, resumoX, yH, resumoW, H1);
-        txtLine(doc, 'Resumo do Cronograma de Entrega',
-          resumoX + 2, yH + (H1 - 6) / 2, resumoW - 4,
-          { fontSize: 6, bold: true });
 
         // — Qtd. de itens (linha 2) —
         strokeRect(doc, col('qtd').x, yH + H1, col('qtd').w, H2);
-        txtLine(doc, 'Qtd. de itens',
-          col('qtd').x + 1, yH + H1 + (H2 - 6) / 2, col('qtd').w - 2,
-          { fontSize: 6, bold: true });
 
         // — Período de execução (linha 2) —
         strokeRect(doc, col('per').x, yH + H1, col('per').w, H2);
+
+        // Textos após fill para não sobrepor
+        txtLine(doc, 'Resumo do Cronograma de Entrega',
+          resumoX + 2, yH + (H1 - 6) / 2, resumoW - 4,
+          { fontSize: 6, bold: true });
+        txtLine(doc, 'Qtd. de itens',
+          col('qtd').x + 1, yH + H1 + (H2 - 6) / 2, col('qtd').w - 2,
+          { fontSize: 6, bold: true });
         txtLine(doc, 'Período de execução',
           col('per').x + 1, yH + H1 + (H2 - 6) / 2, col('per').w - 2,
           { fontSize: 6, bold: true });
@@ -310,6 +329,7 @@ async function gerarPDF(dados, destino) {
         ];
         valDefs.forEach(({ key, lbl }) => {
           const c = col(key);
+          doc.rect(c.x, yH, c.w, H1 + H2).fill(BG_HDR_TABELA);
           strokeRect(doc, c.x, yH, c.w, H1 + H2);
           const lH = strH(doc, lbl, 6, true, c.w - 4);
           doc.font('Helvetica-Bold').fontSize(6).fillColor(PRETO)
@@ -385,7 +405,7 @@ async function gerarPDF(dados, destino) {
       const TOT_H = 16;
       checkPage(TOT_H + 22);
 
-      doc.rect(L, y, W, TOT_H).fill(BG_HDR_TABELA);
+      doc.rect(L, y, W, TOT_H).fill('#D9D9D9');
       COLS.forEach(c => { doc.lineWidth(BORDA_W).rect(c.x, y, c.w, TOT_H).stroke(PRETO); });
 
       doc.font('Helvetica-Bold').fontSize(8).fillColor(PRETO)
