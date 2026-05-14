@@ -114,14 +114,16 @@ function buildHTML(dados) {
 
   .bloco { margin-bottom: 3px; }
 
-  /* ── Bloco 1: Cabeçalho — fundo BRANCO, texto preto bold ── */
+  /* ── Bloco 1: Cabeçalho — fundo LARANJA, texto branco ── */
   .hdr-esq {
     width: 58%; vertical-align: top;
     padding: 5px 6px; font-weight: bold; font-size: 8px; line-height: 1.6;
+    background: #FF6D01; color: #fff;
   }
   .hdr-dir {
     width: 42%; vertical-align: top;
     padding: 5px 6px; font-size: 8px; line-height: 1.6;
+    background: #FF6D01; color: #fff;
   }
   .hdr-dir .ap-titulo { font-weight: bold; font-size: 10px; }
   .hdr-dir .contrato  { font-size: 7px; margin-top: 3px; }
