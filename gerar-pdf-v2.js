@@ -193,8 +193,7 @@ function buildHTML(dados) {
 
   .rdf-assin-dir {
     width: 40%; text-align: center;
-    vertical-align: middle; padding: 6px 8px;
-    height: 70px;
+    vertical-align: bottom; padding: 8px 8px 6px;
   }
 </style>
 </head>
@@ -278,7 +277,9 @@ function buildHTML(dados) {
 <table>
   <tr>
     <td class="rdf-data-esq">DATA: ${esc(dados.data || '—')}</td>
-    <td class="rdf-data-dir"></td>
+    <td class="rdf-data-dir" style="text-align:center; vertical-align:middle; padding:4px 8px;">
+      <img src="data:image/png;base64,${imgB64}" style="max-height:50px; max-width:100%; object-fit:contain; display:inline-block;">
+    </td>
   </tr>
 </table>
 </div>
@@ -299,7 +300,9 @@ function buildHTML(dados) {
       </div>
     </td>
     <td class="rdf-assin-dir">
-      <img src="data:image/png;base64,${imgB64}" style="width:100%; max-height:60px; object-fit:contain; display:block;">
+      <div style="margin-bottom:24px"></div>
+      <div>________________________________</div>
+      <div style="margin-top:4px">Assinatura do Cliente</div>
     </td>
   </tr>
 </table>
