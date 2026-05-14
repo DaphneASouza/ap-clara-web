@@ -6,6 +6,8 @@ const { CARDAPIO } = require('./cardapio');
 
 const CARD_MAP = Object.fromEntries(CARDAPIO.map(c => [c.id, c]));
 
+const imgB64 = fs.readFileSync(path.join(__dirname, 'public', 'assinatura.png')).toString('base64');
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function brl(v) {
@@ -191,7 +193,8 @@ function buildHTML(dados) {
 
   .rdf-assin-dir {
     width: 40%; text-align: center;
-    vertical-align: bottom; padding: 8px 8px 6px;
+    vertical-align: middle; padding: 6px 8px;
+    height: 70px;
   }
 </style>
 </head>
@@ -296,9 +299,7 @@ function buildHTML(dados) {
       </div>
     </td>
     <td class="rdf-assin-dir">
-      <div style="margin-bottom:24px"></div>
-      <div>________________________________</div>
-      <div style="margin-top:4px">Assinatura do Cliente</div>
+      <img src="data:image/png;base64,${imgB64}" style="width:100%; max-height:60px; object-fit:contain; display:block;">
     </td>
   </tr>
 </table>
