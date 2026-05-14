@@ -67,8 +67,11 @@ function buildHTML(dados) {
   let totEst = 0, totDisc = 0;
   itens.forEach(i => { totEst += i.vtEst; totDisc += i.vtDisc; });
 
-  // 2. DESCRITIVO: junta os descritivos dos itens do cardápio separados por " ; "
-  const descval = itens.map(it => it.desc).filter(Boolean).join(' ; ');
+  // 2. DESCRITIVO: junta os descricao_projeto de cada item separados por " ; "
+  const descval = itens
+    .map(it => (it.descricao_projeto || '').trim())
+    .filter(Boolean)
+    .join(' ; ');
 
   // ── Linhas de item da tabela ─────────────────────────────────────────────
   const linhasItens = itens.map(it => `

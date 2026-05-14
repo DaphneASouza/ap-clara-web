@@ -1168,12 +1168,13 @@ async function gerarAPdaExecucao(row){
 
   // Mapeia itens para o formato do Gerador de AP
   const itens=itensExec.map(i=>({
-    id          :i.item_id||'',
-    titulo      :i.produto||'',
-    complexidade:i.complexidade||'',
-    valor       :parseFloat(i.valor_unitario)||0,
-    qtd         :parseInt(i.quantidade)||1,
-    periodo     :'',
+    id               :i.item_id||'',
+    titulo           :i.produto||'',
+    complexidade     :i.complexidade||'',
+    valor            :parseFloat(i.valor_unitario)||0,
+    qtd              :parseInt(i.quantidade)||1,
+    periodo          :'',
+    descricao_projeto:i.descricao_projeto||'',
   }));
 
   // i.valor já tem desconto de 13,5% aplicado
