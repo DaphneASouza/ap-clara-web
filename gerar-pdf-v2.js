@@ -41,13 +41,17 @@ function extrairPeriodo(numeroAP) {
 // ── HTML do documento ─────────────────────────────────────────────────────────
 
 function buildHTML(dados) {
-  const periodo = extrairPeriodo(dados.numero || '');
+  // 4. Período: usa dados.mes + dados.ano diretamente
+  const mesAbrev = MESES_PT[(dados.mes || '').toUpperCase().trim()]
+                   || (dados.mes || '').slice(0, 3).toLowerCase();
+  const periodo  = dados.ano ? `${mesAbrev}/${String(dados.ano).slice(2)}` : mesAbrev;
 
   // Enriquece itens com dados do cardápio e calcula valores
   const itens = (dados.itens || []).map(item => {
     const ci    = CARD_MAP[item.id] || {};
     const tit   = ci.titulo       || item.titulo       || '—';
     const comp  = ci.complexidade || item.complexidade || '';
+    const desc  = ci.descritivo   || item.descritivo   || '';  // 2/3. campo descritivo
     const qtd   = Number(item.qtd || item.quantidade)  || 1;
     const per   = item.periodo || periodo;
 
@@ -57,14 +61,14 @@ function buildHTML(dados) {
     const vtEst  = vEst  * qtd;
     const vtDisc = vDisc * qtd;
 
-    return { id: item.id, tit, comp, qtd, per, vEst, vtEst, vDisc, vtDisc };
+    return { id: item.id, tit, comp, desc, qtd, per, vEst, vtEst, vDisc, vtDisc };
   });
 
   let totEst = 0, totDisc = 0;
   itens.forEach(i => { totEst += i.vtEst; totDisc += i.vtDisc; });
 
-  const descval  = (dados.descritivo || '').trim();
-  const showDesc = descval && descval !== '—';
+  // 2. DESCRITIVO: junta os descritivos dos itens do cardápio separados por " ; "
+  const descval = itens.map(it => it.desc).filter(Boolean).join(' ; ');
 
   // ── Linhas de item da tabela ─────────────────────────────────────────────
   const linhasItens = itens.map(it => `
@@ -80,12 +84,14 @@ function buildHTML(dados) {
       <td class="td-num">${brl(it.vtDisc)}</td>
     </tr>`).join('');
 
-  // ── Descritivo dos produtos ─────────────────────────────────────────────
+  // 3. Descritivo dos produtos: titulo + descritivo completo + complexidade em itálico
   const descItems = itens.map(it => `
     <div class="desc-item">
       <span class="desc-titulo">${esc(it.id)}.${esc(it.tit)}</span>
+      ${it.desc
+        ? `<div class="desc-comp">${esc(it.desc)}</div>` : ''}
       ${it.comp && it.comp !== 'Não se aplica'
-        ? `<div class="desc-comp">${esc(it.comp)}</div>` : ''}
+        ? `<div class="desc-comp" style="font-style:italic;font-size:7.5px">${esc(it.comp)}</div>` : ''}
     </div>`).join('');
 
   return `<!DOCTYPE html>
@@ -226,10 +232,10 @@ function buildHTML(dados) {
 <div class="bloco">
 <table>
   <tr><td class="lbl">CLIENTE:</td>             <td class="val">SESC DF</td></tr>
-  <tr><td class="lbl">UNIDADE REQUISITANTE:</td> <td class="val">${esc(dados.unidade || '')}</td></tr>
+  <tr><td class="lbl">UNIDADE REQUISITANTE:</td> <td class="val">${esc(dados.unidade?.trim() || 'Geral')}</td></tr>
   <tr><td class="lbl">PROJETO:</td>              <td class="val">${esc(dados.tipo || '')}</td></tr>
   <tr><td class="lbl">NOME DO PROJETO:</td>      <td class="val">${esc(dados.nomeProjeto || '')}</td></tr>
-  <tr><td class="lbl">DESCRITIVO:</td>           <td class="val">${showDesc ? esc(descval) : ''}</td></tr>
+  <tr><td class="lbl">DESCRITIVO:</td>           <td class="val">${esc(descval)}</td></tr>
 </table>
 </div>
 
