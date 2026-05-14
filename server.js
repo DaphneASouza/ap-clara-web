@@ -7,6 +7,7 @@ const bcrypt     = require('bcrypt');
 const path       = require('path');
 const { pool, setupDB } = require('./db');
 const { gerarPDF }      = require('./gerar-pdf');
+const { gerarPDFv2 }    = require('./gerar-pdf-v2');
 const { CARDAPIO }      = require('./cardapio');
 
 const app  = express();
@@ -351,6 +352,25 @@ app.delete('/api/execucao/:id', requireAuth, async (req, res) => {
     await pool.query(`DELETE FROM execucao WHERE id=$1`, [req.params.id]);
     res.json({ ok: true });
   } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// POST /api/gerar-ap-pdf-v2 — gera PDF v2 (Puppeteer/HTML) sem salvar no banco
+// ════════════════════════════════════════════════════════════════════════════
+app.post('/api/gerar-ap-pdf-v2', requireAuth, async (req, res) => {
+  const dados = req.body;
+  if (!dados.numero || !dados.itens?.length) {
+    return res.status(400).json({ erro: 'Campos obrigatórios: numero, itens' });
+  }
+  try {
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition',
+      `attachment; filename="AP_${(dados.numero || 'AP').replace(/\./g, '_')}.pdf"`);
+    await gerarPDFv2(dados, res);
+  } catch (e) {
+    console.error('[gerar-ap-pdf-v2]', e);
+    if (!res.headersSent) res.status(500).json({ erro: e.message });
+  }
 });
 
 // ── Rota catch-all (SPA) ─────────────────────────────────────────────────────
