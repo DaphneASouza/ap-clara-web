@@ -135,7 +135,7 @@ app.post('/api/aps', requireAuth, async (req, res) => {
     res.setHeader('Content-Disposition',
       `attachment; filename="AP_${dados.numero.replace(/\./g,'_')}.pdf"`);
 
-    await gerarPDF(dados, res);
+    await gerarPDFv2(dados, res);
 
   } catch (e) {
     console.error(e);
@@ -218,7 +218,7 @@ app.get('/api/aps/:id/pdf', requireAuth, async (req, res) => {
       totalDesconto: Number(ap.total_desconto),
     };
 
-    await gerarPDF(dados, res);
+    await gerarPDFv2(dados, res);
   } catch (e) {
     if (!res.headersSent) res.status(500).json({ erro: e.message });
   }
