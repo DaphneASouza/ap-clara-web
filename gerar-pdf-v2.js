@@ -324,21 +324,44 @@ function buildHTML(dados) {
 </html>`;
 }
 
+// ── Browser singleton — reutilizado entre requisições ────────────────────────
+
+let _browser = null;
+let _launching = null;
+
+async function getBrowser() {
+  // Se já existe e está vivo, reutiliza
+  if (_browser) {
+    try { await _browser.version(); return _browser; } catch { _browser = null; }
+  }
+  // Evita múltiplos launches simultâneos
+  if (_launching) return _launching;
+
+  const puppeteer = require('puppeteer-core');
+  const chromium  = require('@sparticuz/chromium');
+
+  _launching = puppeteer.launch({
+    args:            chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath:  await chromium.executablePath(),
+    headless:        chromium.headless,
+  }).then(b => {
+    _browser   = b;
+    _launching = null;
+    b.on('disconnected', () => { _browser = null; });
+    return b;
+  }).catch(e => { _launching = null; throw e; });
+
+  return _launching;
+}
+
 // ── Gerar PDF via Puppeteer ───────────────────────────────────────────────────
 
 async function gerarPDFv2(dados, destino) {
-  let browser;
+  let page;
   try {
-    const puppeteer = require('puppeteer-core');
-    const chromium  = require('@sparticuz/chromium');
-    browser = await puppeteer.launch({
-      args:            chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath:  await chromium.executablePath(),
-      headless:        chromium.headless,
-    });
-
-    const page = await browser.newPage();
+    const browser = await getBrowser();
+    page = await browser.newPage();
     const html = buildHTML(dados);
     await page.setContent(html, { waitUntil: 'load' });
 
@@ -348,8 +371,8 @@ async function gerarPDFv2(dados, destino) {
       margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' },
     });
 
-    await browser.close();
-    browser = null;
+    await page.close();
+    page = null;
 
     const buf = Buffer.isBuffer(pdfBuf) ? pdfBuf : Buffer.from(pdfBuf);
 
@@ -370,7 +393,7 @@ async function gerarPDFv2(dados, destino) {
     }
 
   } catch (e) {
-    if (browser) await browser.close().catch(() => {});
+    if (page) await page.close().catch(() => {});
     throw e;
   }
 }
