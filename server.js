@@ -76,6 +76,18 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// GET /api/debug/unidades — diagnóstico temporário (sem auth)
+app.get('/api/debug/unidades', async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT DISTINCT unidade, COUNT(*) as total FROM execucao GROUP BY unidade ORDER BY unidade`
+    );
+    res.json(r.rows);
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 // GET /api/test-session
 app.get('/api/test-session', (req, res) => {
   if (!req.session.contador) req.session.contador = 0;
@@ -376,18 +388,6 @@ app.post('/api/gerar-ap-pdf-v2', requireAuth, async (req, res) => {
 // ── Rota catch-all (SPA) ─────────────────────────────────────────────────────
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// GET /api/debug/unidades — diagnóstico temporário
-app.get('/api/debug/unidades', async (req, res) => {
-  try {
-    const r = await pool.query(
-      `SELECT DISTINCT unidade, COUNT(*) as total FROM execucao GROUP BY unidade ORDER BY unidade`
-    );
-    res.json(r.rows);
-  } catch (e) {
-    res.status(500).json({ erro: e.message });
-  }
 });
 
 // ── Start ────────────────────────────────────────────────────────────────────
