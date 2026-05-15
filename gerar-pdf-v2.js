@@ -367,19 +367,36 @@ async function getBrowser() {
 async function gerarPDFv2(dados, destino) {
   let page;
   try {
-    const browser = await getBrowser();
-    page = await browser.newPage();
-    const html = buildHTML(dados);
-    await page.setContent(html, { waitUntil: 'domcontentloaded' });
+    console.time('total');
 
+    console.time('getBrowser');
+    const browser = await getBrowser();
+    console.timeEnd('getBrowser');
+
+    console.time('newPage');
+    page = await browser.newPage();
+    console.timeEnd('newPage');
+
+    const html = buildHTML(dados);
+
+    console.time('setContent');
+    await page.setContent(html, { waitUntil: 'domcontentloaded' });
+    console.timeEnd('setContent');
+
+    console.time('page.pdf');
     const pdfBuf = await page.pdf({
       format: 'A4',
       printBackground: true,
       margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' },
     });
+    console.timeEnd('page.pdf');
 
+    console.time('page.close');
     await page.close();
+    console.timeEnd('page.close');
     page = null;
+
+    console.timeEnd('total');
 
     const buf = Buffer.isBuffer(pdfBuf) ? pdfBuf : Buffer.from(pdfBuf);
 
