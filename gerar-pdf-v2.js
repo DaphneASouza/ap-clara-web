@@ -61,7 +61,8 @@ function buildHTML(dados) {
     const vtEst  = vEst  * qtd;
     const vtDisc = vDisc * qtd;
 
-    return { id: item.id, tit, comp, desc, qtd, per, vEst, vtEst, vDisc, vtDisc };
+    return { id: item.id, tit, comp, desc, qtd, per, vEst, vtEst, vDisc, vtDisc,
+             descricao_projeto: item.descricao_projeto || '' };
   });
 
   let totEst = 0, totDisc = 0;
