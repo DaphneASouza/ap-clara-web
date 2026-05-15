@@ -1356,9 +1356,17 @@ async function gerarAPdaExecucao(row){
     };
     try{
       toast('Gerando AP...','info');
+      console.log('[AP] Enviando dados:', JSON.stringify({numero,mes,tipo,unidade:dados.unidade,nomeProjeto:dados.nomeProjeto,itens:dados.itens?.length}));
       const r=await fetch('/api/aps',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)});
-      if(!r.ok){const e=await r.json();toast(e.erro||'Erro ao gerar AP.','erro');return;}
+      console.log('[AP] Status:', r.status, r.statusText);
+      if(!r.ok){
+        const erro=await r.text();
+        console.error('[AP] Erro servidor:', erro);
+        toast('Erro ao gerar AP: '+erro,'erro');
+        return;
+      }
       const blob=await r.blob();
+      console.log('[AP] Blob recebido: tamanho='+blob.size+' tipo='+blob.type);
       const url=URL.createObjectURL(blob);
       const a=document.createElement('a');
       a.href=url;
@@ -1369,7 +1377,10 @@ async function gerarAPdaExecucao(row){
       setTimeout(()=>URL.revokeObjectURL(url),10000);
       toast('✅ AP gerada e baixada!','ok');
       carregarBanco();
-    }catch{toast('Erro de conexão.','erro');}
+    }catch(e){
+      console.error('[AP] Erro fetch:', e);
+      toast('Erro ao gerar AP: '+e.message,'erro');
+    }
   });
 }
 
