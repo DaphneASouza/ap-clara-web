@@ -56,7 +56,7 @@
     .metric-header{display:flex;justify-content:space-between;align-items:flex-start}
     .metric-label{font-size:12px;color:var(--texto-leve);font-weight:500}
     .metric-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
-    .metric-value{font-size:22px;font-weight:700;color:var(--texto)}
+    .metric-value{font-size:16px;font-weight:700;color:var(--texto);word-break:break-word}
     .metric-sub{font-size:11px;color:var(--texto-leve)}
     .charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
     .chart-card{background:white;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
@@ -616,9 +616,9 @@ function aplicarFiltrosDashboard(){
 
   // Cards
   el('m-aps').textContent  =filtrado.length;
-  el('m-bruto').textContent=brlK(filtrado.reduce((s,a)=>s+Number(a.total_bruto||0),0));
-  el('m-desc').textContent =brlK(filtrado.reduce((s,a)=>s+Number(a.total_desconto||0),0));
-  el('m-total').textContent=brlK(porUnd.reduce((s,a)=>s+Number(a.total_desconto||0),0));
+  el('m-bruto').textContent=brl(filtrado.reduce((s,a)=>s+Number(a.total_bruto||0),0));
+  el('m-desc').textContent =brl(filtrado.reduce((s,a)=>s+Number(a.total_desconto||0),0));
+  el('m-total').textContent=brl(porUnd.reduce((s,a)=>s+Number(a.total_desconto||0),0));
 
   // Tabela recentes (filtrado por mês + unidade)
   const tbody=el('tbody-recentes');
