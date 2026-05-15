@@ -326,6 +326,16 @@ function buildHTML(dados) {
 
 // ── Browser singleton — reutilizado entre requisições ────────────────────────
 
+const puppeteer = require('puppeteer-core');
+const chromium  = require('@sparticuz/chromium');
+
+// Resolve o caminho do executável uma única vez na inicialização
+let _executablePath = null;
+async function getExecutablePath() {
+  if (!_executablePath) _executablePath = await chromium.executablePath();
+  return _executablePath;
+}
+
 let _browser = null;
 let _launching = null;
 
@@ -337,13 +347,10 @@ async function getBrowser() {
   // Evita múltiplos launches simultâneos
   if (_launching) return _launching;
 
-  const puppeteer = require('puppeteer-core');
-  const chromium  = require('@sparticuz/chromium');
-
   _launching = puppeteer.launch({
     args:            chromium.args,
     defaultViewport: chromium.defaultViewport,
-    executablePath:  await chromium.executablePath(),
+    executablePath:  await getExecutablePath(),
     headless:        chromium.headless,
   }).then(b => {
     _browser   = b;
@@ -363,7 +370,7 @@ async function gerarPDFv2(dados, destino) {
     const browser = await getBrowser();
     page = await browser.newPage();
     const html = buildHTML(dados);
-    await page.setContent(html, { waitUntil: 'load' });
+    await page.setContent(html, { waitUntil: 'domcontentloaded' });
 
     const pdfBuf = await page.pdf({
       format: 'A4',
