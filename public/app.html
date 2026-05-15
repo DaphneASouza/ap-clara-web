@@ -1011,7 +1011,12 @@ document.getElementById('btn-add-item-exec').addEventListener('click',()=>{
   ecItens.push({descricao_projeto:'',link_trello:'',item_id:'',produto:'',complexidade:'',valor_unitario:0,quantidade:1,valor_total:0,link_trello_comprovacao:''});
   renderFormItens();
   const container=document.getElementById('ec-itens-container');
-  if(container)container.lastElementChild?.scrollIntoView({behavior:'smooth',block:'start'});
+  if(container){
+    // Colapsa todos exceto o último (recém-adicionado)
+    const cards=container.querySelectorAll('.ec-item-card');
+    cards.forEach((c,i)=>{ if(i<cards.length-1){ c.querySelector('.ec-item-card-body')?.classList.remove('open'); c.querySelector('.ec-item-card-chevron')?.classList.remove('open'); } });
+    container.lastElementChild?.scrollIntoView({behavior:'smooth',block:'start'});
+  }
 });
 
 async function carregarExecucao(){
@@ -1451,6 +1456,9 @@ function renderCardEdit(card,row){
   card.querySelector('.btn-add-edit-item').addEventListener('click',()=>{
     editItens.push({descricao_projeto:'',link_trello:'',item_id:'',produto:'',complexidade:'',valor_unitario:0,quantidade:1,valor_total:0,link_trello_comprovacao:''});
     renderEditItens();
+    // Colapsa todos exceto o último (recém-adicionado)
+    const cont=card.querySelector('.edit-itens-container');
+    if(cont){ const cs=cont.querySelectorAll('.ec-item-card'); cs.forEach((c,i)=>{ if(i<cs.length-1){ c.querySelector('.ec-item-card-body')?.classList.remove('open'); c.querySelector('.ec-item-card-chevron')?.classList.remove('open'); } }); }
   });
 
   card.querySelector('.btn-cancel-edit').addEventListener('click',()=>renderCardView(card,row));
