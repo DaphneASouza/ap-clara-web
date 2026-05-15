@@ -378,6 +378,18 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// GET /api/debug/unidades — diagnóstico temporário
+app.get('/api/debug/unidades', async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT DISTINCT unidade, COUNT(*) as total FROM execucao GROUP BY unidade ORDER BY unidade`
+    );
+    res.json(r.rows);
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 // ── Start ────────────────────────────────────────────────────────────────────
 setupDB().then(() => {
   app.listen(PORT, () => console.log(`✅ Servidor rodando na porta ${PORT}`));
