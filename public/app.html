@@ -353,7 +353,7 @@
           <div class="fgrid">
             <div class="fg">
               <label>Unidade Requisitante</label>
-              <select id="ec-unidade"><option>Interno</option><option>Geral</option></select>
+              <select id="ec-unidade"><option value="Interno">Interno</option><option value="Geral">Geral</option></select>
             </div>
             <div class="fg">
               <label>Projeto</label>
@@ -1345,7 +1345,7 @@ async function gerarAPdaExecucao(row){
       ano,
       tipo,
       sequencial :seq,
-      unidade    :row.unidade||'',
+      unidade    :row.unidade??'',
       nomeProjeto:row.nome_projeto||'',
       descritivo :'',
       data       :dataBr,
@@ -1402,8 +1402,8 @@ function renderCardEdit(card,row){
       <div class="fgrid">
         <div class="fg"><label>Unidade Requisitante</label>
           <select class="edit-f" data-f="unidade">
-            <option ${row.unidade==='Interno'?'selected':''}>Interno</option>
-            <option ${row.unidade==='Geral'?'selected':''}>Geral</option>
+            <option value="Interno" ${row.unidade==='Interno'?'selected':''}>Interno</option>
+            <option value="Geral" ${(row.unidade==='Geral'||!row.unidade)?'selected':''}>Geral</option>
           </select></div>
         <div class="fg"><label>Projeto</label>
           <select class="edit-f" data-f="projeto">
