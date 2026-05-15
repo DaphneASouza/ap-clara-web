@@ -271,10 +271,31 @@
 
     <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
+      <div class="toolbar" style="margin-bottom:12px;gap:8px;flex-wrap:wrap">
+        <select id="dash-filtro-mes" style="padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;cursor:pointer">
+          <option value="">Todos os meses</option>
+          <option value="0">Janeiro</option>
+          <option value="1">Fevereiro</option>
+          <option value="2">Março</option>
+          <option value="3">Abril</option>
+          <option value="4">Maio</option>
+          <option value="5">Junho</option>
+          <option value="6">Julho</option>
+          <option value="7">Agosto</option>
+          <option value="8">Setembro</option>
+          <option value="9">Outubro</option>
+          <option value="10">Novembro</option>
+          <option value="11">Dezembro</option>
+        </select>
+        <select id="dash-filtro-unidade" style="padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;cursor:pointer">
+          <option value="">Todas as unidades</option>
+        </select>
+        <button onclick="aplicarFiltrosDashboard()" style="padding:7px 16px;background:var(--laranja);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">Aplicar</button>
+      </div>
       <div class="metrics-grid">
         <div class="metric-card">
           <div class="metric-header">
-            <div class="metric-label">APs este mês</div>
+            <div class="metric-label" id="m-aps-label">APs no período</div>
             <div class="metric-icon" style="background:var(--laranja-claro)">📄</div>
           </div>
           <div class="metric-value" id="m-aps">0</div>
@@ -282,7 +303,7 @@
         </div>
         <div class="metric-card">
           <div class="metric-header">
-            <div class="metric-label">Valor Bruto (mês)</div>
+            <div class="metric-label" id="m-bruto-label">Valor Bruto</div>
             <div class="metric-icon" style="background:var(--azul-claro)">💰</div>
           </div>
           <div class="metric-value" id="m-bruto">R$ 0</div>
@@ -290,7 +311,7 @@
         </div>
         <div class="metric-card">
           <div class="metric-header">
-            <div class="metric-label">Com Desconto (mês)</div>
+            <div class="metric-label" id="m-desc-label">Com Desconto</div>
             <div class="metric-icon" style="background:var(--verde-claro)">✅</div>
           </div>
           <div class="metric-value" id="m-desc">R$ 0</div>
@@ -537,41 +558,90 @@ async function carregarDashboard(){
   try{
     const r=await fetch('/api/aps');
     banco=await r.json();
-    const agora=new Date(),mesAtual=agora.getMonth(),anoAtual=agora.getFullYear();
-    const doMes=banco.filter(ap=>{const d=new Date(ap.criado_em);return d.getMonth()===mesAtual&&d.getFullYear()===anoAtual;});
-    document.getElementById('m-aps').textContent=doMes.length;
-    document.getElementById('m-bruto').textContent=brlK(doMes.reduce((s,a)=>s+Number(a.total_bruto||0),0));
-    document.getElementById('m-desc').textContent=brlK(doMes.reduce((s,a)=>s+Number(a.total_desconto||0),0));
-    document.getElementById('m-total').textContent=brlK(banco.reduce((s,a)=>s+Number(a.total_desconto||0),0));
 
-    const tbody=document.getElementById('tbody-recentes');
-    tbody.innerHTML='';
-    banco.slice(0,6).forEach(ap=>{
-      const tr=document.createElement('tr');
-      tr.innerHTML=`<td><span class="tag-ap">${ap.numero}</span></td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ap.nome_projeto}</td><td style="text-align:right;font-weight:700;color:var(--verde)">${brl(ap.total_desconto)}</td>`;
-      tbody.appendChild(tr);
-    });
-
-    const ultimos6=[];
-    for(let i=5;i>=0;i--){
-      const d=new Date(anoAtual,mesAtual-i,1);
-      const m=d.getMonth(),a=d.getFullYear();
-      const label=MESES[m].substring(0,3)+'/'+String(a).substring(2);
-      const valor=banco.filter(ap=>{const dd=new Date(ap.criado_em);return dd.getMonth()===m&&dd.getFullYear()===a;}).reduce((s,ap)=>s+Number(ap.total_desconto||0),0);
-      ultimos6.push({label,valor});
+    // Popula select de unidade com valores distintos do banco
+    const selUnd=document.getElementById('dash-filtro-unidade');
+    if(selUnd){
+      const unidades=[...new Set(banco.map(ap=>(ap.unidade||'').trim()).filter(Boolean))].sort();
+      const valorAtual=selUnd.value;
+      selUnd.innerHTML='<option value="">Todas as unidades</option>';
+      unidades.forEach(u=>{
+        const opt=document.createElement('option');
+        opt.value=u;opt.textContent=u;
+        if(u===valorAtual)opt.selected=true;
+        selUnd.appendChild(opt);
+      });
     }
 
-    if(chartMensal)chartMensal.destroy();
-    const ctx=document.getElementById('chart-mensal').getContext('2d');
-    chartMensal=new Chart(ctx,{
-      type:'bar',
-      data:{
-        labels:ultimos6.map(x=>x.label),
-        datasets:[{label:'Valor com Desconto',data:ultimos6.map(x=>x.valor),backgroundColor:'rgba(230,92,0,0.15)',borderColor:'#E65C00',borderWidth:2,borderRadius:6}]
-      },
-      options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v>=1000?`R$ ${(v/1000).toFixed(0)}k`:`R$ ${v}`,font:{size:10}},grid:{color:'#F4F4F5'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}
-    });
+    // Define mês atual como default na primeira carga
+    const selMes=document.getElementById('dash-filtro-mes');
+    if(selMes&&selMes.dataset.iniciado!=='1'){
+      selMes.value=String(new Date().getMonth());
+      selMes.dataset.iniciado='1';
+    }
+
+    aplicarFiltrosDashboard();
   }catch(e){console.error(e);}
+}
+
+function aplicarFiltrosDashboard(){
+  const agora=new Date(),anoAtual=agora.getFullYear(),mesAtual=agora.getMonth();
+  const selMes=document.getElementById('dash-filtro-mes');
+  const selUnd=document.getElementById('dash-filtro-unidade');
+  const filtroMes=selMes?selMes.value:'';          // '' = todos, '0'-'11' = mês
+  const filtroUnd=selUnd?(selUnd.value||''):'';    // '' = todas
+
+  // Filtra por unidade (afeta tudo)
+  const porUnd=filtroUnd?banco.filter(ap=>(ap.unidade||'').trim()===filtroUnd):banco;
+
+  // Filtra por mês (afeta cards e tabela recentes, NÃO o gráfico)
+  const filtrado=filtroMes!==''
+    ?porUnd.filter(ap=>{const d=new Date(ap.criado_em);return d.getMonth()===Number(filtroMes);})
+    :porUnd;
+
+  // Atualiza labels dos cards
+  const nomesMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const sufixo=filtroMes!==''?` — ${nomesMes[Number(filtroMes)]}`:'';
+  const labelUnd=filtroUnd?` (${filtroUnd})`:'';
+  const el=id=>document.getElementById(id);
+  if(el('m-aps-label'))  el('m-aps-label').textContent  ='APs no período'+sufixo+labelUnd;
+  if(el('m-bruto-label'))el('m-bruto-label').textContent='Valor Bruto'+sufixo+labelUnd;
+  if(el('m-desc-label')) el('m-desc-label').textContent ='Com Desconto'+sufixo+labelUnd;
+
+  // Cards
+  el('m-aps').textContent  =filtrado.length;
+  el('m-bruto').textContent=brlK(filtrado.reduce((s,a)=>s+Number(a.total_bruto||0),0));
+  el('m-desc').textContent =brlK(filtrado.reduce((s,a)=>s+Number(a.total_desconto||0),0));
+  el('m-total').textContent=brlK(porUnd.reduce((s,a)=>s+Number(a.total_desconto||0),0));
+
+  // Tabela recentes (filtrado por mês + unidade)
+  const tbody=el('tbody-recentes');
+  tbody.innerHTML='';
+  filtrado.slice(0,6).forEach(ap=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><span class="tag-ap">${ap.numero}</span></td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ap.nome_projeto}</td><td style="text-align:right;font-weight:700;color:var(--verde)">${brl(ap.total_desconto)}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  // Gráfico — afetado só por unidade, sempre 6 meses
+  const ultimos6=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(anoAtual,mesAtual-i,1);
+    const m=d.getMonth(),a=d.getFullYear();
+    const label=MESES_ORDER[m].substring(0,3)+'/'+String(a).substring(2);
+    const valor=porUnd.filter(ap=>{const dd=new Date(ap.criado_em);return dd.getMonth()===m&&dd.getFullYear()===a;}).reduce((s,ap)=>s+Number(ap.total_desconto||0),0);
+    ultimos6.push({label,valor});
+  }
+  if(chartMensal)chartMensal.destroy();
+  const ctx=el('chart-mensal').getContext('2d');
+  chartMensal=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:ultimos6.map(x=>x.label),
+      datasets:[{label:'Valor com Desconto',data:ultimos6.map(x=>x.valor),backgroundColor:'rgba(230,92,0,0.15)',borderColor:'#E65C00',borderWidth:2,borderRadius:6}]
+    },
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v>=1000?`R$ ${(v/1000).toFixed(0)}k`:`R$ ${v}`,font:{size:10}},grid:{color:'#F4F4F5'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}
+  });
 }
 
 async function carregarCardapio(){
