@@ -434,14 +434,28 @@
       <div class="toolbar">
         <input type="text" id="banco-busca" placeholder="🔍  Filtrar APs..."/>
         <select id="banco-filtro-unidade" style="padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;cursor:pointer">
-          <option value="">Todas as unidades</option>
-          <option value="Interno">Interno</option>
+          <option value="">Todas as Unidades</option>
           <option value="Geral">Geral</option>
+          <option value="Interno">Interno</option>
+        </select>
+        <select id="banco-filtro-mes" style="padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;cursor:pointer">
+          <option value="">Todos os Meses</option>
+          <option value="0">Janeiro</option>
+          <option value="1">Fevereiro</option>
+          <option value="2">Março</option>
+          <option value="3">Abril</option>
+          <option value="4">Maio</option>
+          <option value="5">Junho</option>
+          <option value="6">Julho</option>
+          <option value="7">Agosto</option>
+          <option value="8">Setembro</option>
+          <option value="9">Outubro</option>
+          <option value="10">Novembro</option>
+          <option value="11">Dezembro</option>
         </select>
         <button class="btn-refresh" onclick="carregarBanco()">↻ Atualizar</button>
         <span id="banco-count" style="font-size:11px;color:var(--texto-leve)"></span>
       </div>
-      <div id="banco-resumo-unidades" style="display:none;margin-bottom:12px;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)"></div>
       <div id="banco-folders"></div>
     </div>
 
@@ -694,31 +708,18 @@ async function carregarBanco(){
 function filtrarBanco(){
   const q=(document.getElementById('banco-busca')?.value||'').toLowerCase().trim();
   const und=(document.getElementById('banco-filtro-unidade')?.value||'');
+  const mes=(document.getElementById('banco-filtro-mes')?.value);
   let lista=banco;
   if(q)lista=lista.filter(ap=>ap.numero.toLowerCase().includes(q)||ap.nome_projeto.toLowerCase().includes(q)||(ap.observacao||'').toLowerCase().includes(q)||(ap.unidade||'').toLowerCase().includes(q));
   if(und)lista=lista.filter(ap=>(ap.unidade||'').trim()===und);
-  renderBanco(lista,und);
+  if(mes!==''&&mes!=null)lista=lista.filter(ap=>new Date(ap.criado_em).getMonth()===Number(mes));
+  renderBanco(lista);
 }
 
-function renderBanco(lista,filtroUnidade){
+function renderBanco(lista){
   const container=document.getElementById('banco-folders');
   if(!container)return;
   document.getElementById('banco-count').textContent=`${lista.length} AP(s)`;
-
-  // Resumo por unidade (só quando "Todas as unidades" está selecionado)
-  const resumoDiv=document.getElementById('banco-resumo-unidades');
-  if(resumoDiv){
-    if(!filtroUnidade&&lista.length){
-      const grupos={};
-      lista.forEach(ap=>{const u=(ap.unidade||'(sem unidade)').trim();if(!grupos[u])grupos[u]={qtd:0,total:0};grupos[u].qtd++;grupos[u].total+=Number(ap.total_desconto||0);});
-      const linhas=Object.entries(grupos).sort((a,b)=>b[1].total-a[1].total).map(([u,v])=>`<tr style="border-bottom:1px solid #eee"><td style="padding:7px 14px;font-weight:600">${u}</td><td style="padding:7px 14px;text-align:center">${v.qtd}</td><td style="padding:7px 14px;text-align:right;font-weight:700;color:var(--verde)">${brl(v.total)}</td></tr>`).join('');
-      resumoDiv.style.display='';
-      resumoDiv.innerHTML=`<table style="width:100%;border-collapse:collapse;background:#fff;font-size:12px"><thead><tr style="background:var(--laranja);color:#fff"><th style="padding:8px 14px;text-align:left">Unidade</th><th style="padding:8px 14px;text-align:center">APs</th><th style="padding:8px 14px;text-align:right">Total c/ Desconto</th></tr></thead><tbody>${linhas}</tbody></table>`;
-    } else {
-      resumoDiv.style.display='none';
-      resumoDiv.innerHTML='';
-    }
-  }
 
   container.innerHTML='';
   if(!lista.length){
@@ -861,6 +862,7 @@ function editarBancoRow(tr,ap,isAdmin){
 
 document.getElementById('banco-busca').addEventListener('input',filtrarBanco);
 document.getElementById('banco-filtro-unidade').addEventListener('change',filtrarBanco);
+document.getElementById('banco-filtro-mes').addEventListener('change',filtrarBanco);
 
 async function carregarUsuarios(){
   const r=await fetch('/api/usuarios');
