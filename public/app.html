@@ -1347,7 +1347,7 @@ async function gerarAPdaExecucao(row){
       sequencial :seq,
       unidade    :row.unidade??'',
       nomeProjeto:row.nome_projeto||'',
-      descritivo :'',
+      descritivo :(row.itens||[]).map(i=>(i.descricao_projeto||'').trim()).filter(Boolean).join(' ; '),
       data       :dataBr,
       observacao :row.obs||'',
       itens,
