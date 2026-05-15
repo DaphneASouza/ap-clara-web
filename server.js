@@ -79,10 +79,11 @@ app.post('/api/login', async (req, res) => {
 // GET /api/debug/unidades — diagnóstico temporário (sem auth)
 app.get('/api/debug/unidades', async (req, res) => {
   try {
-    const r = await pool.query(
-      `SELECT DISTINCT unidade, COUNT(*) as total FROM execucao GROUP BY unidade ORDER BY unidade`
-    );
-    res.json(r.rows);
+    const [rExec, rAps] = await Promise.all([
+      pool.query(`SELECT DISTINCT unidade, COUNT(*) as total FROM execucao GROUP BY unidade ORDER BY unidade`),
+      pool.query(`SELECT DISTINCT unidade, COUNT(*) as total FROM aps GROUP BY unidade ORDER BY unidade`),
+    ]);
+    res.json({ execucao: rExec.rows, aps: rAps.rows });
   } catch (e) {
     res.status(500).json({ erro: e.message });
   }
