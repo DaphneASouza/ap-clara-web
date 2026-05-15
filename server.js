@@ -76,34 +76,6 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// GET /api/debug/unidades — diagnóstico temporário (sem auth)
-app.get('/api/debug/unidades', async (req, res) => {
-  try {
-    const [rExec, rAps] = await Promise.all([
-      pool.query(`SELECT DISTINCT unidade, COUNT(*) as total FROM execucao GROUP BY unidade ORDER BY unidade`),
-      pool.query(`SELECT DISTINCT unidade, COUNT(*) as total FROM aps GROUP BY unidade ORDER BY unidade`),
-    ]);
-    res.json({ execucao: rExec.rows, aps: rAps.rows });
-  } catch (e) {
-    res.status(500).json({ erro: e.message });
-  }
-});
-
-// POST /api/debug/corrigir-unidades — correção temporária de dados (sem auth)
-app.post('/api/debug/corrigir-unidades', async (req, res) => {
-  try {
-    const r = await pool.query(`
-      UPDATE aps SET unidade = e.unidade
-      FROM execucao e
-      WHERE aps.numero = e.numero_ap
-        AND (aps.unidade IS NULL OR aps.unidade = '')
-    `);
-    res.json({ ok: true, atualizadas: r.rowCount });
-  } catch (e) {
-    res.status(500).json({ erro: e.message });
-  }
-});
-
 // GET /api/test-session
 app.get('/api/test-session', (req, res) => {
   if (!req.session.contador) req.session.contador = 0;
