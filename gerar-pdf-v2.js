@@ -61,8 +61,7 @@ function buildHTML(dados) {
     const vtEst  = vEst  * qtd;
     const vtDisc = vDisc * qtd;
 
-    return { id: item.id, tit, comp, qtd, per, vEst, vtEst, vDisc, vtDisc,
-             descricao_projeto: item.descricao_projeto || '' };
+    return { id: item.id, tit, comp, desc, qtd, per, vEst, vtEst, vDisc, vtDisc };
   });
 
   let totEst = 0, totDisc = 0;
@@ -88,12 +87,12 @@ function buildHTML(dados) {
       <td class="td-num">${brl(it.vtDisc)}</td>
     </tr>`).join('');
 
-  // 3. Descritivo dos produtos: titulo + descricao_projeto do item + complexidade em itálico
+  // 3. Descritivo dos produtos: titulo + descritivo completo + complexidade em itálico
   const descItems = itens.map(it => `
     <div class="desc-item">
       <span class="desc-titulo">${esc(it.id)}.${esc(it.tit)}</span>
-      ${it.descricao_projeto
-        ? `<div class="desc-comp">${esc(it.descricao_projeto)}</div>` : ''}
+      ${it.desc
+        ? `<div class="desc-comp">${esc(it.desc)}</div>` : ''}
       ${it.comp && it.comp !== 'Não se aplica'
         ? `<div class="desc-comp" style="font-style:italic;font-size:7.5px">${esc(it.comp)}</div>` : ''}
     </div>`).join('');
