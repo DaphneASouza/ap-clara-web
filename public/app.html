@@ -1281,7 +1281,7 @@ function renderCardView(card,row){
 // ── Modal de confirmação de geração de AP ────────────────────────────────────
 (function(){
   const overlay  = document.getElementById('modal-overlay');
-  const btnGerar = document.getElementById('modal-btn-gerar');
+  let   btnGerar = document.getElementById('modal-btn-gerar');
   const btnCanc  = document.getElementById('modal-btn-cancelar');
 
   // Fecha ao clicar no overlay fora do card
@@ -1296,11 +1296,11 @@ function renderCardView(card,row){
     const hoje = new Date().toISOString().split('T')[0];
     document.getElementById('modal-data').value = hoje;
     overlay.classList.add('show');
-    // Remove listener anterior e adiciona novo
+    // Clona o botão para remover listeners anteriores, atualiza referência
     const novo = btnGerar.cloneNode(true);
     btnGerar.parentNode.replaceChild(novo, btnGerar);
-    // Reatribui referência local para poder substituir no próximo clique
-    document.getElementById('modal-btn-gerar').addEventListener('click', async () => {
+    btnGerar = novo;  // mantém referência atualizada para a próxima chamada
+    btnGerar.addEventListener('click', async () => {
       const dataIso = document.getElementById('modal-data').value;
       if(!dataIso){ toast('Selecione a data da AP.','erro'); return; }
       const dataBr = dataIso.split('-').reverse().join('/');
