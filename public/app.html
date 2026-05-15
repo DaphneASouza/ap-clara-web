@@ -435,6 +435,8 @@
         <input type="text" id="banco-busca" placeholder="🔍  Filtrar APs..."/>
         <select id="banco-filtro-unidade" style="padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;cursor:pointer">
           <option value="">Todas as unidades</option>
+          <option value="Interno">Interno</option>
+          <option value="Geral">Geral</option>
         </select>
         <button class="btn-refresh" onclick="carregarBanco()">↻ Atualizar</button>
         <span id="banco-count" style="font-size:11px;color:var(--texto-leve)"></span>
@@ -685,19 +687,6 @@ async function carregarBanco(){
   try{
     const r=await fetch('/api/aps');
     banco=await r.json();
-    // Popula select de unidade
-    const selUnd=document.getElementById('banco-filtro-unidade');
-    if(selUnd){
-      const valorAtual=selUnd.value;
-      const unidades=[...new Set(banco.map(ap=>(ap.unidade||'').trim()).filter(Boolean))].sort();
-      selUnd.innerHTML='<option value="">Todas as unidades</option>';
-      unidades.forEach(u=>{
-        const opt=document.createElement('option');
-        opt.value=u;opt.textContent=u;
-        if(u===valorAtual)opt.selected=true;
-        selUnd.appendChild(opt);
-      });
-    }
     filtrarBanco();
   }catch{toast('Erro ao carregar banco.','erro');}
 }
