@@ -1363,9 +1363,12 @@ async function gerarAPdaExecucao(row){
       const a=document.createElement('a');
       a.href=url;
       a.download=`AP_${numero.replace(/\./g,'_')||'execucao'}.pdf`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url),10000);
       toast('✅ AP gerada e baixada!','ok');
+      carregarBanco();
     }catch{toast('Erro de conexão.','erro');}
   });
 }
