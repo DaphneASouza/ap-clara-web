@@ -417,6 +417,7 @@
               <th style="padding:10px 12px;width:40px">ID</th>
               <th style="padding:10px 12px">Título</th>
               <th style="padding:10px 12px">Complexidade</th>
+              <th style="padding:10px 12px;white-space:nowrap">Prazo de Entrega</th>
               <th style="padding:10px 12px;max-width:280px">Descritivo</th>
               <th style="padding:10px 12px;text-align:right;white-space:nowrap">Valor (c/ desc.)</th>
             </tr>
@@ -685,6 +686,7 @@ function renderCardapio(filtro=''){
       <td style="padding:8px 12px;color:var(--laranja);font-weight:700">${i.id}</td>
       <td style="padding:8px 12px;font-weight:500">${i.titulo||''}</td>
       <td style="padding:8px 12px;color:#555">${i.complexidade||''}</td>
+      <td style="padding:8px 12px;white-space:nowrap;color:#555">${i.prazo||'—'}</td>
       <td style="padding:8px 12px;max-width:280px;word-wrap:break-word;font-size:11px;color:#444">${i.descritivo||''}</td>
       <td style="padding:8px 12px;text-align:right;font-weight:700;white-space:nowrap">${brl(i.valor)}</td>
     </tr>`).join('');
