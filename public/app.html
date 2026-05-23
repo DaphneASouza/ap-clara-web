@@ -1075,12 +1075,7 @@ function criarCardItem(item,idx,itensArr,onUpdate){
     inp1.type='text';inp1.placeholder='https://trello.com/...';
     inp1.style.cssText='border:1.5px solid var(--borda);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;color:var(--texto);background:white;outline:none;width:100%';
     inp1.addEventListener('input',()=>sincronizarLinks(card,itensArr,idx));
-    const inp2=document.createElement('input');
-    inp2.type='text';inp2.placeholder='https://trello.com/...';
-    inp2.style.cssText='border:1.5px solid var(--borda);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;color:var(--texto);background:white;outline:none;width:100%';
-    inp2.addEventListener('input',()=>sincronizarLinks(card,itensArr,idx));
     trelloWrap.appendChild(inp1);
-    compWrap.appendChild(inp2);
     inp1.focus();
   });
 
