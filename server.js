@@ -2,6 +2,9 @@
 require('dotenv').config();
 const express    = require('express');
 const cloudinary = require('cloudinary').v2;
+cloudinary.config({
+  cloudinary_url: process.env.CLOUDINARY_URL
+});
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 const session    = require('express-session');
