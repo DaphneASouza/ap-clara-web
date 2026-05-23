@@ -167,15 +167,24 @@ app.get('/api/aps', requireAuth, async (req, res) => {
 // PUT /api/aps/:id — edita campos básicos de uma AP
 app.put('/api/aps/:id', requireAuth, async (req, res) => {
   const u = req.session.usuario;
-  const { numero, nome_projeto, data_ap, observacao } = req.body;
+  const { numero, nome_projeto, data_ap, observacao, status, ap_assinada_url, numero_nf, data_envio, data_pagamento } = req.body;
   try {
     const check = await pool.query(`SELECT usuario_id FROM aps WHERE id = $1`, [req.params.id]);
     if (!check.rows.length) return res.status(404).json({ erro: 'AP não encontrada' });
     if (u.nivel !== 'admin' && check.rows[0].usuario_id !== u.id)
       return res.status(403).json({ erro: 'Sem permissão' });
-    await pool.query(
-      `UPDATE aps SET numero=$1, nome_projeto=$2, data_ap=$3, observacao=$4 WHERE id=$5`,
-      [numero, nome_projeto, data_ap || null, observacao || null, req.params.id]
+    await pool.query(`
+      UPDATE aps SET
+        numero=$1, nome_projeto=$2, data_ap=$3, observacao=$4,
+        status=COALESCE($5, status),
+        ap_assinada_url=COALESCE($6, ap_assinada_url),
+        numero_nf=COALESCE($7, numero_nf),
+        data_envio=COALESCE($8, data_envio),
+        data_pagamento=COALESCE($9, data_pagamento)
+      WHERE id=$10`,
+      [numero, nome_projeto, data_ap||null, observacao||null,
+       status||null, ap_assinada_url||null, numero_nf||null,
+       data_envio||null, data_pagamento||null, req.params.id]
     );
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ erro: e.message }); }
@@ -190,6 +199,32 @@ app.delete('/api/aps/:id', requireAuth, async (req, res) => {
     if (u.nivel !== 'admin' && check.rows[0].usuario_id !== u.id)
       return res.status(403).json({ erro: 'Sem permissão' });
     await pool.query(`DELETE FROM aps WHERE id = $1`, [req.params.id]);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ erro: e.message }); }
+});
+
+// Upload AP assinada
+app.post('/api/aps/:id/assinada', requireAuth, async (req, res) => {
+  try {
+    const { ap_assinada_url } = req.body;
+    await pool.query(`UPDATE aps SET ap_assinada_url=$1 WHERE id=$2`, [ap_assinada_url, req.params.id]);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ erro: e.message }); }
+});
+
+// Atualizar status da AP
+app.patch('/api/aps/:id/status', requireAuth, async (req, res) => {
+  try {
+    const { status, numero_nf, data_envio, data_pagamento } = req.body;
+    await pool.query(`
+      UPDATE aps SET
+        status=COALESCE($1,status),
+        numero_nf=COALESCE($2,numero_nf),
+        data_envio=COALESCE($3,data_envio),
+        data_pagamento=COALESCE($4,data_pagamento)
+      WHERE id=$5`,
+      [status||null, numero_nf||null, data_envio||null, data_pagamento||null, req.params.id]
+    );
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ erro: e.message }); }
 });

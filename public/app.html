@@ -305,6 +305,8 @@
     <div class="nav-section">Registros</div>
     <button class="nav-item" data-page="cardapio"><span class="icon">📒</span> Cardápio</button>
     <button class="nav-item" data-page="banco"><span class="icon">🗂</span> Banco de APs</button>
+    <div class="nav-section">Faturamento</div>
+    <button class="nav-item" data-page="faturamento"><span class="icon">💼</span> Faturamento</button>
     <div class="nav-section admin-only" style="display:none">Administração</div>
     <button class="nav-item admin-only" data-page="usuarios" style="display:none"><span class="icon">👥</span> Usuários</button>
   </nav>
@@ -524,6 +526,15 @@
       <div id="banco-folders"></div>
     </div>
 
+    <!-- FATURAMENTO -->
+    <div class="page" id="page-faturamento">
+      <div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:2px solid var(--borda);padding-bottom:12px">
+        <button class="fat-tab active" data-tab="enviadas" style="background:none;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:6px 16px;border-radius:8px;color:var(--laranja);border-bottom:2px solid var(--laranja)">📤 Enviadas</button>
+        <button class="fat-tab" data-tab="pagas" style="background:none;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:6px 16px;border-radius:8px;color:var(--texto-leve)">✅ Pagas</button>
+      </div>
+      <div id="fat-tab-enviadas"></div>
+      <div id="fat-tab-pagas" style="display:none"></div>
+    </div>
     <!-- USUÁRIOS -->
     <div class="page" id="page-usuarios">
       <div class="page-header">
@@ -596,6 +607,7 @@ const pageTitles={
   'execucoes-salvas':['Execuções Salvas','Histórico e edição das execuções salvas'],
   cardapio:['Cardápio','Itens do Cardápio SESC-AR/DF Nº 018188/2024'],
   banco:['Banco de APs','Histórico de todas as autorizações'],
+  faturamento:['Faturamento','Gestão de envio, assinatura e pagamento de APs'],
   usuarios:['Usuários','Gerenciamento de acesso ao sistema'],
 };
 
@@ -615,6 +627,7 @@ document.querySelectorAll('.nav-item').forEach(btn=>{
     if(page==='dashboard')carregarDashboard();
     if(page==='execucao-controle')carregarExecucao();
     if(page==='execucoes-salvas')carregarExecucoesSalvas();
+    if(page==='faturamento')carregarFaturamento();
     if(page==='cardapio')renderCardapio();
   });
 });
@@ -882,13 +895,26 @@ function renderBancoRow(card,ap,isAdmin){
       ${isAdmin?`<div style="font-size:11px;color:var(--texto-leve)">👤 ${ap.usuario_nome||'—'}</div>`:''}
       ${ap.observacao?`<div style="font-size:11px;color:var(--texto-leve);font-style:italic">${ap.observacao}</div>`:''}
     </div>
-    <div style="padding:8px 14px;border-top:1px solid var(--borda);display:flex;gap:6px;justify-content:flex-end">
+    <div style="padding:8px 14px;border-top:1px solid var(--borda);display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap">
       <button class="btn-pdf">📄 PDF</button>
+      ${ap.status==='enviada'||ap.status==='paga'
+        ?`<span style="background:var(--verde-claro);color:var(--verde);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700">${ap.status==='paga'?'✅ Paga':'📤 Enviada'}</span>`
+        :`<button class="btn-enviar-ap">📤 Enviar para cliente</button>`}
       <button class="btn-edit-ap">✏️ Editar</button>
       <button class="btn-del-ap">🗑</button>
     </div>`;
   card.querySelector('.btn-pdf').addEventListener('click',()=>window.open(`/api/aps/${ap.id}/pdf`,'_blank'));
   card.querySelector('.btn-edit-ap').addEventListener('click',()=>editarBancoRow(card,ap,isAdmin));
+  card.querySelector('.btn-enviar-ap')?.addEventListener('click',async()=>{
+    if(!confirm(`Confirmar envio da AP "${ap.numero}" para o cliente?`))return;
+    const hoje=new Date().toLocaleDateString('pt-BR');
+    const r=await fetch(`/api/aps/${ap.id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'enviada',data_envio:hoje})});
+    if(r.ok){
+      toast('📤 AP marcada como enviada!','ok');
+      banco=banco.map(x=>x.id===ap.id?{...x,status:'enviada',data_envio:hoje}:x);
+      renderBancoRow(card,{...ap,status:'enviada',data_envio:hoje},isAdmin);
+    }else toast('Erro ao atualizar status.','erro');
+  });
   card.querySelector('.btn-del-ap').addEventListener('click',async()=>{
     if(!confirm(`Excluir a AP "${ap.numero}"?`))return;
     const r=await fetch(`/api/aps/${ap.id}`,{method:'DELETE'});
@@ -1632,6 +1658,115 @@ function renderCardEdit(card,row){
   overlay.addEventListener('click', fecharMenu);
   document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', fecharMenu));
 })();
+
+// ── Faturamento ──────────────────────────────────────────────────────────────
+async function carregarFaturamento(){
+  try{
+    const r=await fetch('/api/aps');
+    const todas=await r.json();
+    const enviadas=todas.filter(ap=>ap.status==='enviada');
+    const pagas=todas.filter(ap=>ap.status==='paga');
+    renderFatEnviadas(enviadas);
+    renderFatPagas(pagas);
+  }catch{toast('Erro ao carregar faturamento.','erro');}
+}
+
+function renderFatEnviadas(lista){
+  const el=document.getElementById('fat-tab-enviadas');
+  if(!el)return;
+  if(!lista.length){el.innerHTML='<div style="text-align:center;padding:48px;color:var(--texto-leve)">Nenhuma AP enviada ainda.</div>';return;}
+  el.innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+lista.map(ap=>`
+    <div class="fat-card" data-id="${ap.id}" style="background:white;border-radius:10px;box-shadow:var(--shadow);border:1px solid var(--borda);overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--borda);flex-wrap:wrap;gap:8px">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span class="tag-ap">${ap.numero}</span>
+          <span style="font-size:12px;color:var(--texto-leve)">${ap.data_envio?'Enviado em '+ap.data_envio:''}</span>
+        </div>
+        <span style="font-weight:800;color:var(--verde);font-size:15px">${brl(ap.total_desconto)}</span>
+      </div>
+      <div style="padding:12px 16px;display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:13px;font-weight:600">${ap.nome_projeto||'—'}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <button onclick="window.open('/api/aps/${ap.id}/pdf','_blank')" style="background:var(--laranja-claro);color:var(--laranja);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📄 Ver AP</button>
+          ${ap.ap_assinada_url?`<a href="${ap.ap_assinada_url}" target="_blank" style="background:var(--verde-claro);color:var(--verde);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">✅ Ver AP Assinada</a>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;padding:10px 12px;background:var(--bg);border-radius:8px">
+          <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase">AP Assinada (link ou upload)</label>
+          <div style="display:flex;gap:6px">
+            <input type="text" placeholder="Cole o link da AP assinada..." id="fat-link-${ap.id}" value="${ap.ap_assinada_url||''}" style="flex:1;padding:7px 10px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit"/>
+            <button onclick="salvarApAssinada(${ap.id})" style="background:var(--laranja);color:white;border:none;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">💾 Salvar</button>
+          </div>
+          <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase;margin-top:6px">Número da NF <span style="color:#DC2626">*</span></label>
+          <div style="display:flex;gap:6px">
+            <input type="text" placeholder="Ex: 001234" id="fat-nf-${ap.id}" value="${ap.numero_nf||''}" style="flex:1;padding:7px 10px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit"/>
+            <button onclick="marcarPaga(${ap.id})" style="background:var(--verde);color:white;border:none;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">✅ Marcar Paga</button>
+          </div>
+        </div>
+      </div>
+    </div>`).join('')+'</div>';
+}
+
+function renderFatPagas(lista){
+  const el=document.getElementById('fat-tab-pagas');
+  if(!el)return;
+  if(!lista.length){el.innerHTML='<div style="text-align:center;padding:48px;color:var(--texto-leve)">Nenhuma AP paga ainda.</div>';return;}
+  el.innerHTML='<div style="display:flex;flex-direction:column;gap:10px">'+lista.map(ap=>`
+    <div style="background:white;border-radius:10px;box-shadow:var(--shadow);border:1px solid var(--borda);overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--borda);flex-wrap:wrap;gap:8px">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span class="tag-ap">${ap.numero}</span>
+          <span style="background:var(--verde-claro);color:var(--verde);padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700">PAGA</span>
+          ${ap.numero_nf?`<span style="font-size:11px;color:var(--texto-leve)">NF ${ap.numero_nf}</span>`:''}
+        </div>
+        <span style="font-weight:800;color:var(--verde);font-size:15px">${brl(ap.total_desconto)}</span>
+      </div>
+      <div style="padding:12px 16px;display:flex;flex-direction:column;gap:6px">
+        <div style="font-size:13px;font-weight:600">${ap.nome_projeto||'—'}</div>
+        <div style="font-size:11px;color:var(--texto-leve)">${ap.data_pagamento?'Pago em '+ap.data_pagamento:''} ${ap.data_envio?'· Enviado em '+ap.data_envio:''}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+          <button onclick="window.open('/api/aps/${ap.id}/pdf','_blank')" style="background:var(--laranja-claro);color:var(--laranja);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📄 Ver AP</button>
+          ${ap.ap_assinada_url?`<a href="${ap.ap_assinada_url}" target="_blank" style="background:var(--verde-claro);color:var(--verde);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">✅ Ver AP Assinada</a>`:''}
+          <button onclick="desfazerPagamento(${ap.id})" style="background:#FEE2E2;color:#DC2626;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">↩ Desfazer</button>
+        </div>
+      </div>
+    </div>`).join('')+'</div>';
+}
+
+async function salvarApAssinada(id){
+  const url=document.getElementById(`fat-link-${id}`)?.value.trim();
+  if(!url){toast('Cole o link da AP assinada.','erro');return;}
+  const r=await fetch(`/api/aps/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({ap_assinada_url:url})});
+  if(r.ok){toast('✅ Link salvo!','ok');carregarFaturamento();}
+  else toast('Erro ao salvar link.','erro');
+}
+
+async function marcarPaga(id){
+  const nf=document.getElementById(`fat-nf-${id}`)?.value.trim();
+  if(!nf){toast('Informe o número da NF antes de marcar como paga.','erro');return;}
+  const hoje=new Date().toLocaleDateString('pt-BR');
+  const r=await fetch(`/api/aps/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'paga',numero_nf:nf,data_pagamento:hoje})});
+  if(r.ok){toast('✅ AP marcada como paga!','ok');carregarFaturamento();}
+  else toast('Erro ao marcar como paga.','erro');
+}
+
+async function desfazerPagamento(id){
+  if(!confirm('Desfazer pagamento e voltar para Enviadas?'))return;
+  const r=await fetch(`/api/aps/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'enviada',data_pagamento:null,numero_nf:null})});
+  if(r.ok){toast('AP voltou para Enviadas.','ok');carregarFaturamento();}
+  else toast('Erro ao desfazer.','erro');
+}
+
+document.querySelectorAll('.fat-tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.fat-tab').forEach(b=>{
+      b.style.color='var(--texto-leve)';b.style.borderBottom='none';
+    });
+    btn.style.color='var(--laranja)';btn.style.borderBottom='2px solid var(--laranja)';
+    const tab=btn.dataset.tab;
+    document.getElementById('fat-tab-enviadas').style.display=tab==='enviadas'?'':'none';
+    document.getElementById('fat-tab-pagas').style.display=tab==='pagas'?'':'none';
+  });
+});
 
 init();
 </script>

@@ -54,6 +54,11 @@ async function setupDB() {
   `);
   await pool.query(`ALTER TABLE execucao ADD COLUMN IF NOT EXISTS numero_ap TEXT`);
   await pool.query(`ALTER TABLE execucao ADD COLUMN IF NOT EXISTS obs TEXT`);
+  await pool.query(`ALTER TABLE aps ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'gerada'`);
+  await pool.query(`ALTER TABLE aps ADD COLUMN IF NOT EXISTS ap_assinada_url TEXT`);
+  await pool.query(`ALTER TABLE aps ADD COLUMN IF NOT EXISTS numero_nf TEXT`);
+  await pool.query(`ALTER TABLE aps ADD COLUMN IF NOT EXISTS data_envio TEXT`);
+  await pool.query(`ALTER TABLE aps ADD COLUMN IF NOT EXISTS data_pagamento TEXT`);
 
   // Cria admin Daphne se não existir
   const bcrypt = require('bcrypt');
