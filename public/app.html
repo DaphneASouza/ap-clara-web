@@ -985,6 +985,15 @@ function buildItemSelect(selectedId){
   return sel;
 }
 
+function sincronizarLinks(card,itensArr,idx){
+  const trelloInps=[...card.querySelectorAll('.links-trello-wrap input')];
+  const compInps=[...card.querySelectorAll('.links-comprovacao-wrap input')];
+  itensArr[idx].link_trello=trelloInps[0]?.value||'';
+  itensArr[idx].link_trello_comprovacao=compInps[0]?.value||'';
+  itensArr[idx].links_trello_extra=trelloInps.slice(1).map(i=>i.value).filter(Boolean);
+  itensArr[idx].links_comprovacao_extra=compInps.slice(1).map(i=>i.value).filter(Boolean);
+}
+
 function criarCardItem(item,idx,itensArr,onUpdate){
   const card=document.createElement('div');
   card.className='ec-item-card';
@@ -1051,9 +1060,11 @@ function criarCardItem(item,idx,itensArr,onUpdate){
     const inp1=document.createElement('input');
     inp1.type='text';inp1.placeholder='https://trello.com/...';
     inp1.style.cssText='border:1.5px solid var(--borda);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;color:var(--texto);background:white;outline:none;width:100%';
+    inp1.addEventListener('input',()=>sincronizarLinks(card,itensArr,idx));
     const inp2=document.createElement('input');
     inp2.type='text';inp2.placeholder='https://trello.com/...';
     inp2.style.cssText='border:1.5px solid var(--borda);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;color:var(--texto);background:white;outline:none;width:100%';
+    inp2.addEventListener('input',()=>sincronizarLinks(card,itensArr,idx));
     trelloWrap.appendChild(inp1);
     compWrap.appendChild(inp2);
     inp1.focus();
@@ -1065,6 +1076,7 @@ function criarCardItem(item,idx,itensArr,onUpdate){
       const f=el.dataset.f;
       const val=el.type==='number'?(parseFloat(el.value)||0):el.value;
       itensArr[idx][f]=val;
+      sincronizarLinks(card,itensArr,idx);
       if(f==='quantidade'){
         itensArr[idx].valor_total=(itensArr[idx].valor_unitario||0)*val;
         card.querySelector('[data-f="valor_total_disp"]').value=brl(itensArr[idx].valor_total);
