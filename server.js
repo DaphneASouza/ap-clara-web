@@ -2,11 +2,7 @@
 require('dotenv').config();
 const express    = require('express');
 const cloudinary = require('cloudinary').v2;
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+cloudinary.config({ cloudinary_url: `cloudinary://${process.env.CLOUDINARY_API_KEY}:${process.env.CLOUDINARY_API_SECRET}@${process.env.CLOUDINARY_CLOUD_NAME}` });
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 const session    = require('express-session');
