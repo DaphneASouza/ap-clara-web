@@ -658,13 +658,6 @@ async function carregarDashboard(){
       });
     }
 
-    // Define mês atual como default na primeira carga
-    const selMes=document.getElementById('dash-filtro-mes');
-    if(selMes&&selMes.dataset.iniciado!=='1'){
-      selMes.value=String(new Date().getMonth());
-      selMes.dataset.iniciado='1';
-    }
-
     aplicarFiltrosDashboard();
   }catch(e){console.error(e);}
 }
