@@ -214,6 +214,7 @@ app.delete('/api/aps/:id', requireAuth, async (req, res) => {
 // Upload AP assinada
 app.post('/api/aps/:id/assinada', requireAuth, upload.single('arquivo'), async (req, res) => {
   try {
+    console.log('[Cloudinary] cloud_name:', process.env.CLOUDINARY_CLOUD_NAME, '| api_key:', process.env.CLOUDINARY_API_KEY ? 'OK' : 'MISSING');
     if (!req.file) return res.status(400).json({ erro: 'Nenhum arquivo enviado.' });
     const resultado = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
