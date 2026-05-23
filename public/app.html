@@ -802,7 +802,7 @@ function filtrarBanco(){
   const q=(document.getElementById('banco-busca')?.value||'').toLowerCase().trim();
   const und=(document.getElementById('banco-filtro-unidade')?.value||'');
   const mes=(document.getElementById('banco-filtro-mes')?.value);
-  let lista=banco;
+  let lista=banco.filter(ap=>ap.status!=='enviada'&&ap.status!=='paga');
   if(q)lista=lista.filter(ap=>ap.numero.toLowerCase().includes(q)||ap.nome_projeto.toLowerCase().includes(q)||(ap.observacao||'').toLowerCase().includes(q)||(ap.unidade||'').toLowerCase().includes(q));
   if(und)lista=lista.filter(ap=>(ap.unidade||'').trim()===und);
   if(mes!==''&&mes!=null)lista=lista.filter(ap=>new Date(ap.criado_em).getMonth()===Number(mes));
