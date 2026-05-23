@@ -1327,7 +1327,9 @@ function renderCardView(card,row){
           </div>
           <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
             ${it.link_trello?`<a href="${it.link_trello}" target="_blank" style="font-size:11px;color:var(--azul);text-decoration:none">🔗 Trello</a>`:''}
+            ${(it.links_trello_extra||[]).map((l,i)=>l?`<a href="${l}" target="_blank" style="font-size:11px;color:var(--azul);text-decoration:none">🔗 Trello ${i+2}</a>`:'').join('')}
             ${it.link_trello_comprovacao?`<a href="${it.link_trello_comprovacao}" target="_blank" style="font-size:11px;color:var(--azul);text-decoration:none">✅ Comprovação</a>`:''}
+            ${(it.links_comprovacao_extra||[]).map((l,i)=>l?`<a href="${l}" target="_blank" style="font-size:11px;color:var(--azul);text-decoration:none">✅ Comprovação ${i+2}</a>`:'').join('')}
           </div>
         </div>`).join('')}</div>`
     :'<div style="font-size:12px;color:var(--texto-leve)">Sem itens cadastrados</div>';
