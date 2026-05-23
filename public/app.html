@@ -1140,10 +1140,18 @@ async function carregarExecucao(){
   try{
     const r=await fetch('/api/execucao');
     const todas=await r.json();
-    const seq=(todas.length||0)+1;
     const projeto=document.getElementById('ec-projeto').value.toUpperCase();
     const mesAtual=MESES_ORDER[new Date().getMonth()];
-    document.getElementById('ec-numero-ap').value=`${mesAtual}.${projeto}.${seq}`;
+    // Pega o maior sequencial já usado em qualquer execução
+    let maxSeq=0;
+    todas.forEach(row=>{
+      const partes=(row.numero_ap||'').split('.');
+      if(partes.length===3){
+        const n=parseInt(partes[2])||0;
+        if(n>maxSeq)maxSeq=n;
+      }
+    });
+    document.getElementById('ec-numero-ap').value=`${mesAtual}.${projeto}.${maxSeq+1}`;
   }catch{
     document.getElementById('ec-numero-ap').value='';
   }
