@@ -832,24 +832,14 @@ function renderBanco(lista){
     body.className='exec-folder-body'+(aberto?' open':'');
 
     const wrap=document.createElement('div');
-    wrap.style.cssText='padding:12px 12px 16px';
-    const table=document.createElement('table');
-    table.className='data-table';
-    table.style.cssText='border-radius:8px;overflow:hidden;width:100%';
-    table.innerHTML=`<thead><tr>
-      <th>Número AP</th><th>Projeto</th><th>Data</th>
-      ${isAdmin?'<th>Usuário</th>':''}
-      <th>Com Desconto</th><th>Observação</th><th>Ações</th>
-    </tr></thead>`;
-    const tbody=document.createElement('tbody');
+    wrap.style.cssText='padding:8px 12px 16px;display:flex;flex-direction:column;gap:8px';
     rows.forEach(ap=>{
-      const tr=document.createElement('tr');
-      tr.dataset.id=ap.id;
-      renderBancoRow(tr,ap,isAdmin);
-      tbody.appendChild(tr);
+      const card=document.createElement('div');
+      card.dataset.id=ap.id;
+      card.style.cssText='background:white;border-radius:8px;border:1px solid var(--borda);overflow:hidden';
+      renderBancoRow(card,ap,isAdmin);
+      wrap.appendChild(card);
     });
-    table.appendChild(tbody);
-    wrap.appendChild(table);
     body.appendChild(wrap);
 
     head.addEventListener('click',()=>{
@@ -864,63 +854,80 @@ function renderBanco(lista){
   });
 }
 
-function renderBancoRow(tr,ap,isAdmin){
-  tr.className='';
-  tr.innerHTML=`
-    <td><span class="tag-ap">${ap.numero||'—'}</span></td>
-    <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${ap.nome_projeto||''}">${ap.nome_projeto||'—'}</td>
-    <td style="white-space:nowrap">${ap.data_ap||'—'}</td>
-    ${isAdmin?`<td>${ap.usuario_nome||'—'}</td>`:''}
-    <td class="td-money">${brl(ap.total_desconto)}</td>
-    <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${ap.observacao||''}">${ap.observacao||'—'}</td>
-    <td><div style="display:flex;gap:4px;flex-wrap:nowrap">
-      <button class="btn-pdf">📄</button>
+function renderBancoRow(card,ap,isAdmin){
+  card.className='';
+  const dataIso=ap.data_ap?(ap.data_ap.split('/').reverse().join('-')):'';
+  card.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--borda);gap:8px;flex-wrap:wrap">
+      <span class="tag-ap">${ap.numero||'—'}</span>
+      <span style="font-size:12px;color:var(--texto-leve)">${ap.data_ap||'—'}</span>
+      <span style="font-weight:800;color:var(--verde);font-size:14px;margin-left:auto">${brl(ap.total_desconto)}</span>
+    </div>
+    <div style="padding:10px 14px;display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:13px;font-weight:600">${ap.nome_projeto||'—'}</div>
+      ${isAdmin?`<div style="font-size:11px;color:var(--texto-leve)">👤 ${ap.usuario_nome||'—'}</div>`:''}
+      ${ap.observacao?`<div style="font-size:11px;color:var(--texto-leve);font-style:italic">${ap.observacao}</div>`:''}
+    </div>
+    <div style="padding:8px 14px;border-top:1px solid var(--borda);display:flex;gap:6px;justify-content:flex-end">
+      <button class="btn-pdf">📄 PDF</button>
       <button class="btn-edit-ap">✏️ Editar</button>
       <button class="btn-del-ap">🗑</button>
-    </div></td>`;
-  tr.querySelector('.btn-pdf').addEventListener('click',()=>window.open(`/api/aps/${ap.id}/pdf`,'_blank'));
-  tr.querySelector('.btn-edit-ap').addEventListener('click',()=>editarBancoRow(tr,ap,isAdmin));
-  tr.querySelector('.btn-del-ap').addEventListener('click',async()=>{
+    </div>`;
+  card.querySelector('.btn-pdf').addEventListener('click',()=>window.open(`/api/aps/${ap.id}/pdf`,'_blank'));
+  card.querySelector('.btn-edit-ap').addEventListener('click',()=>editarBancoRow(card,ap,isAdmin));
+  card.querySelector('.btn-del-ap').addEventListener('click',async()=>{
     if(!confirm(`Excluir a AP "${ap.numero}"?`))return;
     const r=await fetch(`/api/aps/${ap.id}`,{method:'DELETE'});
     if(!r.ok){const e=await r.json();toast(e.erro||'Erro ao excluir.','erro');return;}
     banco=banco.filter(x=>x.id!==ap.id);
-    tr.remove();
+    card.remove();
     toast('AP excluída.','ok');
   });
 }
 
-function editarBancoRow(tr,ap,isAdmin){
-  tr.className='tr-editing';
-  // Converte dd/mm/yyyy → yyyy-mm-dd para o input date
+function editarBancoRow(card,ap,isAdmin){
   const dataIso=ap.data_ap?(ap.data_ap.split('/').reverse().join('-')):'';
-  tr.innerHTML=`
-    <td><input type="text" data-f="numero" value="${ap.numero||''}" style="width:130px"/></td>
-    <td><input type="text" data-f="nome_projeto" value="${ap.nome_projeto||''}" style="width:140px"/></td>
-    <td><input type="date" data-f="data_ap" value="${dataIso}" style="width:130px"/></td>
-    ${isAdmin?`<td style="color:var(--texto-leve);font-size:11px">${ap.usuario_nome||'—'}</td>`:''}
-    <td class="td-money">${brl(ap.total_desconto)}</td>
-    <td><input type="text" data-f="observacao" value="${ap.observacao||''}" style="width:120px"/></td>
-    <td><div style="display:flex;gap:4px">
-      <button class="btn-save-ap">💾 Salvar</button>
-      <button class="btn-cancel-ap">✕</button>
-    </div></td>`;
-  tr.querySelector('.btn-cancel-ap').addEventListener('click',()=>renderBancoRow(tr,ap,isAdmin));
-  tr.querySelector('.btn-save-ap').addEventListener('click',async()=>{
-    const getF=f=>tr.querySelector(`[data-f="${f}"]`).value.trim();
+  card.innerHTML=`
+    <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase">Número AP</label>
+          <input type="text" data-f="numero" value="${ap.numero||''}" style="padding:7px 10px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit"/>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase">Data</label>
+          <input type="date" data-f="data_ap" value="${dataIso}" style="padding:7px 10px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit"/>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px;grid-column:span 2">
+          <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase">Nome do Projeto</label>
+          <input type="text" data-f="nome_projeto" value="${ap.nome_projeto||''}" style="padding:7px 10px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit"/>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px;grid-column:span 2">
+          <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase">Observação</label>
+          <input type="text" data-f="observacao" value="${ap.observacao||''}" style="padding:7px 10px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit"/>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-save-ap" style="flex:1;padding:9px;font-size:13px;font-weight:700;background:var(--laranja);color:white;border:none;border-radius:8px;cursor:pointer;font-family:inherit">💾 Salvar</button>
+        <button class="btn-cancel-ap" style="padding:9px 14px;font-size:13px;background:var(--bg);color:var(--texto);border:1px solid var(--borda);border-radius:8px;cursor:pointer;font-family:inherit">✕</button>
+      </div>
+    </div>`;
+  card.querySelector('.btn-cancel-ap').addEventListener('click',()=>renderBancoRow(card,ap,isAdmin));
+  card.querySelector('.btn-save-ap').addEventListener('click',async()=>{
+    const getF=f=>card.querySelector(`[data-f="${f}"]`).value.trim();
     const dataIso2=getF('data_ap');
     const dados={
-      numero      :getF('numero'),
+      numero:getF('numero'),
       nome_projeto:getF('nome_projeto'),
-      data_ap     :dataIso2?dataIso2.split('-').reverse().join('/'):null,
-      observacao  :getF('observacao')||null,
+      data_ap:dataIso2?dataIso2.split('-').reverse().join('/'):null,
+      observacao:getF('observacao')||null,
     };
     try{
       const r=await fetch(`/api/aps/${ap.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(dados)});
       if(!r.ok){const e=await r.json();toast(e.erro||'Erro ao salvar.','erro');return;}
       const updated={...ap,...dados};
       banco=banco.map(x=>x.id===ap.id?updated:x);
-      renderBancoRow(tr,updated,isAdmin);
+      renderBancoRow(card,updated,isAdmin);
       toast('✅ AP atualizada!','ok');
     }catch{toast('Erro de conexão.','erro');}
   });
