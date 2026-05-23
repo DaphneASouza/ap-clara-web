@@ -462,6 +462,26 @@
       </div>
       <div class="toolbar">
         <input type="text" id="exec-busca" placeholder="🔍  Buscar em todas as execuções..."/>
+        <select id="exec-filtro-unidade" style="padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;cursor:pointer">
+          <option value="">Todas as unidades</option>
+          <option value="Geral">Geral</option>
+          <option value="Interno">Interno</option>
+        </select>
+        <select id="exec-filtro-mes" style="padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;cursor:pointer">
+          <option value="">Todos os meses</option>
+          <option value="JANEIRO">Janeiro</option>
+          <option value="FEVEREIRO">Fevereiro</option>
+          <option value="MARÇO">Março</option>
+          <option value="ABRIL">Abril</option>
+          <option value="MAIO">Maio</option>
+          <option value="JUNHO">Junho</option>
+          <option value="JULHO">Julho</option>
+          <option value="AGOSTO">Agosto</option>
+          <option value="SETEMBRO">Setembro</option>
+          <option value="OUTUBRO">Outubro</option>
+          <option value="NOVEMBRO">Novembro</option>
+          <option value="DEZEMBRO">Dezembro</option>
+        </select>
         <span id="exec-busca-count" style="font-size:11px;color:var(--texto-leve);white-space:nowrap"></span>
       </div>
       <div class="exec-cards-grid" id="exec-cards-grid"></div>
@@ -528,9 +548,32 @@
 
     <!-- FATURAMENTO -->
     <div class="page" id="page-faturamento">
-      <div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:2px solid var(--borda);padding-bottom:12px">
+      <div style="display:flex;gap:8px;margin-bottom:12px;border-bottom:2px solid var(--borda);padding-bottom:12px">
         <button class="fat-tab active" data-tab="enviadas" style="background:none;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:6px 16px;border-radius:8px;color:var(--laranja);border-bottom:2px solid var(--laranja)">📤 Enviadas</button>
         <button class="fat-tab" data-tab="pagas" style="background:none;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:6px 16px;border-radius:8px;color:var(--texto-leve)">✅ Pagas</button>
+      </div>
+      <div class="toolbar" style="margin-bottom:14px">
+        <input type="text" id="fat-busca" placeholder="🔍  Filtrar APs..."/>
+        <select id="fat-filtro-unidade" style="padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;cursor:pointer">
+          <option value="">Todas as unidades</option>
+          <option value="Geral">Geral</option>
+          <option value="Interno">Interno</option>
+        </select>
+        <select id="fat-filtro-mes" style="padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;cursor:pointer">
+          <option value="">Todos os meses</option>
+          <option value="JANEIRO">Janeiro</option>
+          <option value="FEVEREIRO">Fevereiro</option>
+          <option value="MARÇO">Março</option>
+          <option value="ABRIL">Abril</option>
+          <option value="MAIO">Maio</option>
+          <option value="JUNHO">Junho</option>
+          <option value="JULHO">Julho</option>
+          <option value="AGOSTO">Agosto</option>
+          <option value="SETEMBRO">Setembro</option>
+          <option value="OUTUBRO">Outubro</option>
+          <option value="NOVEMBRO">Novembro</option>
+          <option value="DEZEMBRO">Dezembro</option>
+        </select>
       </div>
       <div id="fat-tab-enviadas"></div>
       <div id="fat-tab-pagas" style="display:none"></div>
@@ -1267,6 +1310,15 @@ document.getElementById('exec-busca').addEventListener('input',function(){
   renderResultadosBusca(resultados,q);
 });
 
+document.getElementById('exec-filtro-unidade').addEventListener('change',()=>{
+  const q=(document.getElementById('exec-busca')?.value||'').trim();
+  if(q){const r=filtrarExecucoes(q);renderResultadosBusca(r,q);}else renderExecCards();
+});
+document.getElementById('exec-filtro-mes').addEventListener('change',()=>{
+  const q=(document.getElementById('exec-busca')?.value||'').trim();
+  if(q){const r=filtrarExecucoes(q);renderResultadosBusca(r,q);}else renderExecCards();
+});
+
 async function carregarExecucoesSalvas(){
   try{
     const r=await fetch('/api/execucao');
@@ -1295,14 +1347,22 @@ function renderExecCards(){
   const grid=document.getElementById('exec-cards-grid');
   if(!grid)return;
   grid.innerHTML='';
-  if(!execSalvasData.length){
+  const filtroUnd=(document.getElementById('exec-filtro-unidade')?.value||'');
+  const filtroMes=(document.getElementById('exec-filtro-mes')?.value||'');
+  const dadosFiltrados=execSalvasData.filter(row=>{
+    if(filtroUnd&&(row.unidade||'')!==filtroUnd)return false;
+    if(filtroMes&&extrairMes(row.numero_ap||'')!==filtroMes)return false;
+    return true;
+  });
+
+  if(!dadosFiltrados.length){
     grid.innerHTML='<div style="text-align:center;padding:48px;color:var(--texto-leve)">Nenhuma execução salva ainda.</div>';
     return;
   }
 
   // Agrupa por mês extraído do numero_ap
   const grupos={};
-  execSalvasData.forEach(row=>{
+  dadosFiltrados.forEach(row=>{
     const mes=extrairMes(row.numero_ap);
     if(!grupos[mes])grupos[mes]=[];
     grupos[mes].push(row);
@@ -1673,8 +1733,19 @@ async function carregarFaturamento(){
   try{
     const r=await fetch('/api/aps');
     const todas=await r.json();
-    const enviadas=todas.filter(ap=>ap.status==='enviada');
-    const pagas=todas.filter(ap=>ap.status==='paga');
+    const q=(document.getElementById('fat-busca')?.value||'').toLowerCase().trim();
+    const und=(document.getElementById('fat-filtro-unidade')?.value||'');
+    const mes=(document.getElementById('fat-filtro-mes')?.value||'');
+    let enviadas=todas.filter(ap=>ap.status==='enviada');
+    let pagas=todas.filter(ap=>ap.status==='paga');
+    const filtrar=lista=>lista.filter(ap=>{
+      if(und&&(ap.unidade||'').trim()!==und)return false;
+      if(mes&&extrairMes(ap.numero||'')!==mes)return false;
+      if(q&&!(ap.numero||'').toLowerCase().includes(q)&&!(ap.nome_projeto||'').toLowerCase().includes(q))return false;
+      return true;
+    });
+    enviadas=filtrar(enviadas);
+    pagas=filtrar(pagas);
     renderFatEnviadas(enviadas);
     renderFatPagas(pagas);
   }catch{toast('Erro ao carregar faturamento.','erro');}
@@ -1855,6 +1926,10 @@ document.querySelectorAll('.fat-tab').forEach(btn=>{
     document.getElementById('fat-tab-pagas').style.display=tab==='pagas'?'':'none';
   });
 });
+
+document.getElementById('fat-busca')?.addEventListener('input',carregarFaturamento);
+document.getElementById('fat-filtro-unidade')?.addEventListener('change',carregarFaturamento);
+document.getElementById('fat-filtro-mes')?.addEventListener('change',carregarFaturamento);
 
 init();
 </script>
