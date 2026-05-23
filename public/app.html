@@ -1691,10 +1691,10 @@ function renderFatEnviadas(lista){
           ${ap.ap_assinada_url?`<a href="${ap.ap_assinada_url}" target="_blank" style="background:var(--verde-claro);color:var(--verde);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">✅ Ver AP Assinada</a>`:''}
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;padding:10px 12px;background:var(--bg);border-radius:8px">
-          <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase">AP Assinada (link ou upload)</label>
-          <div style="display:flex;gap:6px">
-            <input type="text" placeholder="Cole o link da AP assinada..." id="fat-link-${ap.id}" value="${ap.ap_assinada_url||''}" style="flex:1;padding:7px 10px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit"/>
-            <button onclick="salvarApAssinada(${ap.id})" style="background:var(--laranja);color:white;border:none;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">💾 Salvar</button>
+          <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase">AP Assinada (PDF)</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="file" accept="application/pdf" id="fat-file-${ap.id}" style="flex:1;padding:5px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit;background:white"/>
+            <button onclick="salvarApAssinada(${ap.id})" style="background:var(--laranja);color:white;border:none;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">📤 Enviar</button>
           </div>
           <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase;margin-top:6px">Número da NF <span style="color:#DC2626">*</span></label>
           <div style="display:flex;gap:6px">
@@ -1733,11 +1733,16 @@ function renderFatPagas(lista){
 }
 
 async function salvarApAssinada(id){
-  const url=document.getElementById(`fat-link-${id}`)?.value.trim();
-  if(!url){toast('Cole o link da AP assinada.','erro');return;}
-  const r=await fetch(`/api/aps/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({ap_assinada_url:url})});
-  if(r.ok){toast('✅ Link salvo!','ok');carregarFaturamento();}
-  else toast('Erro ao salvar link.','erro');
+  const fileInput=document.getElementById(`fat-file-${id}`);
+  if(!fileInput?.files?.length){toast('Selecione um arquivo PDF.','erro');return;}
+  const formData=new FormData();
+  formData.append('arquivo',fileInput.files[0]);
+  toast('Enviando PDF...','info');
+  try{
+    const r=await fetch(`/api/aps/${id}/assinada`,{method:'POST',body:formData});
+    if(r.ok){toast('✅ AP assinada enviada!','ok');carregarFaturamento();}
+    else{const e=await r.json();toast(e.erro||'Erro ao enviar.','erro');}
+  }catch{toast('Erro de conexão.','erro');}
 }
 
 async function marcarPaga(id){
