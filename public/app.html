@@ -1703,17 +1703,18 @@ function renderFatEnviadas(lista){
     wrap.style.cssText='padding:8px 12px 16px;display:flex;flex-direction:column;gap:8px';
     rows.forEach(ap=>{
       const card=document.createElement('div');
-      card.style.cssText='background:white;border-radius:10px;box-shadow:var(--shadow);border:1px solid var(--borda);overflow:hidden;position:relative';
+      card.style.cssText='background:white;border-radius:10px;box-shadow:var(--shadow);border:1px solid var(--borda);overflow:hidden';
       card.innerHTML=`
-        <button onclick="excluirApFaturamento(${ap.id},'enviada')" style="position:absolute;top:8px;right:8px;background:none;border:none;font-size:16px;cursor:pointer;color:var(--texto-leve);line-height:1;padding:2px 6px;border-radius:4px" title="Excluir">×</button>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 40px 12px 16px;border-bottom:1px solid var(--borda);flex-wrap:wrap;gap:8px">
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--borda);cursor:pointer;gap:8px" class="fat-card-toggle">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex:1">
             <span class="tag-ap">${ap.numero}</span>
             <span style="font-size:12px;color:var(--texto-leve)">${ap.data_envio?'Enviado em '+ap.data_envio:''}</span>
           </div>
           <span style="font-weight:800;color:var(--verde);font-size:15px">${brl(ap.total_desconto)}</span>
+          <span class="fat-chevron" style="font-size:12px;color:var(--texto-leve);transition:transform .2s;flex-shrink:0">▼</span>
+          <button onclick="event.stopPropagation();excluirApFaturamento(${ap.id},'enviada')" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--texto-leve);line-height:1;padding:2px 6px;border-radius:4px;flex-shrink:0" title="Excluir">×</button>
         </div>
-        <div style="padding:12px 16px;display:flex;flex-direction:column;gap:8px">
+        <div class="fat-card-body" style="display:none;padding:12px 16px;flex-direction:column;gap:8px">
           <div style="font-size:13px;font-weight:600">${ap.nome_projeto||'—'}</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
             <button onclick="window.open('/api/aps/${ap.id}/pdf','_blank')" style="background:var(--laranja-claro);color:var(--laranja);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📄 Ver AP</button>
@@ -1733,6 +1734,13 @@ function renderFatEnviadas(lista){
           </div>
         </div>`;
       wrap.appendChild(card);
+      card.querySelector('.fat-card-toggle').addEventListener('click',()=>{
+        const body=card.querySelector('.fat-card-body');
+        const chevron=card.querySelector('.fat-chevron');
+        const open=body.style.display==='none';
+        body.style.display=open?'flex':'none';
+        chevron.style.transform=open?'rotate(180deg)':'';
+      });
     });
     body.appendChild(wrap);
     head.addEventListener('click',()=>{
@@ -1767,18 +1775,19 @@ function renderFatPagas(lista){
     wrap.style.cssText='padding:8px 12px 16px;display:flex;flex-direction:column;gap:8px';
     rows.forEach(ap=>{
       const card=document.createElement('div');
-      card.style.cssText='background:white;border-radius:10px;box-shadow:var(--shadow);border:1px solid var(--borda);overflow:hidden;position:relative';
+      card.style.cssText='background:white;border-radius:10px;box-shadow:var(--shadow);border:1px solid var(--borda);overflow:hidden';
       card.innerHTML=`
-        <button onclick="excluirApFaturamento(${ap.id},'paga')" style="position:absolute;top:8px;right:8px;background:none;border:none;font-size:16px;cursor:pointer;color:var(--texto-leve);line-height:1;padding:2px 6px;border-radius:4px" title="Excluir">×</button>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 40px 12px 16px;border-bottom:1px solid var(--borda);flex-wrap:wrap;gap:8px">
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--borda);cursor:pointer;gap:8px" class="fat-card-toggle">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex:1">
             <span class="tag-ap">${ap.numero}</span>
             <span style="background:var(--verde-claro);color:var(--verde);padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700">PAGA</span>
             ${ap.numero_nf?`<span style="font-size:11px;color:var(--texto-leve)">NF ${ap.numero_nf}</span>`:''}
           </div>
           <span style="font-weight:800;color:var(--verde);font-size:15px">${brl(ap.total_desconto)}</span>
+          <span class="fat-chevron" style="font-size:12px;color:var(--texto-leve);transition:transform .2s;flex-shrink:0">▼</span>
+          <button onclick="event.stopPropagation();excluirApFaturamento(${ap.id},'paga')" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--texto-leve);line-height:1;padding:2px 6px;border-radius:4px;flex-shrink:0" title="Excluir">×</button>
         </div>
-        <div style="padding:12px 16px;display:flex;flex-direction:column;gap:6px">
+        <div class="fat-card-body" style="display:none;padding:12px 16px;flex-direction:column;gap:6px">
           <div style="font-size:13px;font-weight:600">${ap.nome_projeto||'—'}</div>
           <div style="font-size:11px;color:var(--texto-leve)">${ap.data_pagamento?'Pago em '+ap.data_pagamento:''} ${ap.data_envio?'· Enviado em '+ap.data_envio:''}</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
@@ -1788,6 +1797,13 @@ function renderFatPagas(lista){
           </div>
         </div>`;
       wrap.appendChild(card);
+      card.querySelector('.fat-card-toggle').addEventListener('click',()=>{
+        const body=card.querySelector('.fat-card-body');
+        const chevron=card.querySelector('.fat-chevron');
+        const open=body.style.display==='none';
+        body.style.display=open?'flex':'none';
+        chevron.style.transform=open?'rotate(180deg)':'';
+      });
     });
     body.appendChild(wrap);
     head.addEventListener('click',()=>{
