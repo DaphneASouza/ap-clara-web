@@ -1007,11 +1007,11 @@ function criarCardItem(item,idx,itensArr,onUpdate){
     <div class="ec-item-card-body open">
       <div class="fgrid">
         <div class="fg span2"><label>Descrição do Projeto</label><input type="text" data-f="descricao_projeto" value="${item.descricao_projeto||''}" placeholder="Descreva este item..."/></div>
-        <div class="fg span2"><label>Link do Trello</label><input type="text" data-f="link_trello" value="${item.link_trello||''}" placeholder="https://trello.com/..."/></div>
+        <div class="fg span2"><label style="display:flex;align-items:center;justify-content:space-between">Link do Trello <button type="button" class="btn-add-link" style="background:var(--laranja);color:white;border:none;border-radius:5px;width:20px;height:20px;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</button></label><div class="links-trello-wrap" style="display:flex;flex-direction:column;gap:6px"><input type="text" data-f="link_trello" value="${item.link_trello||''}" placeholder="https://trello.com/..."/></div></div>
         <div class="fg span2"><label>Item do Cardápio</label><div class="cardapio-sel-wrap"></div></div>
         <div class="fg"><label>Quantidade</label><input type="number" data-f="quantidade" value="${item.quantidade||1}" min="1" style="text-align:center"/></div>
         <div class="fg"><label>Valor Total</label><input type="text" data-f="valor_total_disp" value="${brl((item.valor_unitario||0)*(item.quantidade||1))}" readonly style="background:var(--laranja-claro);color:var(--laranja);font-weight:700"/></div>
-        <div class="fg span2"><label>Link Trello Comprovação</label><input type="text" data-f="link_trello_comprovacao" value="${item.link_trello_comprovacao||''}" placeholder="https://trello.com/..."/></div>
+        <div class="fg span2"><label>Link Trello Comprovação</label><div class="links-comprovacao-wrap" style="display:flex;flex-direction:column;gap:6px"><input type="text" data-f="link_trello_comprovacao" value="${item.link_trello_comprovacao||''}" placeholder="https://trello.com/..."/></div></div>
       </div>
     </div>`;
 
@@ -1043,6 +1043,20 @@ function criarCardItem(item,idx,itensArr,onUpdate){
     itensArr.splice(idx,1);
     if(onUpdate)onUpdate();
     else{renderFormItens();atualizarTotalizador();}
+  });
+
+  card.querySelector('.btn-add-link').addEventListener('click',()=>{
+    const trelloWrap=card.querySelector('.links-trello-wrap');
+    const compWrap=card.querySelector('.links-comprovacao-wrap');
+    const inp1=document.createElement('input');
+    inp1.type='text';inp1.placeholder='https://trello.com/...';
+    inp1.style.cssText='border:1.5px solid var(--borda);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;color:var(--texto);background:white;outline:none;width:100%';
+    const inp2=document.createElement('input');
+    inp2.type='text';inp2.placeholder='https://trello.com/...';
+    inp2.style.cssText='border:1.5px solid var(--borda);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;color:var(--texto);background:white;outline:none;width:100%';
+    trelloWrap.appendChild(inp1);
+    compWrap.appendChild(inp2);
+    inp1.focus();
   });
 
   card.querySelectorAll('[data-f]').forEach(el=>{
