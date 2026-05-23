@@ -1137,13 +1137,13 @@ document.getElementById('btn-add-item-exec').addEventListener('click',()=>{
 });
 
 async function carregarExecucao(){
-  // Gera número AP automático
   try{
     const r=await fetch('/api/execucao');
     const todas=await r.json();
     const seq=(todas.length||0)+1;
     const projeto=document.getElementById('ec-projeto').value.toUpperCase();
-    document.getElementById('ec-numero-ap').value=`.${projeto}.${seq}`;
+    const mesAtual=MESES_ORDER[new Date().getMonth()];
+    document.getElementById('ec-numero-ap').value=`${mesAtual}.${projeto}.${seq}`;
   }catch{
     document.getElementById('ec-numero-ap').value='';
   }
