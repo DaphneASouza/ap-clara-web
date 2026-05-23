@@ -48,28 +48,64 @@
     #content{flex:1;overflow:hidden;position:relative}
 
     /* MOBILE */
-    #btn-menu-mobile{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:var(--texto);padding:4px 8px;line-height:1;flex-shrink:0}
-    #sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99}
+    #btn-menu-mobile{display:none;background:none;border:none;cursor:pointer;padding:6px 8px;border-radius:6px;font-size:20px;line-height:1;color:var(--texto)}
+    #sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:199}
+    #sidebar-overlay.show{display:block}
     @media(max-width:768px){
-      body{flex-direction:column}
-      #sidebar{position:fixed;top:0;left:0;height:100vh;z-index:100;transform:translateX(-100%);transition:transform .25s ease;width:240px}
-      #sidebar.open{transform:translateX(0)}
-      #sidebar-overlay.open{display:block}
-      #btn-menu-mobile{display:block}
-      #main{width:100%;height:100vh}
-      #topbar{padding:0 16px}
-      .page{padding:16px}
-      .metrics-grid{grid-template-columns:1fr 1fr}
-      .charts-grid{grid-template-columns:1fr}
-      .cards-row{grid-template-columns:1fr}
-      .exec-folder-cards{grid-template-columns:1fr;padding:10px}
-      #exec-ctrl-form{max-width:100%}
+      body{overflow:hidden;position:fixed;width:100%}
+      #sidebar{position:fixed;top:0;left:0;height:100%;width:260px;z-index:200;transform:translateX(-100%);transition:transform .25s ease}
+      #sidebar.open{transform:translateX(0);box-shadow:4px 0 24px rgba(0,0,0,.3)}
+      #main{width:100%}
+      #topbar{padding:0 12px;height:52px;gap:10px}
+      #btn-menu-mobile{display:flex;align-items:center;justify-content:center}
+      #page-title{font-size:14px}
+      #page-sub{display:none}
+      .badge-nivel{font-size:10px;padding:3px 8px}
+      .page{padding:12px}
+      .metrics-grid{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+      .metric-card{padding:14px 12px}
+      .metric-value{font-size:14px}
+      .metric-icon{width:30px;height:30px;font-size:14px}
+      .charts-grid{grid-template-columns:1fr;gap:12px}
+      .chart-card{padding:14px 12px}
+      .recentes-table{font-size:11px}
+      .recentes-table thead th,.recentes-table tbody td{padding:6px 8px}
+      .toolbar{flex-wrap:wrap;gap:8px}
+      .toolbar input,.toolbar select,#exec-busca{width:100%;max-width:none;font-size:13px}
+      .btn-refresh{width:100%;text-align:center}
+      #page-dashboard .toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+      #page-dashboard .toolbar button{grid-column:span 2}
       .fgrid{grid-template-columns:1fr}
       .fg.span2{grid-column:span 1}
-    }
-    @media(max-width:480px){
-      .metrics-grid{grid-template-columns:1fr}
-      .exec-card-btns{flex-wrap:wrap}
+      #exec-ctrl-form{max-width:100%;gap:12px}
+      .form-secao{padding:14px 12px!important}
+      .ec-item-card-title{font-size:12px}
+      .ec-item-card-subtitle{font-size:10px}
+      .btn-rem-item{padding:4px 8px;font-size:10px}
+      #ec-total-box{flex-direction:column;gap:4px;align-items:flex-start;padding:12px}
+      #ec-total-label{font-size:22px}
+      .exec-folder-cards{grid-template-columns:1fr;padding:8px 8px 12px 8px;gap:10px}
+      .exec-folder-head{padding:10px 12px;gap:6px}
+      .exec-folder-mes{font-size:13px}
+      .exec-folder-total{display:none}
+      .exec-card-top{flex-wrap:wrap;gap:8px;padding:10px 12px}
+      .exec-card-btns{width:100%;justify-content:flex-end}
+      .exec-card-toggle-nome{font-size:12px}
+      .exec-card-body{padding:10px 12px;gap:8px}
+      .exec-card-item-row{padding:8px 10px}
+      .exec-card-total-val{font-size:15px}
+      #banco-folders{overflow-x:auto}
+      .data-table{min-width:560px}
+      .page-header{flex-direction:column;align-items:flex-start;gap:6px;margin-bottom:14px}
+      .page-header h2{font-size:16px}
+      #cardapio-table{min-width:560px}
+      .cards-row{grid-template-columns:1fr}
+      #modal-card{margin:16px;padding:20px;max-width:calc(100vw - 32px)}
+      #toast{left:12px;right:12px;bottom:16px;text-align:center}
+      .exec-edit-form{padding:12px;gap:12px}
+      .exec-edit-actions{flex-direction:column;gap:8px}
+      .btn-save-edit,.btn-cancel-edit{width:100%;text-align:center}
+      .btn-edit-ap,.btn-del-ap,.btn-pdf{padding:4px 6px;font-size:10px}
     }
 
     .page{display:none;height:100%;overflow-y:auto;padding:24px}
