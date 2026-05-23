@@ -47,6 +47,31 @@
     .badge-nivel{background:var(--laranja-claro);color:var(--laranja);padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600}
     #content{flex:1;overflow:hidden;position:relative}
 
+    /* MOBILE */
+    #btn-menu-mobile{display:none;background:none;border:none;font-size:22px;cursor:pointer;color:var(--texto);padding:4px 8px;line-height:1;flex-shrink:0}
+    #sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99}
+    @media(max-width:768px){
+      body{flex-direction:column}
+      #sidebar{position:fixed;top:0;left:0;height:100vh;z-index:100;transform:translateX(-100%);transition:transform .25s ease;width:240px}
+      #sidebar.open{transform:translateX(0)}
+      #sidebar-overlay.open{display:block}
+      #btn-menu-mobile{display:block}
+      #main{width:100%;height:100vh}
+      #topbar{padding:0 16px}
+      .page{padding:16px}
+      .metrics-grid{grid-template-columns:1fr 1fr}
+      .charts-grid{grid-template-columns:1fr}
+      .cards-row{grid-template-columns:1fr}
+      .exec-folder-cards{grid-template-columns:1fr;padding:10px}
+      #exec-ctrl-form{max-width:100%}
+      .fgrid{grid-template-columns:1fr}
+      .fg.span2{grid-column:span 1}
+    }
+    @media(max-width:480px){
+      .metrics-grid{grid-template-columns:1fr}
+      .exec-card-btns{flex-wrap:wrap}
+    }
+
     .page{display:none;height:100%;overflow-y:auto;padding:24px}
     .page.active{display:block}
 
@@ -260,6 +285,7 @@
 
 <div id="main">
   <div id="topbar">
+    <button id="btn-menu-mobile" aria-label="Menu">☰</button>
     <div>
       <div id="page-title">Dashboard</div>
       <div id="page-sub">Visão geral das Autorizações de Produção</div>
@@ -490,6 +516,8 @@
 
   </div>
 </div>
+
+<div id="sidebar-overlay"></div>
 
 <div id="modal-overlay">
   <div id="modal-card">
@@ -1485,6 +1513,21 @@ function renderCardEdit(card,row){
     }catch{toast('Erro de conexão.','erro');}
   });
 }
+
+// ── Menu Mobile ──────────────────────────────────────────────────────────────
+(function(){
+  const btnMenu   = document.getElementById('btn-menu-mobile');
+  const sidebar   = document.getElementById('sidebar');
+  const overlay   = document.getElementById('sidebar-overlay');
+  function abrirMenu(){ sidebar.classList.add('open'); overlay.classList.add('open'); }
+  function fecharMenu(){ sidebar.classList.remove('open'); overlay.classList.remove('open'); }
+  btnMenu.addEventListener('click', abrirMenu);
+  overlay.addEventListener('click', fecharMenu);
+  // Fecha ao navegar (mobile)
+  document.querySelectorAll('.nav-item').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ if(window.innerWidth<=768) fecharMenu(); });
+  });
+})();
 
 init();
 </script>
