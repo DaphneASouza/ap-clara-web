@@ -74,7 +74,8 @@
       .toolbar input,.toolbar select,#exec-busca{width:100%;max-width:none;font-size:13px}
       .btn-refresh{width:100%;text-align:center}
       #page-dashboard .toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-      #page-dashboard .toolbar button{grid-column:span 2}
+      #page-dashboard .toolbar{grid-template-columns:1fr 1fr 1fr}
+      #page-dashboard .toolbar button{grid-column:span 3}
       .fgrid{grid-template-columns:1fr}
       .fg.span2{grid-column:span 1}
       #exec-ctrl-form{max-width:100%;gap:12px}
@@ -646,6 +647,20 @@ async function carregarDashboard(){
     banco=await r.json();
 
     // Popula select de unidade com valores distintos do banco
+    const selAno=document.getElementById('dash-filtro-ano');
+    if(selAno){
+      const anoAtualStr=String(new Date().getFullYear());
+      const anos=[...new Set(banco.map(ap=>new Date(ap.criado_em).getFullYear()).filter(Boolean))].sort((a,b)=>b-a);
+      if(!anos.includes(Number(anoAtualStr)))anos.unshift(Number(anoAtualStr));
+      const valorAtualAno=selAno.value||anoAtualStr;
+      selAno.innerHTML='<option value="">Todos os anos</option>';
+      anos.forEach(a=>{
+        const opt=document.createElement('option');
+        opt.value=a;opt.textContent=a;
+        if(String(a)===valorAtualAno)opt.selected=true;
+        selAno.appendChild(opt);
+      });
+    }
     const selUnd=document.getElementById('dash-filtro-unidade');
     if(selUnd){
       const unidades=[...new Set(banco.map(ap=>(ap.unidade||'').trim()).filter(Boolean))].sort();
@@ -668,15 +683,20 @@ function aplicarFiltrosDashboard(){
   const selMes=document.getElementById('dash-filtro-mes');
   const selUnd=document.getElementById('dash-filtro-unidade');
   const filtroMes=selMes?selMes.value:'';          // '' = todos, '0'-'11' = mês
-  const filtroUnd=selUnd?(selUnd.value||''):'';    // '' = todas
+  const filtroUnd=selUnd?(selUnd.value||''):'';
+  const selAno2=document.getElementById('dash-filtro-ano');
+  const filtroAno=selAno2?(selAno2.value||''):'';    // '' = todas
 
   // Filtra por unidade (afeta tudo)
   const porUnd=filtroUnd?banco.filter(ap=>(ap.unidade||'').trim()===filtroUnd):banco;
 
   // Filtra por mês (afeta cards e tabela recentes, NÃO o gráfico)
-  const filtrado=filtroMes!==''
-    ?porUnd.filter(ap=>{const d=new Date(ap.criado_em);return d.getMonth()===Number(filtroMes);})
+  const porAno=filtroAno!==''
+    ?porUnd.filter(ap=>new Date(ap.criado_em).getFullYear()===Number(filtroAno))
     :porUnd;
+  const filtrado=filtroMes!==''
+    ?porAno.filter(ap=>{const d=new Date(ap.criado_em);return d.getMonth()===Number(filtroMes);})
+    :porAno;
 
   // Atualiza labels dos cards
   const nomesMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
