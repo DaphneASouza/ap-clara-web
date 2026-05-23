@@ -1115,6 +1115,15 @@ function atualizarTotalizador(){
   if(lbl)lbl.textContent=brl(total);
 }
 
+document.getElementById('ec-projeto').addEventListener('change',function(){
+  const val=document.getElementById('ec-numero-ap').value;
+  const partes=val.split('.');
+  if(partes.length===3){
+    partes[1]=this.value.toUpperCase();
+    document.getElementById('ec-numero-ap').value=partes.join('.');
+  }
+});
+
 document.getElementById('btn-add-item-exec').addEventListener('click',()=>{
   ecItens.push({descricao_projeto:'',link_trello:'',item_id:'',produto:'',complexidade:'',valor_unitario:0,quantidade:1,valor_total:0,link_trello_comprovacao:''});
   renderFormItens();
@@ -1128,6 +1137,16 @@ document.getElementById('btn-add-item-exec').addEventListener('click',()=>{
 });
 
 async function carregarExecucao(){
+  // Gera número AP automático
+  try{
+    const r=await fetch('/api/execucao');
+    const todas=await r.json();
+    const seq=(todas.length||0)+1;
+    const projeto=document.getElementById('ec-projeto').value.toUpperCase();
+    document.getElementById('ec-numero-ap').value=`.${projeto}.${seq}`;
+  }catch{
+    document.getElementById('ec-numero-ap').value='';
+  }
   renderFormItens();
 }
 
