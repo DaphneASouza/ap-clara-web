@@ -1142,7 +1142,6 @@ async function carregarExecucao(){
     const todas=await r.json();
     const projeto=document.getElementById('ec-projeto').value.toUpperCase();
     const mesAtual=MESES_ORDER[new Date().getMonth()];
-    // Pega o maior sequencial já usado em qualquer execução
     let maxSeq=0;
     todas.forEach(row=>{
       const partes=(row.numero_ap||'').split('.');
