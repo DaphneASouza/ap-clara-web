@@ -1550,19 +1550,16 @@ function renderCardEdit(card,row){
   });
 }
 
-// ── Menu Mobile ──────────────────────────────────────────────────────────────
 (function(){
-  const btnMenu   = document.getElementById('btn-menu-mobile');
-  const sidebar   = document.getElementById('sidebar');
-  const overlay   = document.getElementById('sidebar-overlay');
-  function abrirMenu(){ sidebar.classList.add('open'); overlay.classList.add('open'); }
-  function fecharMenu(){ sidebar.classList.remove('open'); overlay.classList.remove('open'); }
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  const btnMenu = document.getElementById('btn-menu-mobile');
+  if(!btnMenu) return;
+  function abrirMenu(){ sidebar.classList.add('open'); overlay.classList.add('show'); }
+  function fecharMenu(){ sidebar.classList.remove('open'); overlay.classList.remove('show'); }
   btnMenu.addEventListener('click', abrirMenu);
   overlay.addEventListener('click', fecharMenu);
-  // Fecha ao navegar (mobile)
-  document.querySelectorAll('.nav-item').forEach(btn=>{
-    btn.addEventListener('click', ()=>{ if(window.innerWidth<=768) fecharMenu(); });
-  });
+  document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', fecharMenu));
 })();
 
 init();
