@@ -477,6 +477,56 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// ── Seed feriados nacionais ──────────────────────────────────────────────────
+app.post('/api/eventos/seed-feriados', requireAuth, async (req, res) => {
+  try {
+    const { ano } = req.body;
+    if (!ano) return res.status(400).json({ erro: 'Informe o ano.' });
+    // Calcula Páscoa (algoritmo de Meeus/Jones/Butcher)
+    function pascoa(y) {
+      const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4;
+      const f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30;
+      const i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7;
+      const m=Math.floor((a+11*h+22*l)/451);
+      const mes=Math.floor((h+l-7*m+114)/31),dia=((h+l-7*m+114)%31)+1;
+      return new Date(y,mes-1,dia);
+    }
+    function fmt(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+    function addDias(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
+    const p=pascoa(ano);
+    const feriados=[
+      // Fixos
+      {data:`${ano}-01-01`,titulo:'Confraternização Universal',categoria:'Evento',cor:'#2563EB'},
+      {data:`${ano}-04-21`,titulo:'Tiradentes',categoria:'Evento',cor:'#2563EB'},
+      {data:`${ano}-05-01`,titulo:'Dia do Trabalho',categoria:'Evento',cor:'#2563EB'},
+      {data:`${ano}-09-07`,titulo:'Independência do Brasil',categoria:'Evento',cor:'#16A34A'},
+      {data:`${ano}-10-12`,titulo:'Nossa Sra. Aparecida',categoria:'Evento',cor:'#7C3AED'},
+      {data:`${ano}-11-02`,titulo:'Finados',categoria:'Evento',cor:'#71717A'},
+      {data:`${ano}-11-15`,titulo:'Proclamação da República',categoria:'Evento',cor:'#16A34A'},
+      {data:`${ano}-11-20`,titulo:'Consciência Negra',categoria:'Evento',cor:'#E65C00'},
+      {data:`${ano}-12-25`,titulo:'Natal',categoria:'Evento',cor:'#DC2626'},
+      // Móveis baseados na Páscoa
+      {data:fmt(addDias(p,-48)),titulo:'Segunda de Carnaval',categoria:'Evento',cor:'#F59E0B'},
+      {data:fmt(addDias(p,-47)),titulo:'Terça de Carnaval',categoria:'Evento',cor:'#F59E0B'},
+      {data:fmt(addDias(p,-46)),titulo:'Quarta de Cinzas (meio dia)',categoria:'Evento',cor:'#F59E0B'},
+      {data:fmt(addDias(p,-2)),titulo:'Sexta-feira Santa',categoria:'Evento',cor:'#7C3AED'},
+      {data:fmt(p),titulo:'Páscoa',categoria:'Evento',cor:'#7C3AED'},
+      {data:fmt(addDias(p,60)),titulo:'Corpus Christi',categoria:'Evento',cor:'#7C3AED'},
+    ];
+    // Insere apenas os que ainda não existem (mesmo título e data)
+    let inseridos=0;
+    for(const f of feriados){
+      const existe=await pool.query(`SELECT id FROM eventos WHERE data=$1 AND titulo=$2`,[f.data,f.titulo]);
+      if(!existe.rows.length){
+        await pool.query(`INSERT INTO eventos (titulo,descricao,data,cor,categoria,usuario_id) VALUES ($1,$2,$3,$4,$5,$6)`,
+          [f.titulo,'Feriado Nacional',f.data,f.cor,f.categoria,req.session.usuario.id]);
+        inseridos++;
+      }
+    }
+    res.json({ ok:true, inseridos, total:feriados.length });
+  } catch(e){ res.status(500).json({ erro: e.message }); }
+});
+
 // ── Start ────────────────────────────────────────────────────────────────────
 setupDB().then(() => {
   app.listen(PORT, () => console.log(`✅ Servidor rodando na porta ${PORT}`));

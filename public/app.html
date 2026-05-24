@@ -372,7 +372,10 @@
           <span id="cal-titulo" style="font-size:17px;font-weight:800;min-width:180px;text-align:center"></span>
           <button id="cal-next" style="background:none;border:1px solid var(--borda);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px">›</button>
         </div>
-        <button onclick="abrirModalEvento()" style="background:var(--laranja);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ Novo Evento</button>
+        <div style="display:flex;gap:8px">
+          <button onclick="seedFeriados()" style="background:var(--sidebar-bg);color:white;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🇧🇷 Feriados ${new Date().getFullYear()}</button>
+          <button onclick="abrirModalEvento()" style="background:var(--laranja);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ Novo Evento</button>
+        </div>
       </div>
       <div id="cal-grid" style="background:white;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden"></div>
       <div id="cal-dia-panel" style="display:none;margin-top:16px;background:white;border-radius:var(--radius);box-shadow:var(--shadow);padding:20px"></div>
@@ -1890,6 +1893,15 @@ async function excluirApFaturamento(id,status){
 
 // ── Calendário ───────────────────────────────────────────────────────────────
 let calEventos=[],calAno=new Date().getFullYear(),calMes=new Date().getMonth(),calEditandoId=null;
+
+async function seedFeriados(){
+  const ano=calAno;
+  if(!confirm(`Inserir feriados nacionais de ${ano} no calendário?`))return;
+  const r=await fetch('/api/eventos/seed-feriados',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ano})});
+  const d=await r.json();
+  if(r.ok){toast(`✅ ${d.inseridos} feriados inseridos de ${d.total}!`,'ok');await carregarCalendario();}
+  else toast(d.erro||'Erro ao inserir feriados.','erro');
+}
 
 async function carregarCalendario(){
   try{
