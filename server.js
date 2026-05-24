@@ -11,6 +11,7 @@ const bcrypt     = require('bcrypt');
 const path       = require('path');
 const { pool, setupDB } = require('./db');
 const { gerarPDF }      = require('./gerar-pdf');
+const { gerarRelatorio } = require('./gerar-relatorio');
 const { gerarPDFv2 }    = require('./gerar-pdf-v2');
 const { CARDAPIO }      = require('./cardapio');
 
@@ -164,6 +165,19 @@ app.get('/api/aps', requireAuth, async (req, res) => {
     const r = await pool.query(query, params);
     res.json(r.rows);
   } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+app.post('/api/relatorio/dashboard', requireAuth, async (req, res) => {
+  try {
+    const { filtros, cards, itens } = req.body;
+    const geradoEm = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="Relatorio_Dashboard_${Date.now()}.pdf"`);
+    await gerarRelatorio({ filtros, cards, itens, geradoEm }, res);
+  } catch(e) {
+    console.error('[Relatório]', e);
     res.status(500).json({ erro: e.message });
   }
 });

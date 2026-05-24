@@ -355,7 +355,10 @@
       <div id="page-title">Dashboard</div>
       <div id="page-sub">Visão geral das Autorizações de Produção</div>
     </div>
-    <div><span class="badge-nivel" id="badge-nivel">—</span></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button id="btn-gerar-relatorio" style="display:none;background:var(--laranja);color:white;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;gap:6px;align-items:center" onclick="gerarRelatorioDashboard()">📊 Exportar PDF</button>
+      <span class="badge-nivel" id="badge-nivel">—</span>
+    </div>
   </div>
 
   <div id="content">
@@ -707,6 +710,7 @@ document.querySelectorAll('.nav-item').forEach(btn=>{
     document.getElementById('page-sub').textContent=sub;
     if(page==='banco')carregarBanco();
     if(page==='usuarios')carregarUsuarios();
+    document.getElementById('btn-gerar-relatorio').style.display=page==='dashboard'?'flex':'none';
     if(page==='dashboard')carregarDashboard();
     if(page==='execucao-controle')carregarExecucao();
     if(page==='execucoes-salvas')carregarExecucoesSalvas();
@@ -2082,6 +2086,59 @@ document.querySelectorAll('.fat-tab').forEach(btn=>{
 document.getElementById('fat-busca')?.addEventListener('input',carregarFaturamento);
 document.getElementById('fat-filtro-unidade')?.addEventListener('change',carregarFaturamento);
 document.getElementById('fat-filtro-mes')?.addEventListener('change',carregarFaturamento);
+
+async function gerarRelatorioDashboard(){
+  const btn=document.getElementById('btn-gerar-relatorio');
+  btn.textContent='⏳ Gerando...';btn.disabled=true;
+  try{
+    const filtroMes=document.getElementById('dash-filtro-mes')?.value||'';
+    const filtroAno=document.getElementById('dash-filtro-ano')?.value||'';
+    const filtroUnd=document.getElementById('dash-filtro-unidade')?.value||'';
+    const visao=document.getElementById('dash-filtro-visao')?.value||'todas';
+    const nomesMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const labelsVisao={todas:'Todas as APs',gerada:'APs Geradas',enviada:'APs Enviadas',paga:'APs Pagas',execucoes:'Execuções Salvas'};
+    const filtros=[
+      {label:'Visão',valor:labelsVisao[visao]||visao},
+      {label:'Mês',valor:filtroMes!==''?nomesMes[Number(filtroMes)]:'Todos'},
+      {label:'Ano',valor:filtroAno||'Todos'},
+      {label:'Unidade',valor:filtroUnd||'Todas'},
+    ];
+    const cards=[
+      {label:document.getElementById('m-aps-label')?.textContent||'APs',value:document.getElementById('m-aps')?.textContent||'0',sub:'',cor:'#E65C00'},
+      {label:document.getElementById('m-bruto-label')?.textContent||'Valor Bruto',value:document.getElementById('m-bruto')?.textContent||'R$ 0',sub:'Sem desconto',cor:'#2563EB'},
+      {label:document.getElementById('m-desc-label')?.textContent||'Com Desconto',value:document.getElementById('m-desc')?.textContent||'R$ 0',sub:'13,5% desconto',cor:'#16A34A'},
+      {label:'Total Acumulado',value:document.getElementById('m-total')?.textContent||'R$ 0',sub:'',cor:'#7C3AED'},
+    ];
+    let itens=[];
+    if(visao==='execucoes'){
+      const execBase=(window._execSalvasDash||[]);
+      itens=execBase.map(r=>({
+        numero:r.numero_ap||'—',nome_projeto:r.nome_projeto||'—',
+        unidade:r.unidade||'—',data_ap:r.criado_em?new Date(r.criado_em).toLocaleDateString('pt-BR'):'—',
+        status:'',total_desconto:(r.itens||[]).reduce((s,i)=>s+(i.valor_total||0),0)
+      }));
+    } else {
+      let base=banco;
+      if(filtroUnd)base=base.filter(ap=>(ap.unidade||'').trim()===filtroUnd);
+      if(filtroAno)base=base.filter(ap=>new Date(ap.criado_em).getFullYear()===Number(filtroAno));
+      if(filtroMes!=='')base=base.filter(ap=>new Date(ap.criado_em).getMonth()===Number(filtroMes));
+      if(visao==='gerada')base=base.filter(ap=>!ap.status||ap.status==='gerada');
+      else if(visao==='enviada')base=base.filter(ap=>ap.status==='enviada');
+      else if(visao==='paga')base=base.filter(ap=>ap.status==='paga');
+      itens=base.map(ap=>({numero:ap.numero,nome_projeto:ap.nome_projeto,unidade:ap.unidade,data_ap:ap.data_ap,status:ap.status||'gerada',total_desconto:ap.total_desconto}));
+    }
+    const r=await fetch('/api/relatorio/dashboard',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filtros,cards,itens})});
+    if(!r.ok){toast('Erro ao gerar relatório.','erro');return;}
+    const blob=await r.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=`Relatorio_Dashboard.pdf`;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
+    toast('✅ Relatório gerado!','ok');
+  }catch(e){toast('Erro: '+e.message,'erro');}
+  finally{btn.textContent='📊 Exportar PDF';btn.disabled=false;}
+}
 
 init();
 </script>
