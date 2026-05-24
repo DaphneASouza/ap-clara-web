@@ -208,19 +208,12 @@ app.delete('/api/aps/:id', requireAuth, async (req, res) => {
 });
 
 // Upload AP assinada
-app.post('/api/aps/:id/assinada', requireAuth, upload.single('arquivo'), async (req, res) => {
+app.post('/api/aps/:id/assinada', requireAuth, async (req, res) => {
   try {
-    console.log('[Cloudinary] cloud_name:', process.env.CLOUDINARY_CLOUD_NAME, '| api_key:', process.env.CLOUDINARY_API_KEY ? 'OK' : 'MISSING');
-    if (!req.file) return res.status(400).json({ erro: 'Nenhum arquivo enviado.' });
-    const resultado = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { resource_type: 'raw', folder: 'aps_assinadas', public_id: `AP_${req.params.id}_assinada` },
-        (error, result) => error ? reject(error) : resolve(result)
-      );
-      stream.end(req.file.buffer);
-    });
-    await pool.query(`UPDATE aps SET ap_assinada_url=$1 WHERE id=$2`, [resultado.secure_url, req.params.id]);
-    res.json({ ok: true, url: resultado.secure_url });
+    const { ap_assinada_url } = req.body;
+    if (!ap_assinada_url) return res.status(400).json({ erro: 'URL não informada.' });
+    await pool.query(`UPDATE aps SET ap_assinada_url=$1 WHERE id=$2`, [ap_assinada_url, req.params.id]);
+    res.json({ ok: true });
   } catch (e) { res.status(500).json({ erro: e.message }); }
 });
 

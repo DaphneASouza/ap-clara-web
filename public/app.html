@@ -1889,14 +1889,20 @@ function renderFatPagas(lista){
 async function salvarApAssinada(id){
   const fileInput=document.getElementById(`fat-file-${id}`);
   if(!fileInput?.files?.length){toast('Selecione um arquivo PDF.','erro');return;}
+  const file=fileInput.files[0];
   const formData=new FormData();
-  formData.append('arquivo',fileInput.files[0]);
+  formData.append('file',file);
+  formData.append('upload_preset','aps_assinadas');
+  formData.append('resource_type','raw');
   toast('Enviando PDF...','info');
   try{
-    const r=await fetch(`/api/aps/${id}/assinada`,{method:'POST',body:formData});
-    if(r.ok){toast('✅ AP assinada enviada!','ok');carregarFaturamento();}
-    else{const e=await r.json();toast(e.erro||'Erro ao enviar.','erro');}
-  }catch{toast('Erro de conexão.','erro');}
+    const r=await fetch(`https://api.cloudinary.com/v1_1/dcazdsqkl/raw/upload`,{method:'POST',body:formData});
+    const data=await r.json();
+    if(!data.secure_url){toast('Erro ao enviar para Cloudinary.','erro');console.error(data);return;}
+    const r2=await fetch(`/api/aps/${id}/assinada`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ap_assinada_url:data.secure_url})});
+    if(r2.ok){toast('✅ AP assinada enviada!','ok');carregarFaturamento();}
+    else toast('Erro ao salvar link.','erro');
+  }catch(e){toast('Erro de conexão: '+e.message,'erro');}
 }
 
 async function marcarPaga(id){
