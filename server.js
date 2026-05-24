@@ -286,21 +286,16 @@ app.delete('/api/eventos/:id', requireAuth, async (req, res) => {
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
-// GET /api/aps/:id/pdf — baixa PDF de AP já existente
 app.get('/api/aps/:id/pdf', requireAuth, async (req, res) => {
-  const u = req.session.usuario;
   try {
     const r = await pool.query(`SELECT * FROM aps WHERE id = $1`, [req.params.id]);
     if (!r.rows.length) return res.status(404).json({ erro: 'AP não encontrada' });
-
     const ap = r.rows[0];
-    if (u.nivel !== 'admin' && ap.usuario_id !== u.id)
-      return res.status(403).json({ erro: 'Sem permissão' });
-
+    // Se tiver PDF original salvo, redireciona para ele
+    if (ap.ap_assinada_url) return res.redirect(ap.ap_assinada_url);
+    // Caso contrário gera o PDF via Puppeteer
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition',
-      `attachment; filename="AP_${ap.numero.replace(/\./g,'_')}.pdf"`);
-
+    res.setHeader('Content-Disposition', `attachment; filename="AP_${ap.numero.replace(/\./g,'_')}.pdf"`);
     const dados = {
       numero: ap.numero, mes: ap.mes, ano: ap.ano, tipo: ap.tipo,
       unidade: ap.unidade, nomeProjeto: ap.nome_projeto,
@@ -309,9 +304,8 @@ app.get('/api/aps/:id/pdf', requireAuth, async (req, res) => {
       totalBruto: Number(ap.total_bruto),
       totalDesconto: Number(ap.total_desconto),
     };
-
     await gerarPDFv2(dados, res);
-  } catch (e) {
+  } catch(e) {
     if (!res.headersSent) res.status(500).json({ erro: e.message });
   }
 });
