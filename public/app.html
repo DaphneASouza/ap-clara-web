@@ -107,6 +107,20 @@
       .exec-edit-actions{flex-direction:column;gap:8px}
       .btn-save-edit,.btn-cancel-edit{width:100%;text-align:center}
       .btn-edit-ap,.btn-del-ap,.btn-pdf{padding:4px 6px;font-size:10px}
+      /* Bottom bar */
+      #bottom-bar{display:flex;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--sidebar-bg);border-top:1px solid rgba(255,255,255,.08);z-index:300;padding-bottom:env(safe-area-inset-bottom)}
+      .bb-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;color:rgba(255,255,255,.45);cursor:pointer;padding:6px 0;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:color .15s}
+      .bb-item.active{color:var(--laranja)}
+      .bb-icon{font-size:18px;line-height:1}
+      .bb-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+      /* Ajustes gerais iOS */
+      #content{padding-bottom:56px}
+      #btn-menu-mobile{display:none!important}
+      body{-webkit-text-size-adjust:100%}
+      .page{-webkit-overflow-scrolling:touch;padding-bottom:70px}
+      #topbar{padding:0 16px}
+      #toast{bottom:72px}
+      #modal-card{max-width:calc(100vw - 24px);margin:12px}
     }
 
     .page{display:none;height:100%;overflow-y:auto;padding:24px}
@@ -629,6 +643,13 @@
 </div>
 
 <div id="toast"></div>
+<nav id="bottom-bar">
+  <button class="bb-item active" data-page="dashboard"><span class="bb-icon">📊</span><span class="bb-label">Dashboard</span></button>
+  <button class="bb-item" data-page="execucao-controle"><span class="bb-icon">📋</span><span class="bb-label">Execução</span></button>
+  <button class="bb-item" data-page="execucoes-salvas"><span class="bb-icon">📁</span><span class="bb-label">Salvas</span></button>
+  <button class="bb-item" data-page="faturamento"><span class="bb-icon">💼</span><span class="bb-label">Faturamento</span></button>
+  <button class="bb-item" id="bb-mais"><span class="bb-icon">☰</span><span class="bb-label">Mais</span></button>
+</nav>
 
 <script>
 'use strict';
@@ -1719,6 +1740,39 @@ function renderCardEdit(card,row){
   btnMenu.addEventListener('click', abrirMenu);
   overlay.addEventListener('click', fecharMenu);
   document.querySelectorAll('.nav-item').forEach(btn => btn.addEventListener('click', fecharMenu));
+})();
+
+// ── Bottom Bar mobile ────────────────────────────────────────────────────────
+(function(){
+  const bar=document.getElementById('bottom-bar');
+  if(!bar)return;
+  bar.querySelectorAll('.bb-item:not(#bb-mais)').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const page=btn.dataset.page;
+      // ativa nav-item correspondente
+      document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+      const navItem=document.querySelector(`.nav-item[data-page="${page}"]`);
+      if(navItem)navItem.click();
+      // ativa bb-item
+      bar.querySelectorAll('.bb-item').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+  document.getElementById('bb-mais')?.addEventListener('click',()=>{
+    const sidebar=document.getElementById('sidebar');
+    const overlay=document.getElementById('sidebar-overlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('show');
+  });
+  // Sincroniza bottom bar com nav-item ao navegar
+  document.querySelectorAll('.nav-item').forEach(navBtn=>{
+    navBtn.addEventListener('click',()=>{
+      const page=navBtn.dataset.page;
+      bar.querySelectorAll('.bb-item').forEach(b=>b.classList.remove('active'));
+      const bbItem=bar.querySelector(`.bb-item[data-page="${page}"]`);
+      if(bbItem)bbItem.classList.add('active');
+    });
+  });
 })();
 
 // ── Faturamento ──────────────────────────────────────────────────────────────
