@@ -1627,7 +1627,7 @@ function renderCardView(card,row){
         ${row.numero_ap?`<span class="badge-ec" style="background:var(--laranja);color:white">${row.numero_ap}</span>`:''}
       </div>
       <div class="exec-card-btns">
-        <button class="btn-gerar-ap">📄 Gerar AP</button>
+        ${podeEditarTudo()?`<button class="btn-gerar-ap">📄 Gerar AP</button>`:''}
         ${podeEditarTudo()?`<button class="btn-edit-card">✏️ Editar</button>`:''}
         ${podeEditarTudo()?`<button class="btn-del-card">🗑 Excluir</button>`:''}
       </div>
