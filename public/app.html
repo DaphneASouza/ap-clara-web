@@ -443,6 +443,7 @@
           <option value="gerada">APs Geradas</option>
           <option value="enviada">APs Enviadas</option>
           <option value="paga">APs Pagas</option>
+          <option value="cancelada">APs Canceladas</option>
           <option value="execucoes">Execuções Salvas</option>
         </select>
         <button onclick="aplicarFiltrosDashboard()" style="padding:7px 16px;background:var(--laranja);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">Aplicar</button>
@@ -947,9 +948,10 @@ function aplicarFiltrosDashboard(){
   if(visao==='gerada')filtrado=apsBase.filter(ap=>!ap.status||ap.status==='gerada');
   else if(visao==='enviada')filtrado=apsBase.filter(ap=>ap.status==='enviada');
   else if(visao==='paga')filtrado=apsBase.filter(ap=>ap.status==='paga');
+  else if(visao==='cancelada')filtrado=apsBase.filter(ap=>ap.status==='cancelada');
 
-  const labels={todas:'APs no período',gerada:'APs Geradas',enviada:'APs Enviadas',paga:'APs Pagas'};
-  const cores={todas:'#E65C00',gerada:'#2563EB',enviada:'#F59E0B',paga:'#16A34A'};
+  const labels={todas:'APs no período',gerada:'APs Geradas',enviada:'APs Enviadas',paga:'APs Pagas',cancelada:'APs Canceladas'};
+  const cores={todas:'#E65C00',gerada:'#2563EB',enviada:'#F59E0B',paga:'#16A34A',cancelada:'#DC2626'};
   if(el('m-aps-label'))el('m-aps-label').textContent=(labels[visao]||'APs')+sufixo;
   if(el('m-bruto-label'))el('m-bruto-label').textContent='Valor Bruto'+sufixo;
   if(el('m-desc-label'))el('m-desc-label').textContent='Com Desconto'+sufixo;
