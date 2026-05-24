@@ -1104,7 +1104,7 @@ function renderBancoRow(card,ap,isAdmin){
       :''}
     </div>`;
   card.querySelector('.btn-pdf').addEventListener('click',()=>window.open(`/api/aps/${ap.id}/pdf`,'_blank'));
-  card.querySelector('.btn-edit-ap').addEventListener('click',()=>editarBancoRow(card,ap,isAdmin));
+  card.querySelector('.btn-edit-ap')?.addEventListener('click',()=>editarBancoRow(card,ap,isAdmin));
   card.querySelector('.btn-enviar-ap')?.addEventListener('click',async()=>{
     if(!confirm(`Confirmar envio da AP "${ap.numero}" para o cliente?`))return;
     const hoje=new Date().toLocaleDateString('pt-BR');
@@ -1115,7 +1115,7 @@ function renderBancoRow(card,ap,isAdmin){
       renderBancoRow(card,{...ap,status:'enviada',data_envio:hoje},isAdmin);
     }else toast('Erro ao atualizar status.','erro');
   });
-  card.querySelector('.btn-del-ap').addEventListener('click',async()=>{
+  card.querySelector('.btn-del-ap')?.addEventListener('click',async()=>{
     if(!confirm(`Excluir a AP "${ap.numero}"?`))return;
     const r=await fetch(`/api/aps/${ap.id}`,{method:'DELETE'});
     if(!r.ok){const e=await r.json();toast(e.erro||'Erro ao excluir.','erro');return;}
