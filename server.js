@@ -220,16 +220,17 @@ app.post('/api/aps/:id/assinada', requireAuth, async (req, res) => {
 // Atualizar status da AP
 app.patch('/api/aps/:id/status', requireAuth, async (req, res) => {
   try {
-    const { status, numero_nf, data_envio, data_pagamento, nf_arquivo_url } = req.body;
+    const { status, numero_nf, data_envio, data_pagamento, nf_arquivo_url, link_comprovacao } = req.body;
     await pool.query(`
       UPDATE aps SET
         status=COALESCE($1,status),
         numero_nf=COALESCE($2,numero_nf),
         data_envio=COALESCE($3,data_envio),
         data_pagamento=COALESCE($4,data_pagamento),
-        nf_arquivo_url=COALESCE($5,nf_arquivo_url)
-      WHERE id=$6`,
-      [status||null, numero_nf||null, data_envio||null, data_pagamento||null, nf_arquivo_url||null, req.params.id]
+        nf_arquivo_url=COALESCE($5,nf_arquivo_url),
+        link_comprovacao=COALESCE($6,link_comprovacao)
+      WHERE id=$7`,
+      [status||null, numero_nf||null, data_envio||null, data_pagamento||null, nf_arquivo_url||null, link_comprovacao||null, req.params.id]
     );
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ erro: e.message }); }

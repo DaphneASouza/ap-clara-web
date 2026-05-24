@@ -1897,6 +1897,12 @@ function renderFatEnviadas(lista){
             ${ap.ap_assinada_url?`<a href="${ap.ap_assinada_url}" target="_blank" style="background:var(--verde-claro);color:var(--verde);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">✅ Ver AP Assinada</a>`:''}
           </div>
           <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;padding:10px 12px;background:var(--bg);border-radius:8px">
+            <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase">Link de Comprovação</label>
+            <div style="display:flex;gap:6px">
+              <input type="text" placeholder="https://drive.google.com/..." id="fat-comp-${ap.id}" value="${ap.link_comprovacao||''}" style="flex:1;padding:7px 10px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit"/>
+              <button onclick="salvarComprovacao(${ap.id})" style="background:var(--roxo);color:white;border:none;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">💾 Salvar</button>
+            </div>
+            ${ap.link_comprovacao?`<a href="${ap.link_comprovacao}" target="_blank" style="font-size:11px;color:var(--roxo);text-decoration:none;margin-top:2px;display:inline-block">🔗 Ver comprovação</a>`:''}
             <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase">AP Assinada (PDF)</label>
             <div style="display:flex;gap:6px;align-items:center">
               <input type="file" accept="application/pdf" id="fat-file-${ap.id}" style="flex:1;padding:5px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit;background:white"/>
@@ -1976,6 +1982,7 @@ function renderFatPagas(lista){
             <button onclick="window.open('/api/aps/${ap.id}/pdf','_blank')" style="background:var(--laranja-claro);color:var(--laranja);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📄 Ver AP</button>
             ${ap.ap_assinada_url?`<a href="${ap.ap_assinada_url}" target="_blank" style="background:var(--verde-claro);color:var(--verde);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">✅ Ver AP Assinada</a>`:''}
             ${ap.nf_arquivo_url?`<a href="${ap.nf_arquivo_url}" target="_blank" style="background:var(--azul-claro);color:var(--azul);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">📎 Ver NF</a>`:''}
+            ${ap.link_comprovacao?`<a href="${ap.link_comprovacao}" target="_blank" style="background:var(--roxo-claro);color:var(--roxo);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">🔗 Ver Comprovação</a>`:''}
             <button onclick="desfazerPagamento(${ap.id})" style="background:#FEE2E2;color:#DC2626;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">↩ Desfazer</button>
           </div>
         </div>`;
@@ -2015,6 +2022,14 @@ async function salvarApAssinada(id){
     if(r2.ok){toast('✅ AP assinada enviada!','ok');carregarFaturamento();}
     else toast('Erro ao salvar link.','erro');
   }catch(e){toast('Erro de conexão: '+e.message,'erro');}
+}
+
+async function salvarComprovacao(id){
+  const link=document.getElementById(`fat-comp-${id}`)?.value.trim();
+  if(!link){toast('Cole o link de comprovação.','erro');return;}
+  const r=await fetch(`/api/aps/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({link_comprovacao:link})});
+  if(r.ok){toast('✅ Comprovação salva!','ok');carregarFaturamento();}
+  else toast('Erro ao salvar comprovação.','erro');
 }
 
 async function salvarNF(id){
