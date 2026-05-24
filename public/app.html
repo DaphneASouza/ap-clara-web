@@ -983,13 +983,17 @@ function aplicarFiltrosDashboard(){
   for(let i=5;i>=0;i--){
     const d=new Date(anoAtual,mesAtual-i,1);const m=d.getMonth(),a=d.getFullYear();
     const label=MESES_ORDER[m].substring(0,3)+'/'+String(a).substring(2);
-    const base=banco.filter(ap=>{
-      const d=ap.data_ap?ap.data_ap.split('/'):null;
-      const apMes=d?(Number(d[1])-1):new Date(ap.criado_em).getMonth();
-      const apAno=d?Number(d[2]):new Date(ap.criado_em).getFullYear();
-      return apMes===m&&apAno===a&&(!filtroUnd||(ap.unidade||'').trim()===filtroUnd);
+    const base=filtrado.filter(ap=>{
+      const dt=ap.data_ap?ap.data_ap.split('/'):null;
+      const apMes=dt?(Number(dt[1])-1):new Date(ap.criado_em).getMonth();
+      const apAno=dt?Number(dt[2]):new Date(ap.criado_em).getFullYear();
+      return apMes===m&&apAno===a;
     });
-    ultimos6.push({label,gerada:base.filter(ap=>!ap.status||ap.status==='gerada').reduce((s,ap)=>s+Number(ap.total_desconto||0),0),enviada:base.filter(ap=>ap.status==='enviada').reduce((s,ap)=>s+Number(ap.total_desconto||0),0),paga:base.filter(ap=>ap.status==='paga').reduce((s,ap)=>s+Number(ap.total_desconto||0),0)});
+    ultimos6.push({label,
+      gerada:base.filter(ap=>!ap.status||ap.status==='gerada').reduce((s,ap)=>s+Number(ap.total_desconto||0),0),
+      enviada:base.filter(ap=>ap.status==='enviada').reduce((s,ap)=>s+Number(ap.total_desconto||0),0),
+      paga:base.filter(ap=>ap.status==='paga').reduce((s,ap)=>s+Number(ap.total_desconto||0),0),
+    });
   }
   if(chartMensal)chartMensal.destroy();
   const ctx=el('chart-mensal').getContext('2d');
