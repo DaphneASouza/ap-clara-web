@@ -1177,7 +1177,7 @@ function criarCardItem(item,idx,itensArr,onUpdate){
         <div class="fg span2"><label>Item do Cardápio</label><div class="cardapio-sel-wrap"></div></div>
         <div class="fg"><label>Quantidade</label><input type="number" data-f="quantidade" value="${item.quantidade||1}" min="1" style="text-align:center"/></div>
         <div class="fg"><label>Valor Total</label><input type="text" data-f="valor_total_disp" value="${brl((item.valor_unitario||0)*(item.quantidade||1))}" readonly style="background:var(--laranja-claro);color:var(--laranja);font-weight:700"/></div>
-        <div class="fg span2"><label>Link Trello Comprovação</label><div class="links-comprovacao-wrap" style="display:flex;flex-direction:column;gap:6px"><input type="text" data-f="link_trello_comprovacao" value="${item.link_trello_comprovacao||''}" placeholder="https://trello.com/..."/>${(item.links_comprovacao_extra||[]).map(l=>`<input type="text" value="${l||''}" placeholder="https://trello.com/..." style="border:1.5px solid var(--borda);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;color:var(--texto);background:white;outline:none;width:100%"/>`).join('')}</div></div>
+
       </div>
     </div>`;
 
