@@ -1659,15 +1659,15 @@ function renderCardView(card,row){
     chevron.classList.toggle('open',open);
   });
 
-  card.querySelector('.btn-del-card').addEventListener('click',async()=>{
+  card.querySelector('.btn-del-card')?.addEventListener('click',async()=>{
     if(!confirm('Excluir esta execução?'))return;
     const r=await fetch(`/api/execucao/${row.id}`,{method:'DELETE'});
     if(!r.ok){const e=await r.json();toast(e.erro||'Erro ao excluir.','erro');return;}
     execSalvasData=execSalvasData.filter(x=>x.id!==row.id);
     renderExecCards();
   });
-  card.querySelector('.btn-edit-card').addEventListener('click',()=>renderCardEdit(card,row));
-  card.querySelector('.btn-gerar-ap').addEventListener('click',()=>gerarAPdaExecucao(row));
+  card.querySelector('.btn-edit-card')?.addEventListener('click',()=>renderCardEdit(card,row));
+  card.querySelector('.btn-gerar-ap')?.addEventListener('click',()=>gerarAPdaExecucao(row));
 }
 
 // ── Modal de confirmação de geração de AP ────────────────────────────────────
