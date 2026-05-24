@@ -640,6 +640,7 @@
     <div class="page" id="page-faturamento">
       <div style="display:flex;gap:8px;margin-bottom:12px;border-bottom:2px solid var(--borda);padding-bottom:12px">
         <button class="fat-tab active" data-tab="enviadas" style="background:none;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:6px 16px;border-radius:8px;color:var(--laranja);border-bottom:2px solid var(--laranja)">📤 Enviadas</button>
+        <button class="fat-tab" data-tab="aguardando" style="background:none;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:6px 16px;border-radius:8px;color:var(--texto-leve)">🕐 Aguardando Faturar</button>
         <button class="fat-tab" data-tab="pagas" style="background:none;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:6px 16px;border-radius:8px;color:var(--texto-leve)">✅ Pagas</button>
         <button class="fat-tab" data-tab="canceladas" style="background:none;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:6px 16px;border-radius:8px;color:var(--texto-leve)">❌ Canceladas</button>
       </div>
@@ -667,6 +668,7 @@
         </select>
       </div>
       <div id="fat-tab-enviadas"></div>
+      <div id="fat-tab-aguardando" style="display:none"></div>
       <div id="fat-tab-pagas" style="display:none"></div>
       <div id="fat-tab-canceladas" style="display:none"></div>
     </div>
