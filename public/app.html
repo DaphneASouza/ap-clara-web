@@ -372,7 +372,7 @@
           <span id="cal-titulo" style="font-size:17px;font-weight:800;min-width:180px;text-align:center"></span>
           <button id="cal-next" style="background:none;border:1px solid var(--borda);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px">›</button>
         </div>
-        <button onclick="abrirModalEvento()" style="background:var(--laranja);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ Novo Evento</button>
+        <span id="btn-novo-evento-cal"></span>
       </div>
       <div id="cal-grid" style="background:white;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden"></div>
       <div id="cal-dia-panel" style="display:none;margin-top:16px;background:white;border-radius:var(--radius);box-shadow:var(--shadow);padding:20px"></div>
@@ -674,7 +674,13 @@
             <div class="fg"><label>Login</label><input type="text" id="u-login" placeholder="login"/></div>
             <div class="fg"><label>Senha</label><input type="password" id="u-senha" placeholder="senha"/></div>
             <div class="fg"><label>Nível</label>
-              <select id="u-nivel"><option value="usuario">Usuário</option><option value="admin">Admin</option></select>
+              <select id="u-nivel">
+              <option value="atendimento">Atendimento</option>
+              <option value="direcao">Direção</option>
+              <option value="financeiro">Financeiro</option>
+              <option value="faturamento">Faturamento</option>
+              <option value="admin">Admin</option>
+            </select>
             </div>
             <button class="btn-criar" onclick="criarUsuario()">+ Criar Usuário</button>
           </div>
@@ -723,6 +729,21 @@
 <script>
 'use strict';
 let CARDAPIO=[],banco=[],usuario=null,chartMensal=null;
+
+// ── Permissões ───────────────────────────────────────────────────────────────
+const PERMS={
+  admin:      {editarTudo:true,  editarFaturamento:true, editarCalendario:true, gerenciarUsuarios:true},
+  faturamento:{editarTudo:true,  editarFaturamento:true, editarCalendario:true, gerenciarUsuarios:false},
+  financeiro: {editarTudo:false, editarFaturamento:true, editarCalendario:true, gerenciarUsuarios:false},
+  atendimento:{editarTudo:false, editarFaturamento:false,editarCalendario:true, gerenciarUsuarios:false},
+  direcao:    {editarTudo:false, editarFaturamento:false,editarCalendario:true, gerenciarUsuarios:false},
+  usuario:    {editarTudo:false, editarFaturamento:false,editarCalendario:false,gerenciarUsuarios:false},
+};
+function perm(chave){ return !!(PERMS[usuario?.nivel]?.[chave]); }
+function podeEditarTudo(){ return perm('editarTudo'); }
+function podeEditarFaturamento(){ return perm('editarFaturamento'); }
+function podeEditarCalendario(){ return perm('editarCalendario'); }
+function podeGerenciarUsuarios(){ return perm('gerenciarUsuarios'); }
 
 function brl(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
 function brlK(v){v=Number(v||0);return v>=1000?`R$ ${(v/1000).toFixed(1)}k`:brl(v)}
@@ -777,7 +798,7 @@ async function init(){
     document.getElementById('sidebar-nivel').textContent=usuario.nivel;
     document.getElementById('avatar-inicial').textContent=usuario.nome[0].toUpperCase();
     document.getElementById('badge-nivel').textContent=usuario.nivel==='admin'?'👑 Admin':'👤 Usuário';
-    if(usuario.nivel==='admin'){
+    if(podeGerenciarUsuarios()){
       document.querySelectorAll('.admin-only').forEach(el=>el.style.display='');
     }
     await carregarCardapio();
@@ -1067,11 +1088,13 @@ function renderBancoRow(card,ap,isAdmin){
     </div>
     <div style="padding:8px 14px;border-top:1px solid var(--borda);display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap">
       <button class="btn-pdf">📄 PDF</button>
-      ${ap.status==='enviada'||ap.status==='paga'
-        ?`<span style="background:var(--verde-claro);color:var(--verde);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700">${ap.status==='paga'?'✅ Paga':'📤 Enviada'}</span>`
-        :`<button class="btn-enviar-ap">📤 Enviar para cliente</button>`}
-      <button class="btn-edit-ap">✏️ Editar</button>
-      <button class="btn-del-ap">🗑</button>
+      ${podeEditarTudo()?`
+        ${ap.status==='enviada'||ap.status==='paga'
+          ?`<span style="background:var(--verde-claro);color:var(--verde);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700">${ap.status==='paga'?'✅ Paga':'📤 Enviada'}</span>`
+          :`<button class="btn-enviar-ap">📤 Enviar para cliente</button>`}
+        <button class="btn-edit-ap">✏️ Editar</button>
+        <button class="btn-del-ap">🗑</button>`
+      :''}
     </div>`;
   card.querySelector('.btn-pdf').addEventListener('click',()=>window.open(`/api/aps/${ap.id}/pdf`,'_blank'));
   card.querySelector('.btn-edit-ap').addEventListener('click',()=>editarBancoRow(card,ap,isAdmin));
@@ -1333,6 +1356,11 @@ document.getElementById('btn-add-item-exec').addEventListener('click',()=>{
 });
 
 async function carregarExecucao(){
+  // Oculta ações de edição para quem não pode
+  const btnSalvar=document.getElementById('btn-salvar-exec');
+  const btnAdd=document.getElementById('btn-add-item-exec');
+  if(btnSalvar)btnSalvar.style.display=podeEditarTudo()?'':'none';
+  if(btnAdd)btnAdd.style.display=podeEditarTudo()?'':'none';
   try{
     const r=await fetch('/api/execucao');
     const todas=await r.json();
@@ -1592,8 +1620,8 @@ function renderCardView(card,row){
       </div>
       <div class="exec-card-btns">
         <button class="btn-gerar-ap">📄 Gerar AP</button>
-        <button class="btn-edit-card">✏️ Editar</button>
-        <button class="btn-del-card">🗑 Excluir</button>
+        ${podeEditarTudo()?`<button class="btn-edit-card">✏️ Editar</button>`:''}
+        ${podeEditarTudo()?`<button class="btn-del-card">🗑 Excluir</button>`:''}
       </div>
     </div>
     <div class="exec-card-toggle">
@@ -1912,6 +1940,8 @@ function renderCalendario(){
   const nomesMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   const diasSemana=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   document.getElementById('cal-titulo').textContent=`${nomesMes[calMes]} ${calAno}`;
+  const btnNovoEvento=document.getElementById('btn-novo-evento-cal');
+  if(btnNovoEvento)btnNovoEvento.innerHTML=podeEditarCalendario()?`<button onclick="abrirModalEvento()" style="background:var(--laranja);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ Novo Evento</button>`:'';
   const grid=document.getElementById('cal-grid');
   const primeiroDia=new Date(calAno,calMes,1).getDay();
   const diasNoMes=new Date(calAno,calMes+1,0).getDate();
@@ -1943,7 +1973,7 @@ function abrirDia(dataStr){
   panel.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div style="font-size:15px;font-weight:800">${dia} de ${nomesMes[Number(mes)-1]} de ${ano}</div>
-      <button onclick="abrirModalEvento('${dataStr}')" style="background:var(--laranja);color:white;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ Evento neste dia</button>
+      ${podeEditarCalendario()?`<button onclick="abrirModalEvento('${dataStr}')" style="background:var(--laranja);color:white;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ Evento neste dia</button>`:''}
     </div>
     ${!evsDia.length?`<div style="text-align:center;padding:24px;color:var(--texto-leve);font-size:13px">Nenhum evento neste dia.</div>`:
     evsDia.map(e=>`
@@ -1957,8 +1987,8 @@ function abrirDia(dataStr){
           <div style="font-size:10px;color:var(--texto-leve)">Por ${e.usuario_nome||'—'}</div>
         </div>
         <div style="display:flex;gap:4px;flex-shrink:0">
-          <button onclick="editarEvento(${e.id})" style="background:var(--laranja-claro);color:var(--laranja);border:none;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✏️</button>
-          <button onclick="excluirEvento(${e.id})" style="background:#FEE2E2;color:#DC2626;border:none;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🗑</button>
+          ${podeEditarCalendario()?`<button onclick="editarEvento(${e.id})" style="background:var(--laranja-claro);color:var(--laranja);border:none;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✏️</button>`:''}
+          ${podeEditarCalendario()?`<button onclick="excluirEvento(${e.id})" style="background:#FEE2E2;color:#DC2626;border:none;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🗑</button>`:''}
         </div>
       </div>`).join('')}`;
   panel.scrollIntoView({behavior:'smooth',block:'start'});
@@ -2080,7 +2110,7 @@ function renderFatEnviadas(lista){
           </div>
           <span style="font-weight:800;color:var(--verde);font-size:15px">${brl(ap.total_desconto)}</span>
           <span class="fat-chevron" style="font-size:12px;color:var(--texto-leve);transition:transform .2s;flex-shrink:0">▼</span>
-          <button onclick="event.stopPropagation();excluirApFaturamento(${ap.id},'enviada')" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--texto-leve);line-height:1;padding:2px 6px;border-radius:4px;flex-shrink:0" title="Excluir">×</button>
+          ${podeEditarFaturamento()?`<button onclick="event.stopPropagation();excluirApFaturamento(${ap.id},'enviada')" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--texto-leve);line-height:1;padding:2px 6px;border-radius:4px;flex-shrink:0" title="Excluir">×</button>`:''}
         </div>
         <div class="fat-card-body" style="display:none;padding:12px 16px;flex-direction:column;gap:8px">
           <div style="font-size:13px;font-weight:600">${ap.nome_projeto||'—'}</div>
@@ -2088,7 +2118,7 @@ function renderFatEnviadas(lista){
             <button onclick="window.open('/api/aps/${ap.id}/pdf','_blank')" style="background:var(--laranja-claro);color:var(--laranja);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📄 Ver AP</button>
             ${ap.ap_assinada_url?`<a href="${ap.ap_assinada_url}" target="_blank" style="background:var(--verde-claro);color:var(--verde);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">✅ Ver AP Assinada</a>`:''}
           </div>
-          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;padding:10px 12px;background:var(--bg);border-radius:8px">
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;padding:10px 12px;background:var(--bg);border-radius:8px;${podeEditarFaturamento()?'':'display:none!important'}">
             <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase">Link de Comprovação</label>
             <div style="display:flex;gap:6px">
               <input type="text" placeholder="https://drive.google.com/..." id="fat-comp-${ap.id}" value="${ap.link_comprovacao||''}" style="flex:1;padding:7px 10px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit"/>
@@ -2165,7 +2195,7 @@ function renderFatPagas(lista){
           </div>
           <span style="font-weight:800;color:var(--verde);font-size:15px">${brl(ap.total_desconto)}</span>
           <span class="fat-chevron" style="font-size:12px;color:var(--texto-leve);transition:transform .2s;flex-shrink:0">▼</span>
-          <button onclick="event.stopPropagation();excluirApFaturamento(${ap.id},'paga')" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--texto-leve);line-height:1;padding:2px 6px;border-radius:4px;flex-shrink:0" title="Excluir">×</button>
+          ${podeEditarFaturamento()?`<button onclick="event.stopPropagation();excluirApFaturamento(${ap.id},'paga')" style="background:none;border:none;font-size:16px;cursor:pointer;color:var(--texto-leve);line-height:1;padding:2px 6px;border-radius:4px;flex-shrink:0" title="Excluir">×</button>`:''}
         </div>
         <div class="fat-card-body" style="display:none;padding:12px 16px;flex-direction:column;gap:6px">
           <div style="font-size:13px;font-weight:600">${ap.nome_projeto||'—'}</div>
@@ -2175,7 +2205,7 @@ function renderFatPagas(lista){
             ${ap.ap_assinada_url?`<a href="${ap.ap_assinada_url}" target="_blank" style="background:var(--verde-claro);color:var(--verde);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">✅ Ver AP Assinada</a>`:''}
             ${ap.nf_arquivo_url?`<a href="${ap.nf_arquivo_url}" target="_blank" style="background:var(--azul-claro);color:var(--azul);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">📎 Ver NF</a>`:''}
             ${ap.link_comprovacao?`<a href="${ap.link_comprovacao}" target="_blank" style="background:var(--roxo-claro);color:var(--roxo);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">🔗 Ver Comprovação</a>`:''}
-            <button onclick="desfazerPagamento(${ap.id})" style="background:#FEE2E2;color:#DC2626;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">↩ Desfazer</button>
+            ${podeEditarFaturamento()?`<button onclick="desfazerPagamento(${ap.id})" style="background:#FEE2E2;color:#DC2626;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">↩ Desfazer</button>`:''}
           </div>
         </div>`;
       wrap.appendChild(card);
