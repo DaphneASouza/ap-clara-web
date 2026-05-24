@@ -988,7 +988,8 @@ function filtrarCardapio(){
 
 async function carregarBanco(){
   try{
-    const r=await fetch('/api/aps');
+    const r=await fetch('/api/aps',{cache:'no-store'});
+    if(!r.ok){toast('Erro ao carregar banco.','erro');return;}
     banco=await r.json();
     filtrarBanco();
   }catch(e){toast('Erro ao carregar banco.','erro');console.error('banco erro:',e);}
@@ -1481,7 +1482,8 @@ document.getElementById('exec-filtro-mes').addEventListener('change',()=>{
 
 async function carregarExecucoesSalvas(){
   try{
-    const r=await fetch('/api/execucao');
+    const r=await fetch('/api/execucao',{cache:'no-store'});
+    if(!r.ok){toast('Erro ao carregar execuções.','erro');return;}
     execSalvasData=await r.json();
     document.getElementById('exec-salvas-count').textContent=`${execSalvasData.length} registro(s)`;
     const q=(document.getElementById('exec-busca')?.value||'').trim();
