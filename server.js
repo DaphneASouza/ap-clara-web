@@ -150,23 +150,14 @@ app.post('/api/aps', requireAuth, async (req, res) => {
 
 // GET /api/aps — lista APs (admin vê todas, usuário vê as suas)
 app.get('/api/aps', requireAuth, async (req, res) => {
-  const u = req.session.usuario;
   try {
-    const query = u.nivel === 'admin'
-      ? `SELECT a.*, u.nome as usuario_nome
-         FROM aps a JOIN usuarios u ON a.usuario_id = u.id
-         ORDER BY a.criado_em DESC`
-      : `SELECT a.*, u.nome as usuario_nome
-         FROM aps a JOIN usuarios u ON a.usuario_id = u.id
-         WHERE a.usuario_id = $1
-         ORDER BY a.criado_em DESC`;
-
-    const params = u.nivel === 'admin' ? [] : [u.id];
-    const r = await pool.query(query, params);
+    const r = await pool.query(`
+      SELECT a.*, u.nome as usuario_nome
+      FROM aps a JOIN usuarios u ON a.usuario_id = u.id
+      ORDER BY a.criado_em DESC
+    `);
     res.json(r.rows);
-  } catch (e) {
-    res.status(500).json({ erro: e.message });
-  }
+  } catch (e) { res.status(500).json({ erro: e.message }); }
 });
 
 app.post('/api/relatorio/dashboard', requireAuth, async (req, res) => {
@@ -387,24 +378,12 @@ app.delete('/api/usuarios/:id', requireAdmin, async (req, res) => {
 
 // GET /api/execucao — admin vê todas, usuário vê as suas
 app.get('/api/execucao', requireAuth, async (req, res) => {
-  const u = req.session.usuario;
   try {
-    let r;
-    if (u.nivel === 'admin') {
-      r = await pool.query(
-        `SELECT e.*, u.nome as usuario_nome
-         FROM execucao e LEFT JOIN usuarios u ON e.usuario_id = u.id
-         ORDER BY e.criado_em DESC`
-      );
-    } else {
-      r = await pool.query(
-        `SELECT e.*, u.nome as usuario_nome
-         FROM execucao e LEFT JOIN usuarios u ON e.usuario_id = u.id
-         WHERE e.usuario_id = $1
-         ORDER BY e.criado_em DESC`,
-        [u.id]
-      );
-    }
+    const r = await pool.query(`
+      SELECT e.*, u.nome as usuario_nome
+      FROM execucao e LEFT JOIN usuarios u ON e.usuario_id = u.id
+      ORDER BY e.criado_em DESC
+    `);
     res.json(r.rows);
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
