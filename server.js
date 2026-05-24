@@ -377,6 +377,26 @@ app.delete('/api/usuarios/:id', requireAdmin, async (req, res) => {
   } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
+app.put('/api/usuarios/perfil', requireAuth, async (req, res) => {
+  try {
+    const { nome, login, senha } = req.body;
+    const id = req.session.usuario.id;
+    if (!nome || !login) return res.status(400).json({ erro: 'Nome e login são obrigatórios.' });
+    const check = await pool.query(`SELECT id FROM usuarios WHERE login=$1 AND id!=$2`, [login, id]);
+    if (check.rows.length) return res.status(400).json({ erro: 'Este login já está em uso.' });
+    if (senha) {
+      const bcrypt = require('bcrypt');
+      const hash = await bcrypt.hash(senha, 10);
+      await pool.query(`UPDATE usuarios SET nome=$1, login=$2, senha_hash=$3 WHERE id=$4`, [nome, login, hash, id]);
+    } else {
+      await pool.query(`UPDATE usuarios SET nome=$1, login=$2 WHERE id=$3`, [nome, login, id]);
+    }
+    req.session.usuario.nome = nome;
+    req.session.usuario.login = login;
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
 // ════════════════════════════════════════════════════════════════════════════
 // EXECUÇÃO CONTROLE
 // ════════════════════════════════════════════════════════════════════════════
