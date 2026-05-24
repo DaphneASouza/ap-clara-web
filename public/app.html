@@ -1851,11 +1851,12 @@ function renderFatEnviadas(lista){
               <input type="file" accept="application/pdf" id="fat-file-${ap.id}" style="flex:1;padding:5px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit;background:white"/>
               <button onclick="salvarApAssinada(${ap.id})" style="background:var(--laranja);color:white;border:none;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">📤 Enviar</button>
             </div>
-            <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase;margin-top:6px">Número da NF <span style="color:#DC2626">*</span></label>
+            <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase;margin-top:6px">Número da NF</label>
             <div style="display:flex;gap:6px">
               <input type="text" placeholder="Ex: 001234" id="fat-nf-${ap.id}" value="${ap.numero_nf||''}" style="flex:1;padding:7px 10px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit"/>
-              <button onclick="marcarPaga(${ap.id})" style="background:var(--verde);color:white;border:none;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">✅ Marcar Paga</button>
+              <button onclick="salvarNF(${ap.id})" style="background:var(--azul);color:white;border:none;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">💾 Salvar NF</button>
             </div>
+            ${ap.numero_nf?`<button onclick="marcarPaga(${ap.id})" style="background:var(--verde);color:white;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-top:4px">✅ Marcar Paga</button>`:`<button disabled style="background:#E4E4E7;color:#A1A1AA;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:not-allowed;font-family:inherit;width:100%;margin-top:4px">✅ Marcar Paga (salve a NF primeiro)</button>`}
           </div>
         </div>`;
       wrap.appendChild(card);
@@ -1959,11 +1960,18 @@ async function salvarApAssinada(id){
   }catch(e){toast('Erro de conexão: '+e.message,'erro');}
 }
 
-async function marcarPaga(id){
+async function salvarNF(id){
   const nf=document.getElementById(`fat-nf-${id}`)?.value.trim();
-  if(!nf){toast('Informe o número da NF antes de marcar como paga.','erro');return;}
+  if(!nf){toast('Informe o número da NF.','erro');return;}
+  const r=await fetch(`/api/aps/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({numero_nf:nf})});
+  if(r.ok){toast('✅ NF salva!','ok');carregarFaturamento();}
+  else toast('Erro ao salvar NF.','erro');
+}
+
+async function marcarPaga(id){
+  if(!confirm('Confirmar pagamento desta AP?'))return;
   const hoje=new Date().toLocaleDateString('pt-BR');
-  const r=await fetch(`/api/aps/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'paga',numero_nf:nf,data_pagamento:hoje})});
+  const r=await fetch(`/api/aps/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'paga',data_pagamento:hoje})});
   if(r.ok){toast('✅ AP marcada como paga!','ok');carregarFaturamento();}
   else toast('Erro ao marcar como paga.','erro');
 }
