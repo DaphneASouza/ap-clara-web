@@ -1862,12 +1862,17 @@ function renderFatEnviadas(lista){
               <input type="file" accept="application/pdf" id="fat-file-${ap.id}" style="flex:1;padding:5px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit;background:white"/>
               <button onclick="salvarApAssinada(${ap.id})" style="background:var(--laranja);color:white;border:none;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">📤 Enviar</button>
             </div>
-            <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase;margin-top:6px">Número da NF</label>
+            <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase;margin-top:6px">Número da NF <span style="color:#DC2626">*</span></label>
             <div style="display:flex;gap:6px">
               <input type="text" placeholder="Ex: 001234" id="fat-nf-${ap.id}" value="${ap.numero_nf||''}" style="flex:1;padding:7px 10px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit"/>
+            </div>
+            <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase;margin-top:6px">Arquivo da NF <span style="color:#DC2626">*</span></label>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="file" id="fat-nf-file-${ap.id}" style="flex:1;padding:5px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit;background:white"/>
               <button onclick="salvarNF(${ap.id})" style="background:var(--azul);color:white;border:none;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">💾 Salvar NF</button>
             </div>
-            ${ap.numero_nf?`<button onclick="marcarPaga(${ap.id})" style="background:var(--verde);color:white;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-top:4px">✅ Marcar Paga</button>`:`<button disabled style="background:#E4E4E7;color:#A1A1AA;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:not-allowed;font-family:inherit;width:100%;margin-top:4px">✅ Marcar Paga (salve a NF primeiro)</button>`}
+            ${ap.nf_arquivo_url?`<a href="${ap.nf_arquivo_url}" target="_blank" style="font-size:11px;color:var(--azul);text-decoration:none;margin-top:2px;display:inline-block">📎 Ver arquivo NF enviado</a>`:''}
+            ${ap.numero_nf&&ap.nf_arquivo_url?`<button onclick="marcarPaga(${ap.id})" style="background:var(--verde);color:white;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-top:4px">✅ Marcar Paga</button>`:`<button disabled style="background:#E4E4E7;color:#A1A1AA;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:not-allowed;font-family:inherit;width:100%;margin-top:4px">✅ Marcar Paga (salve número e arquivo da NF)</button>`}
           </div>
         </div>`;
       wrap.appendChild(card);
@@ -1973,10 +1978,21 @@ async function salvarApAssinada(id){
 
 async function salvarNF(id){
   const nf=document.getElementById(`fat-nf-${id}`)?.value.trim();
+  const fileInput=document.getElementById(`fat-nf-file-${id}`);
   if(!nf){toast('Informe o número da NF.','erro');return;}
-  const r=await fetch(`/api/aps/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({numero_nf:nf})});
-  if(r.ok){toast('✅ NF salva!','ok');carregarFaturamento();}
-  else toast('Erro ao salvar NF.','erro');
+  if(!fileInput?.files?.length){toast('Selecione o arquivo da NF.','erro');return;}
+  toast('Enviando arquivo da NF...','info');
+  try{
+    const formData=new FormData();
+    formData.append('file',fileInput.files[0]);
+    formData.append('upload_preset','aps_assinadas');
+    const r1=await fetch(`https://api.cloudinary.com/v1_1/dcazdsqkl/raw/upload`,{method:'POST',body:formData});
+    const data=await r1.json();
+    if(!data.secure_url){toast('Erro ao enviar arquivo para Cloudinary.','erro');console.error(data);return;}
+    const r2=await fetch(`/api/aps/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({numero_nf:nf,nf_arquivo_url:data.secure_url})});
+    if(r2.ok){toast('✅ NF salva!','ok');carregarFaturamento();}
+    else toast('Erro ao salvar NF.','erro');
+  }catch(e){toast('Erro: '+e.message,'erro');}
 }
 
 async function marcarPaga(id){
