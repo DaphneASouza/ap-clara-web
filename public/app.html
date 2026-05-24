@@ -344,7 +344,7 @@
     <button class="nav-item admin-only" data-page="usuarios" style="display:none"><span class="icon">👥</span> Usuários</button>
   </nav>
   <div id="sidebar-footer">
-    <div class="user-card">
+    <div class="user-card" style="cursor:pointer" onclick="abrirModalPerfil()" title="Editar perfil">
       <div class="user-avatar" id="avatar-inicial">D</div>
       <div>
         <div class="user-nome" id="sidebar-nome">—</div>
@@ -723,6 +723,21 @@
   </div>
 </div>
 
+<!-- MODAL PERFIL -->
+<div id="modal-perfil-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1100;display:none;align-items:center;justify-content:center">
+  <div style="background:white;border-radius:14px;padding:28px;width:100%;max-width:400px;display:flex;flex-direction:column;gap:16px;box-shadow:0 8px 40px rgba(0,0,0,.22);animation:modalIn .18s ease">
+    <div style="font-size:16px;font-weight:800">✏️ Editar Perfil</div>
+    <div class="fg"><label>Nome Completo</label><input type="text" id="perfil-nome" placeholder="Seu nome"/></div>
+    <div class="fg"><label>Login</label><input type="text" id="perfil-login" placeholder="Seu login"/></div>
+    <div class="fg"><label>Nova Senha <span style="font-size:10px;color:var(--texto-leve);font-weight:400">(deixe em branco para manter)</span></label><input type="password" id="perfil-senha" placeholder="Nova senha (opcional)"/></div>
+    <div class="fg"><label>Confirmar Nova Senha</label><input type="password" id="perfil-senha2" placeholder="Confirme a nova senha"/></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="salvarPerfil()" style="flex:1;background:var(--laranja);color:white;border:none;border-radius:8px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">💾 Salvar</button>
+      <button onclick="document.getElementById('modal-perfil-overlay').style.display='none'" style="padding:11px 16px;background:var(--bg);border:1px solid var(--borda);border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 <nav id="bottom-bar">
   <button class="bb-item active" data-page="dashboard"><span class="bb-icon">📊</span><span class="bb-label">Dashboard</span></button>
@@ -793,6 +808,35 @@ document.querySelectorAll('.nav-item').forEach(btn=>{
     if(page==='calendario')carregarCalendario();
     if(page==='cardapio')renderCardapio();
   });
+});
+
+function abrirModalPerfil(){
+  document.getElementById('perfil-nome').value=usuario?.nome||'';
+  document.getElementById('perfil-login').value=usuario?.login||'';
+  document.getElementById('perfil-senha').value='';
+  document.getElementById('perfil-senha2').value='';
+  document.getElementById('modal-perfil-overlay').style.display='flex';
+}
+async function salvarPerfil(){
+  const nome=document.getElementById('perfil-nome').value.trim();
+  const login=document.getElementById('perfil-login').value.trim();
+  const senha=document.getElementById('perfil-senha').value;
+  const senha2=document.getElementById('perfil-senha2').value;
+  if(!nome||!login){toast('Nome e login são obrigatórios.','erro');return;}
+  if(senha&&senha!==senha2){toast('As senhas não coincidem.','erro');return;}
+  const r=await fetch('/api/usuarios/perfil',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,login,senha:senha||null})});
+  const d=await r.json();
+  if(r.ok){
+    toast('✅ Perfil atualizado!','ok');
+    usuario.nome=nome;usuario.login=login;
+    document.getElementById('sidebar-nome').textContent=nome;
+    document.getElementById('avatar-inicial').textContent=nome[0].toUpperCase();
+    document.getElementById('modal-perfil-overlay').style.display='none';
+  }else toast(d.erro||'Erro ao salvar.','erro');
+}
+document.getElementById('modal-perfil-overlay')?.addEventListener('click',e=>{
+  if(e.target===document.getElementById('modal-perfil-overlay'))
+    document.getElementById('modal-perfil-overlay').style.display='none';
 });
 
 async function init(){
