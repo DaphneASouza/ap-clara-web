@@ -381,6 +381,13 @@
         <select id="dash-filtro-unidade" style="padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;cursor:pointer">
           <option value="">Todas as unidades</option>
         </select>
+        <select id="dash-filtro-visao" style="padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;cursor:pointer">
+          <option value="todas">Todas as APs</option>
+          <option value="gerada">APs Geradas</option>
+          <option value="enviada">APs Enviadas</option>
+          <option value="paga">APs Pagas</option>
+          <option value="execucoes">Execuções Salvas</option>
+        </select>
         <button onclick="aplicarFiltrosDashboard()" style="padding:7px 16px;background:var(--laranja);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">Aplicar</button>
       </div>
       <div class="metrics-grid">
@@ -731,10 +738,9 @@ document.getElementById('btn-logout').addEventListener('click',async()=>{
 
 async function carregarDashboard(){
   try{
-    const r=await fetch('/api/aps');
-    banco=await r.json();
-
-    // Popula select de unidade com valores distintos do banco
+    const [rAps,rExec]=await Promise.all([fetch('/api/aps'),fetch('/api/execucao')]);
+    banco=await rAps.json();
+    window._execSalvasDash=await rExec.json();
     const selAno=document.getElementById('dash-filtro-ano');
     if(selAno){
       const anoAtualStr=String(new Date().getFullYear());
@@ -742,82 +748,106 @@ async function carregarDashboard(){
       if(!anos.includes(Number(anoAtualStr)))anos.unshift(Number(anoAtualStr));
       const valorAtualAno=selAno.value||anoAtualStr;
       selAno.innerHTML='<option value="">Todos os anos</option>';
-      anos.forEach(a=>{
-        const opt=document.createElement('option');
-        opt.value=a;opt.textContent=a;
-        if(String(a)===valorAtualAno)opt.selected=true;
-        selAno.appendChild(opt);
-      });
+      anos.forEach(a=>{const opt=document.createElement('option');opt.value=a;opt.textContent=a;if(String(a)===valorAtualAno)opt.selected=true;selAno.appendChild(opt);});
     }
     const selUnd=document.getElementById('dash-filtro-unidade');
     if(selUnd){
       const unidades=[...new Set(banco.map(ap=>(ap.unidade||'').trim()).filter(Boolean))].sort();
       const valorAtual=selUnd.value;
       selUnd.innerHTML='<option value="">Todas as unidades</option>';
-      unidades.forEach(u=>{
-        const opt=document.createElement('option');
-        opt.value=u;opt.textContent=u;
-        if(u===valorAtual)opt.selected=true;
-        selUnd.appendChild(opt);
-      });
+      unidades.forEach(u=>{const opt=document.createElement('option');opt.value=u;opt.textContent=u;if(u===valorAtual)opt.selected=true;selUnd.appendChild(opt);});
     }
-
     aplicarFiltrosDashboard();
   }catch(e){console.error(e);}
 }
 
 function aplicarFiltrosDashboard(){
   const agora=new Date(),anoAtual=agora.getFullYear(),mesAtual=agora.getMonth();
-  const selMes=document.getElementById('dash-filtro-mes');
-  const selUnd=document.getElementById('dash-filtro-unidade');
-  const filtroMes=selMes?selMes.value:'';          // '' = todos, '0'-'11' = mês
-  const filtroUnd=selUnd?(selUnd.value||''):'';
-  const selAno2=document.getElementById('dash-filtro-ano');
-  const filtroAno=selAno2?(selAno2.value||''):'';    // '' = todas
-
-  // Filtra por unidade (afeta tudo)
-  const porUnd=filtroUnd?banco.filter(ap=>(ap.unidade||'').trim()===filtroUnd):banco;
-
-  // Filtra por mês (afeta cards e tabela recentes, NÃO o gráfico)
-  const porAno=filtroAno!==''
-    ?porUnd.filter(ap=>new Date(ap.criado_em).getFullYear()===Number(filtroAno))
-    :porUnd;
-  const filtrado=filtroMes!==''
-    ?porAno.filter(ap=>{const d=new Date(ap.criado_em);return d.getMonth()===Number(filtroMes);})
-    :porAno;
-
-  // Atualiza labels dos cards
-  const nomesMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  const sufixo=filtroMes!==''?` — ${nomesMes[Number(filtroMes)]}`:'';
-  const labelUnd=filtroUnd?` (${filtroUnd})`:'';
+  const filtroMes=document.getElementById('dash-filtro-mes')?.value||'';
+  const filtroUnd=document.getElementById('dash-filtro-unidade')?.value||'';
+  const filtroAno=document.getElementById('dash-filtro-ano')?.value||'';
+  const visao=document.getElementById('dash-filtro-visao')?.value||'todas';
   const el=id=>document.getElementById(id);
-  if(el('m-aps-label'))  el('m-aps-label').textContent  ='APs no período'+sufixo+labelUnd;
-  if(el('m-bruto-label'))el('m-bruto-label').textContent='Valor Bruto'+sufixo+labelUnd;
-  if(el('m-desc-label')) el('m-desc-label').textContent ='Com Desconto'+sufixo+labelUnd;
+  const nomesMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-  // Cards
-  el('m-aps').textContent  =filtrado.length;
+  // Filtra APs base
+  let apsBase=banco;
+  if(filtroUnd)apsBase=apsBase.filter(ap=>(ap.unidade||'').trim()===filtroUnd);
+  if(filtroAno)apsBase=apsBase.filter(ap=>new Date(ap.criado_em).getFullYear()===Number(filtroAno));
+  if(filtroMes!=='')apsBase=apsBase.filter(ap=>new Date(ap.criado_em).getMonth()===Number(filtroMes));
+
+  // Filtra execuções base
+  let execBase=window._execSalvasDash||[];
+  if(filtroUnd)execBase=execBase.filter(r=>(r.unidade||'').trim()===filtroUnd);
+  if(filtroAno)execBase=execBase.filter(r=>new Date(r.criado_em).getFullYear()===Number(filtroAno));
+  if(filtroMes!=='')execBase=execBase.filter(r=>new Date(r.criado_em).getMonth()===Number(filtroMes));
+
+  const sufixo=(filtroMes!==''?` — ${nomesMes[Number(filtroMes)]}`:'')+(filtroUnd?` (${filtroUnd})`:'');
+
+  if(visao==='execucoes'){
+    const totalExec=execBase.reduce((s,r)=>{const itens=Array.isArray(r.itens)?r.itens:[];return s+itens.reduce((t,i)=>t+(i.valor_total||0),0);},0);
+    if(el('m-aps-label'))el('m-aps-label').textContent='Execuções Salvas'+sufixo;
+    if(el('m-bruto-label'))el('m-bruto-label').textContent='Valor Total (c/ desc.)'+sufixo;
+    if(el('m-desc-label'))el('m-desc-label').textContent='Média por Execução'+sufixo;
+    if(el('m-total-label'))el('m-total-label').textContent='Total Acumulado Execuções';
+    el('m-aps').textContent=execBase.length;
+    el('m-bruto').textContent=brl(totalExec);
+    el('m-desc').textContent=brl(execBase.length?totalExec/execBase.length:0);
+    el('m-total').textContent=brl((window._execSalvasDash||[]).reduce((s,r)=>{const itens=Array.isArray(r.itens)?r.itens:[];return s+itens.reduce((t,i)=>t+(i.valor_total||0),0);},0));
+    // Gráfico execuções
+    const ultimos6=[];
+    for(let i=5;i>=0;i--){
+      const d=new Date(anoAtual,mesAtual-i,1);const m=d.getMonth(),a=d.getFullYear();
+      const label=MESES_ORDER[m].substring(0,3)+'/'+String(a).substring(2);
+      const valor=(window._execSalvasDash||[]).filter(r=>{const dd=new Date(r.criado_em);return dd.getMonth()===m&&dd.getFullYear()===a&&(!filtroUnd||(r.unidade||'').trim()===filtroUnd);}).reduce((s,r)=>{const itens=Array.isArray(r.itens)?r.itens:[];return s+itens.reduce((t,i)=>t+(i.valor_total||0),0);},0);
+      ultimos6.push({label,valor});
+    }
+    renderGraficoSimples(el,ultimos6,'#7C3AED','Execuções');
+    // Tabela recentes
+    const tbody=el('tbody-recentes');tbody.innerHTML='';
+    execBase.slice(0,6).forEach(r=>{
+      const itens=Array.isArray(r.itens)?r.itens:[];
+      const total=itens.reduce((s,i)=>s+(i.valor_total||0),0);
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td><span class="tag-ap" style="background:var(--roxo-claro);color:var(--roxo)">${r.numero_ap||'—'}</span></td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nome_projeto||'—'}</td><td style="text-align:right;font-weight:700;color:var(--roxo)">${brl(total)}</td>`;
+      tbody.appendChild(tr);
+    });
+    return;
+  }
+
+  // Visão APs
+  let filtrado=apsBase;
+  if(visao==='gerada')filtrado=apsBase.filter(ap=>!ap.status||ap.status==='gerada');
+  else if(visao==='enviada')filtrado=apsBase.filter(ap=>ap.status==='enviada');
+  else if(visao==='paga')filtrado=apsBase.filter(ap=>ap.status==='paga');
+
+  const labels={todas:'APs no período',gerada:'APs Geradas',enviada:'APs Enviadas',paga:'APs Pagas'};
+  const cores={todas:'#E65C00',gerada:'#2563EB',enviada:'#F59E0B',paga:'#16A34A'};
+  if(el('m-aps-label'))el('m-aps-label').textContent=(labels[visao]||'APs')+sufixo;
+  if(el('m-bruto-label'))el('m-bruto-label').textContent='Valor Bruto'+sufixo;
+  if(el('m-desc-label'))el('m-desc-label').textContent='Com Desconto'+sufixo;
+  if(el('m-total-label'))el('m-total-label').textContent='Total Acumulado';
+  el('m-aps').textContent=filtrado.length;
   el('m-bruto').textContent=brl(filtrado.reduce((s,a)=>s+Number(a.total_bruto||0),0));
-  el('m-desc').textContent =brl(filtrado.reduce((s,a)=>s+Number(a.total_desconto||0),0));
-  el('m-total').textContent=brl(porUnd.reduce((s,a)=>s+Number(a.total_desconto||0),0));
+  el('m-desc').textContent=brl(filtrado.reduce((s,a)=>s+Number(a.total_desconto||0),0));
+  el('m-total').textContent=brl(apsBase.reduce((s,a)=>s+Number(a.total_desconto||0),0));
 
-  // Tabela recentes (filtrado por mês + unidade)
-  const tbody=el('tbody-recentes');
-  tbody.innerHTML='';
+  // Tabela recentes
+  const tbody=el('tbody-recentes');tbody.innerHTML='';
   filtrado.slice(0,6).forEach(ap=>{
+    const cor=ap.status==='paga'?'var(--verde)':ap.status==='enviada'?'#F59E0B':'var(--laranja)';
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td><span class="tag-ap">${ap.numero}</span></td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ap.nome_projeto}</td><td style="text-align:right;font-weight:700;color:var(--verde)">${brl(ap.total_desconto)}</td>`;
+    tr.innerHTML=`<td><span class="tag-ap">${ap.numero}</span></td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ap.nome_projeto}</td><td style="text-align:right;font-weight:700;color:${cor}">${brl(ap.total_desconto)}</td>`;
     tbody.appendChild(tr);
   });
 
-  // Gráfico — afetado só por unidade, sempre 6 meses
+  // Gráfico barras empilhadas por status
   const ultimos6=[];
   for(let i=5;i>=0;i--){
-    const d=new Date(anoAtual,mesAtual-i,1);
-    const m=d.getMonth(),a=d.getFullYear();
+    const d=new Date(anoAtual,mesAtual-i,1);const m=d.getMonth(),a=d.getFullYear();
     const label=MESES_ORDER[m].substring(0,3)+'/'+String(a).substring(2);
-    const valor=porUnd.filter(ap=>{const dd=new Date(ap.criado_em);return dd.getMonth()===m&&dd.getFullYear()===a;}).reduce((s,ap)=>s+Number(ap.total_desconto||0),0);
-    ultimos6.push({label,valor});
+    const base=banco.filter(ap=>{const dd=new Date(ap.criado_em);return dd.getMonth()===m&&dd.getFullYear()===a&&(!filtroUnd||(ap.unidade||'').trim()===filtroUnd);});
+    ultimos6.push({label,gerada:base.filter(ap=>!ap.status||ap.status==='gerada').reduce((s,ap)=>s+Number(ap.total_desconto||0),0),enviada:base.filter(ap=>ap.status==='enviada').reduce((s,ap)=>s+Number(ap.total_desconto||0),0),paga:base.filter(ap=>ap.status==='paga').reduce((s,ap)=>s+Number(ap.total_desconto||0),0)});
   }
   if(chartMensal)chartMensal.destroy();
   const ctx=el('chart-mensal').getContext('2d');
@@ -825,10 +855,20 @@ function aplicarFiltrosDashboard(){
     type:'bar',
     data:{
       labels:ultimos6.map(x=>x.label),
-      datasets:[{label:'Valor com Desconto',data:ultimos6.map(x=>x.valor),backgroundColor:'rgba(230,92,0,0.15)',borderColor:'#E65C00',borderWidth:2,borderRadius:6}]
+      datasets:[
+        {label:'Gerada',data:ultimos6.map(x=>x.gerada),backgroundColor:'rgba(37,99,235,0.7)',borderRadius:4,stack:'s'},
+        {label:'Enviada',data:ultimos6.map(x=>x.enviada),backgroundColor:'rgba(245,158,11,0.7)',borderRadius:4,stack:'s'},
+        {label:'Paga',data:ultimos6.map(x=>x.paga),backgroundColor:'rgba(22,163,74,0.7)',borderRadius:4,stack:'s'},
+      ]
     },
-    options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v>=1000?`R$ ${(v/1000).toFixed(0)}k`:`R$ ${v}`,font:{size:10}},grid:{color:'#F4F4F5'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}
+    options:{responsive:true,plugins:{legend:{display:true,position:'top',labels:{font:{size:10},boxWidth:10}}},scales:{y:{stacked:true,ticks:{callback:v=>v>=1000?`R$ ${(v/1000).toFixed(0)}k`:`R$ ${v}`,font:{size:10}},grid:{color:'#F4F4F5'}},x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}}}}
   });
+}
+
+function renderGraficoSimples(el,ultimos6,cor,label){
+  if(chartMensal)chartMensal.destroy();
+  const ctx=el('chart-mensal').getContext('2d');
+  chartMensal=new Chart(ctx,{type:'bar',data:{labels:ultimos6.map(x=>x.label),datasets:[{label,data:ultimos6.map(x=>x.valor),backgroundColor:cor+'26',borderColor:cor,borderWidth:2,borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v>=1000?`R$ ${(v/1000).toFixed(0)}k`:`R$ ${v}`,font:{size:10}},grid:{color:'#F4F4F5'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
 }
 
 async function carregarCardapio(){
