@@ -61,6 +61,18 @@ async function setupDB() {
   await pool.query(`ALTER TABLE aps ADD COLUMN IF NOT EXISTS data_pagamento TEXT`);
   await pool.query(`ALTER TABLE aps ADD COLUMN IF NOT EXISTS nf_arquivo_url TEXT`);
   await pool.query(`ALTER TABLE aps ADD COLUMN IF NOT EXISTS link_comprovacao TEXT`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS eventos (
+      id          SERIAL PRIMARY KEY,
+      titulo      TEXT NOT NULL,
+      descricao   TEXT,
+      data        TEXT NOT NULL,
+      cor         TEXT NOT NULL DEFAULT '#E65C00',
+      categoria   TEXT NOT NULL DEFAULT 'Evento',
+      usuario_id  INTEGER REFERENCES usuarios(id),
+      criado_em   TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
 
   // Cria admin Daphne se não existir
   const bcrypt = require('bcrypt');

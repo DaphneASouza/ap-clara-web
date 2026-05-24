@@ -250,6 +250,49 @@ app.patch('/api/aps/:id/status', requireAuth, async (req, res) => {
   } catch (e) { res.status(500).json({ erro: e.message }); }
 });
 
+// ── Calendário / Eventos ─────────────────────────────────────────────────────
+app.get('/api/eventos', requireAuth, async (req, res) => {
+  try {
+    const r = await pool.query(`
+      SELECT e.*, u.nome as usuario_nome
+      FROM eventos e LEFT JOIN usuarios u ON e.usuario_id = u.id
+      ORDER BY e.data ASC, e.criado_em ASC
+    `);
+    res.json(r.rows);
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+app.post('/api/eventos', requireAuth, async (req, res) => {
+  try {
+    const { titulo, descricao, data, cor, categoria } = req.body;
+    if (!titulo || !data) return res.status(400).json({ erro: 'Título e data são obrigatórios.' });
+    const r = await pool.query(
+      `INSERT INTO eventos (titulo, descricao, data, cor, categoria, usuario_id)
+       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+      [titulo, descricao||null, data, cor||'#E65C00', categoria||'Evento', req.session.usuario.id]
+    );
+    res.json(r.rows[0]);
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+app.put('/api/eventos/:id', requireAuth, async (req, res) => {
+  try {
+    const { titulo, descricao, data, cor, categoria } = req.body;
+    await pool.query(
+      `UPDATE eventos SET titulo=$1, descricao=$2, data=$3, cor=$4, categoria=$5 WHERE id=$6`,
+      [titulo, descricao||null, data, cor||'#E65C00', categoria||'Evento', req.params.id]
+    );
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
+app.delete('/api/eventos/:id', requireAuth, async (req, res) => {
+  try {
+    await pool.query(`DELETE FROM eventos WHERE id=$1`, [req.params.id]);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
+});
+
 // GET /api/aps/:id/pdf — baixa PDF de AP já existente
 app.get('/api/aps/:id/pdf', requireAuth, async (req, res) => {
   const u = req.session.usuario;

@@ -325,6 +325,7 @@
   </div>
   <nav id="sidebar-nav">
     <div class="nav-section">Principal</div>
+    <button class="nav-item" data-page="calendario"><span class="icon">📅</span> Calendário</button>
     <button class="nav-item active" data-page="dashboard"><span class="icon">📊</span> Dashboard</button>
     <button class="nav-item" data-page="execucao-controle"><span class="icon">📋</span> Execução</button>
     <button class="nav-item" data-page="execucoes-salvas"><span class="icon">📁</span> Execuções Salvas</button>
@@ -362,6 +363,52 @@
   </div>
 
   <div id="content">
+
+    <!-- CALENDÁRIO -->
+    <div class="page" id="page-calendario">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button id="cal-prev" style="background:none;border:1px solid var(--borda);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px">‹</button>
+          <span id="cal-titulo" style="font-size:17px;font-weight:800;min-width:180px;text-align:center"></span>
+          <button id="cal-next" style="background:none;border:1px solid var(--borda);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:16px">›</button>
+        </div>
+        <button onclick="abrirModalEvento()" style="background:var(--laranja);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ Novo Evento</button>
+      </div>
+      <div id="cal-grid" style="background:white;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden"></div>
+      <div id="cal-dia-panel" style="display:none;margin-top:16px;background:white;border-radius:var(--radius);box-shadow:var(--shadow);padding:20px"></div>
+    </div>
+
+    <!-- MODAL EVENTO -->
+    <div id="modal-evento-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1100;display:none;align-items:center;justify-content:center">
+      <div style="background:white;border-radius:14px;padding:24px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 40px rgba(0,0,0,.22);animation:modalIn .18s ease">
+        <div style="font-size:16px;font-weight:800" id="modal-evento-titulo-label">Novo Evento</div>
+        <div class="fg"><label>Título *</label><input type="text" id="ev-titulo" placeholder="Ex: Reunião de briefing"/></div>
+        <div class="fg"><label>Data *</label><input type="date" id="ev-data"/></div>
+        <div class="fg"><label>Categoria</label>
+          <select id="ev-categoria">
+            <option>Reunião</option>
+            <option>Prazo</option>
+            <option>Evento</option>
+            <option>AP</option>
+            <option>Outro</option>
+          </select>
+        </div>
+        <div class="fg"><label>Cor</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:12px"><input type="radio" name="ev-cor" value="#E65C00" checked/> 🟠 Laranja</label>
+            <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:12px"><input type="radio" name="ev-cor" value="#2563EB"/> 🔵 Azul</label>
+            <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:12px"><input type="radio" name="ev-cor" value="#16A34A"/> 🟢 Verde</label>
+            <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:12px"><input type="radio" name="ev-cor" value="#DC2626"/> 🔴 Vermelho</label>
+            <label style="display:flex;align-items:center;gap:4px;font-weight:400;font-size:12px"><input type="radio" name="ev-cor" value="#7C3AED"/> 🟣 Roxo</label>
+          </div>
+        </div>
+        <div class="fg"><label>Descrição</label><textarea id="ev-descricao" rows="2" placeholder="(opcional)"></textarea></div>
+        <div style="display:flex;gap:8px">
+          <button id="ev-btn-salvar" style="flex:1;background:var(--laranja);color:white;border:none;border-radius:8px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">💾 Salvar</button>
+          <button onclick="fecharModalEvento()" style="padding:11px 16px;background:var(--bg);border:1px solid var(--borda);border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit">Cancelar</button>
+        </div>
+      </div>
+    </div>
 
     <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
@@ -688,6 +735,7 @@ function toast(msg,tipo='info'){
 }
 
 const pageTitles={
+  calendario:['Calendário','Agenda compartilhada da equipe'],
   dashboard:['Dashboard','Visão geral das Autorizações de Produção'],
   'execucao-controle':['Execução','Controle de execução dos projetos'],
   'execucoes-salvas':['Execuções Salvas','Histórico e edição das execuções salvas'],
@@ -715,6 +763,7 @@ document.querySelectorAll('.nav-item').forEach(btn=>{
     if(page==='execucao-controle')carregarExecucao();
     if(page==='execucoes-salvas')carregarExecucoesSalvas();
     if(page==='faturamento')carregarFaturamento();
+    if(page==='calendario')carregarCalendario();
     if(page==='cardapio')renderCardapio();
   });
 });
@@ -1838,6 +1887,135 @@ async function excluirApFaturamento(id,status){
   if(r.ok){toast('AP excluída.','ok');carregarFaturamento();}
   else toast('Erro ao excluir.','erro');
 }
+
+// ── Calendário ───────────────────────────────────────────────────────────────
+let calEventos=[],calAno=new Date().getFullYear(),calMes=new Date().getMonth(),calEditandoId=null;
+
+async function carregarCalendario(){
+  try{
+    const r=await fetch('/api/eventos');
+    calEventos=await r.json();
+    renderCalendario();
+  }catch{toast('Erro ao carregar calendário.','erro');}
+}
+
+function renderCalendario(){
+  const nomesMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const diasSemana=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  document.getElementById('cal-titulo').textContent=`${nomesMes[calMes]} ${calAno}`;
+  const grid=document.getElementById('cal-grid');
+  const primeiroDia=new Date(calAno,calMes,1).getDay();
+  const diasNoMes=new Date(calAno,calMes+1,0).getDate();
+  const hoje=new Date();
+  let html=`<div style="display:grid;grid-template-columns:repeat(7,1fr)">`;
+  diasSemana.forEach(d=>html+=`<div style="padding:8px 4px;text-align:center;font-size:11px;font-weight:700;color:var(--texto-leve);background:#FAFAFA;border-bottom:1px solid var(--borda)">${d}</div>`);
+  for(let i=0;i<primeiroDia;i++)html+=`<div style="border:1px solid var(--borda);min-height:80px;background:#FAFAFA"></div>`;
+  for(let dia=1;dia<=diasNoMes;dia++){
+    const dataStr=`${calAno}-${String(calMes+1).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
+    const evsDia=calEventos.filter(e=>e.data===dataStr);
+    const isHoje=hoje.getDate()===dia&&hoje.getMonth()===calMes&&hoje.getFullYear()===calAno;
+    html+=`<div onclick="abrirDia('${dataStr}')" style="border:1px solid var(--borda);min-height:80px;padding:6px;cursor:pointer;transition:background .15s;${isHoje?'background:#FFF3EC;':''}">
+      <div style="font-size:12px;font-weight:${isHoje?'800':'600'};color:${isHoje?'var(--laranja)':'var(--texto)'};margin-bottom:4px;${isHoje?'background:var(--laranja);color:white;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;':''}">${dia}</div>
+      ${evsDia.slice(0,3).map(e=>`<div style="background:${e.cor}22;color:${e.cor};border-left:2px solid ${e.cor};padding:1px 4px;border-radius:3px;font-size:10px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">${e.titulo}</div>`).join('')}
+      ${evsDia.length>3?`<div style="font-size:9px;color:var(--texto-leve)">+${evsDia.length-3} mais</div>`:''}
+    </div>`;
+  }
+  html+=`</div>`;
+  grid.innerHTML=html;
+  document.getElementById('cal-dia-panel').style.display='none';
+}
+
+function abrirDia(dataStr){
+  const evsDia=calEventos.filter(e=>e.data===dataStr);
+  const panel=document.getElementById('cal-dia-panel');
+  const [ano,mes,dia]=dataStr.split('-');
+  const nomesMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  panel.style.display='block';
+  panel.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:15px;font-weight:800">${dia} de ${nomesMes[Number(mes)-1]} de ${ano}</div>
+      <button onclick="abrirModalEvento('${dataStr}')" style="background:var(--laranja);color:white;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ Evento neste dia</button>
+    </div>
+    ${!evsDia.length?`<div style="text-align:center;padding:24px;color:var(--texto-leve);font-size:13px">Nenhum evento neste dia.</div>`:
+    evsDia.map(e=>`
+      <div style="border-left:3px solid ${e.cor};padding:10px 14px;border-radius:0 8px 8px 0;background:${e.cor}11;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div style="flex:1">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:4px">
+            <span style="font-size:13px;font-weight:700">${e.titulo}</span>
+            <span style="background:${e.cor}22;color:${e.cor};padding:1px 8px;border-radius:99px;font-size:10px;font-weight:700">${e.categoria}</span>
+          </div>
+          ${e.descricao?`<div style="font-size:12px;color:var(--texto-leve);margin-bottom:4px">${e.descricao}</div>`:''}
+          <div style="font-size:10px;color:var(--texto-leve)">Por ${e.usuario_nome||'—'}</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button onclick="editarEvento(${e.id})" style="background:var(--laranja-claro);color:var(--laranja);border:none;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">✏️</button>
+          <button onclick="excluirEvento(${e.id})" style="background:#FEE2E2;color:#DC2626;border:none;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🗑</button>
+        </div>
+      </div>`).join('')}`;
+  panel.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function abrirModalEvento(dataStr=''){
+  calEditandoId=null;
+  document.getElementById('modal-evento-titulo-label').textContent='Novo Evento';
+  document.getElementById('ev-titulo').value='';
+  document.getElementById('ev-data').value=dataStr||new Date().toISOString().split('T')[0];
+  document.getElementById('ev-categoria').value='Evento';
+  document.getElementById('ev-descricao').value='';
+  document.querySelector('input[name="ev-cor"][value="#E65C00"]').checked=true;
+  document.getElementById('modal-evento-overlay').style.display='flex';
+}
+
+function fecharModalEvento(){
+  document.getElementById('modal-evento-overlay').style.display='none';
+  calEditandoId=null;
+}
+
+function editarEvento(id){
+  const ev=calEventos.find(e=>e.id===id);
+  if(!ev)return;
+  calEditandoId=id;
+  document.getElementById('modal-evento-titulo-label').textContent='Editar Evento';
+  document.getElementById('ev-titulo').value=ev.titulo||'';
+  document.getElementById('ev-data').value=ev.data||'';
+  document.getElementById('ev-categoria').value=ev.categoria||'Evento';
+  document.getElementById('ev-descricao').value=ev.descricao||'';
+  const radio=document.querySelector(`input[name="ev-cor"][value="${ev.cor}"]`);
+  if(radio)radio.checked=true;
+  else document.querySelector('input[name="ev-cor"]').checked=true;
+  document.getElementById('modal-evento-overlay').style.display='flex';
+}
+
+async function excluirEvento(id){
+  if(!confirm('Excluir este evento?'))return;
+  const r=await fetch(`/api/eventos/${id}`,{method:'DELETE'});
+  if(r.ok){toast('Evento excluído.','ok');await carregarCalendario();abrirDia(calEventos.find(e=>e.id===id)?.data||'');}
+  else toast('Erro ao excluir.','erro');
+}
+
+document.getElementById('ev-btn-salvar').addEventListener('click',async()=>{
+  const titulo=document.getElementById('ev-titulo').value.trim();
+  const data=document.getElementById('ev-data').value;
+  const categoria=document.getElementById('ev-categoria').value;
+  const descricao=document.getElementById('ev-descricao').value.trim();
+  const cor=document.querySelector('input[name="ev-cor"]:checked')?.value||'#E65C00';
+  if(!titulo||!data){toast('Título e data são obrigatórios.','erro');return;}
+  const method=calEditandoId?'PUT':'POST';
+  const url=calEditandoId?`/api/eventos/${calEditandoId}`:'/api/eventos';
+  const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify({titulo,data,categoria,cor,descricao})});
+  if(r.ok){toast(calEditandoId?'✅ Evento atualizado!':'✅ Evento criado!','ok');fecharModalEvento();await carregarCalendario();abrirDia(data);}
+  else toast('Erro ao salvar evento.','erro');
+});
+
+document.getElementById('cal-prev').addEventListener('click',()=>{
+  calMes--;if(calMes<0){calMes=11;calAno--;}
+  renderCalendario();
+});
+document.getElementById('cal-next').addEventListener('click',()=>{
+  calMes++;if(calMes>11){calMes=0;calAno++;}
+  renderCalendario();
+});
+document.getElementById('modal-evento-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('modal-evento-overlay'))fecharModalEvento();});
 
 async function carregarFaturamento(){
   try{
