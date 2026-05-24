@@ -385,7 +385,7 @@ app.get('/api/execucao', requireAuth, async (req, res) => {
       ORDER BY e.criado_em DESC
     `);
     res.json(r.rows);
-  } catch(e) { res.status(500).json({ erro: e.message }); }
+  } catch(e) { console.error('❌ GET /api/execucao erro:', e); res.status(500).json({ erro: e.message }); }
 });
 
 // POST /api/execucao
