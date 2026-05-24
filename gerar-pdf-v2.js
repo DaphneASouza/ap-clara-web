@@ -410,4 +410,4 @@ async function gerarPDFv2(dados, destino) {
   }
 }
 
-module.exports = { gerarPDFv2, buildHTML };
+module.exports = { gerarPDFv2, buildHTML, getBrowser };
