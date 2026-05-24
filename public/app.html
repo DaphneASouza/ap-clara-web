@@ -1184,9 +1184,16 @@ async function carregarUsuarios(){
   tbody.innerHTML='';
   lista.forEach(u=>{
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${u.nome}</td><td><code>${u.login}</code></td><td><span class="badge ${u.nivel==='admin'?'b-admin':'b-user'}">${u.nivel}</span></td><td><span class="badge ${u.ativo?'b-on':'b-off'}">${u.ativo?'Ativo':'Inativo'}</span></td><td><button class="btn-sm" onclick="toggleUsuario(${u.id},${u.ativo})">${u.ativo?'Desativar':'Ativar'}</button></td>`;
+    tr.innerHTML=`<td>${u.nome}</td><td><code>${u.login}</code></td><td><span class="badge ${u.nivel==='admin'?'b-admin':'b-user'}">${u.nivel}</span></td><td><span class="badge ${u.ativo?'b-on':'b-off'}">${u.ativo?'Ativo':'Inativo'}</span></td><td><button class="btn-sm" style="color:#DC2626;border-color:#DC2626" onclick="excluirUsuario(${u.id},'${u.nome}')">🗑 Excluir</button></td>`;
     tbody.appendChild(tr);
   });
+}
+
+async function excluirUsuario(id,nome){
+  if(!confirm(`Excluir o usuário "${nome}"? Esta ação não pode ser desfeita.`))return;
+  const r=await fetch(`/api/usuarios/${id}`,{method:'DELETE'});
+  if(r.ok){toast(`Usuário ${nome} excluído.`,'ok');carregarUsuarios();}
+  else{const e=await r.json();toast(e.erro||'Erro ao excluir.','erro');}
 }
 
 async function criarUsuario(){

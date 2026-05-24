@@ -367,9 +367,14 @@ app.put('/api/usuarios/:id', requireAdmin, async (req, res) => {
 
 // DELETE /api/usuarios/:id
 app.delete('/api/usuarios/:id', requireAdmin, async (req, res) => {
-  // Não deleta, só desativa
-  await pool.query(`UPDATE usuarios SET ativo=FALSE WHERE id=$1`, [req.params.id]);
-  res.json({ ok: true });
+  try {
+    const { id } = req.params;
+    const check = await pool.query(`SELECT id, login FROM usuarios WHERE id=$1`, [id]);
+    if (!check.rows.length) return res.status(404).json({ erro: 'Usuário não encontrado.' });
+    if (check.rows[0].login === 'daphne') return res.status(403).json({ erro: 'Não é possível excluir o admin principal.' });
+    await pool.query(`DELETE FROM usuarios WHERE id=$1`, [id]);
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ erro: e.message }); }
 });
 
 // ════════════════════════════════════════════════════════════════════════════
