@@ -640,6 +640,7 @@
       <div style="display:flex;gap:8px;margin-bottom:12px;border-bottom:2px solid var(--borda);padding-bottom:12px">
         <button class="fat-tab active" data-tab="enviadas" style="background:none;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:6px 16px;border-radius:8px;color:var(--laranja);border-bottom:2px solid var(--laranja)">📤 Enviadas</button>
         <button class="fat-tab" data-tab="pagas" style="background:none;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:6px 16px;border-radius:8px;color:var(--texto-leve)">✅ Pagas</button>
+        <button class="fat-tab" data-tab="canceladas" style="background:none;border:none;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:6px 16px;border-radius:8px;color:var(--texto-leve)">❌ Canceladas</button>
       </div>
       <div class="toolbar" style="margin-bottom:14px">
         <input type="text" id="fat-busca" placeholder="🔍  Filtrar APs..."/>
@@ -666,6 +667,7 @@
       </div>
       <div id="fat-tab-enviadas"></div>
       <div id="fat-tab-pagas" style="display:none"></div>
+      <div id="fat-tab-canceladas" style="display:none"></div>
     </div>
     <!-- USUÁRIOS -->
     <div class="page" id="page-usuarios">
@@ -2115,25 +2117,31 @@ document.getElementById('cal-next').addEventListener('click',()=>{
 });
 document.getElementById('modal-evento-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('modal-evento-overlay'))fecharModalEvento();});
 
+async function cancelarAP(id){
+  const motivo=prompt('Informe o motivo do cancelamento:');
+  if(motivo===null)return;
+  if(!motivo.trim()){toast('O motivo é obrigatório.','erro');return;}
+  const r=await fetch(`/api/aps/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'cancelada',motivo_cancelamento:motivo.trim()})});
+  if(r.ok){toast('AP cancelada.','ok');carregarFaturamento();}
+  else toast('Erro ao cancelar.','erro');
+}
+
 async function carregarFaturamento(){
   try{
-    const r=await fetch('/api/aps');
+    const r=await fetch('/api/aps',{cache:'no-store'});
     const todas=await r.json();
     const q=(document.getElementById('fat-busca')?.value||'').toLowerCase().trim();
     const und=(document.getElementById('fat-filtro-unidade')?.value||'');
     const mes=(document.getElementById('fat-filtro-mes')?.value||'');
-    let enviadas=todas.filter(ap=>ap.status==='enviada');
-    let pagas=todas.filter(ap=>ap.status==='paga');
     const filtrar=lista=>lista.filter(ap=>{
       if(und&&(ap.unidade||'').trim()!==und)return false;
       if(mes&&extrairMes(ap.numero||'')!==mes)return false;
       if(q&&!(ap.numero||'').toLowerCase().includes(q)&&!(ap.nome_projeto||'').toLowerCase().includes(q))return false;
       return true;
     });
-    enviadas=filtrar(enviadas);
-    pagas=filtrar(pagas);
-    renderFatEnviadas(enviadas);
-    renderFatPagas(pagas);
+    renderFatEnviadas(filtrar(todas.filter(ap=>ap.status==='enviada')));
+    renderFatPagas(filtrar(todas.filter(ap=>ap.status==='paga')));
+    renderFatCanceladas(filtrar(todas.filter(ap=>ap.status==='cancelada')));
   }catch{toast('Erro ao carregar faturamento.','erro');}
 }
 
@@ -2200,6 +2208,7 @@ function renderFatEnviadas(lista){
             </div>
             ${ap.nf_arquivo_url?`<a href="${ap.nf_arquivo_url}" target="_blank" style="font-size:11px;color:var(--azul);text-decoration:none;margin-top:2px;display:inline-block">📎 Ver arquivo NF enviado</a>`:''}
             ${ap.numero_nf&&ap.nf_arquivo_url?`<button onclick="marcarPaga(${ap.id})" style="background:var(--verde);color:white;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-top:4px">✅ Marcar Paga</button>`:`<button disabled style="background:#E4E4E7;color:#A1A1AA;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:not-allowed;font-family:inherit;width:100%;margin-top:4px">✅ Marcar Paga (salve número e arquivo da NF)</button>`}
+            ${podeEditarFaturamento()?`<button onclick="cancelarAP(${ap.id})" style="background:#FEE2E2;color:#DC2626;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:8px;width:100%">❌ Cancelar AP</button>`:''}
           </div>
         </div>`;
       wrap.appendChild(card);
@@ -2275,6 +2284,59 @@ function renderFatPagas(lista){
         body.style.display=open?'flex':'none';
         chevron.style.transform=open?'rotate(180deg)':'';
       });
+    });
+    body.appendChild(wrap);
+    head.addEventListener('click',()=>{
+      const isOpen=body.classList.toggle('open');
+      head.querySelector('.exec-folder-icon').textContent=isOpen?'📂':'📁';
+      head.querySelector('.exec-folder-chevron').classList.toggle('open',isOpen);
+    });
+    folder.appendChild(head);folder.appendChild(body);el.appendChild(folder);
+  });
+}
+
+function renderFatCanceladas(lista){
+  const el=document.getElementById('fat-tab-canceladas');
+  if(!el)return;
+  if(!lista.length){el.innerHTML='<div style="text-align:center;padding:48px;color:var(--texto-leve)">Nenhuma AP cancelada.</div>';return;}
+  const grupos={};
+  lista.forEach(ap=>{const mes=extrairMes(ap.numero);if(!grupos[mes])grupos[mes]=[];grupos[mes].push(ap);});
+  const gruposOrdenados=Object.keys(grupos).sort((a,b)=>{const ia=MESES_ORDER.indexOf(a),ib=MESES_ORDER.indexOf(b);if(ia===-1&&ib===-1)return 0;if(ia===-1)return 1;if(ib===-1)return -1;return ia-ib;});
+  const anoAtual=new Date().getFullYear();
+  el.innerHTML='';
+  gruposOrdenados.forEach(mes=>{
+    const rows=grupos[mes];
+    const totalGrupo=rows.reduce((s,ap)=>s+(Number(ap.total_desconto)||0),0);
+    const folder=document.createElement('div');
+    folder.className='exec-folder';folder.style.marginBottom='12px';
+    const head=document.createElement('div');
+    head.className='exec-folder-head';
+    head.innerHTML=`<span class="exec-folder-icon">📁</span><span class="exec-folder-mes">${mes.charAt(0)+mes.slice(1).toLowerCase()} de ${anoAtual}</span><span class="exec-folder-badge">${rows.length} AP${rows.length===1?'':'s'}</span><span class="exec-folder-total">${brl(totalGrupo)}</span><span class="exec-folder-chevron">▼</span>`;
+    const body=document.createElement('div');
+    body.className='exec-folder-body';
+    const wrap=document.createElement('div');
+    wrap.style.cssText='padding:8px 12px 16px;display:flex;flex-direction:column;gap:8px';
+    rows.forEach(ap=>{
+      const card=document.createElement('div');
+      card.style.cssText='background:white;border-radius:10px;box-shadow:var(--shadow);border:1px solid var(--borda);overflow:hidden';
+      card.innerHTML=`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--borda);flex-wrap:wrap;gap:8px">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span class="tag-ap">${ap.numero}</span>
+            <span style="background:#FEE2E2;color:#DC2626;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700">CANCELADA</span>
+          </div>
+          <span style="font-weight:800;color:#DC2626;font-size:15px">${brl(ap.total_desconto)}</span>
+        </div>
+        <div style="padding:12px 16px;display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:13px;font-weight:600">${ap.nome_projeto||'—'}</div>
+          ${ap.motivo_cancelamento?`<div style="background:#FEE2E2;border-left:3px solid #DC2626;padding:8px 12px;border-radius:0 6px 6px 0;font-size:12px;color:#DC2626"><strong>Motivo:</strong> ${ap.motivo_cancelamento}</div>`:''}
+          <div style="font-size:11px;color:var(--texto-leve)">${ap.data_envio?'Enviado em '+ap.data_envio:''}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+            <button onclick="window.open('/api/aps/${ap.id}/pdf','_blank')" style="background:var(--laranja-claro);color:var(--laranja);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📄 Ver AP</button>
+            ${ap.ap_assinada_url?`<a href="${ap.ap_assinada_url}" target="_blank" style="background:var(--verde-claro);color:var(--verde);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">✅ Ver AP Assinada</a>`:''}
+          </div>
+        </div>`;
+      wrap.appendChild(card);
     });
     body.appendChild(wrap);
     head.addEventListener('click',()=>{
