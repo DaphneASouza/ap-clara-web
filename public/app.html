@@ -52,75 +52,86 @@
     #sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:199}
     #sidebar-overlay.show{display:block}
     @media(max-width:768px){
-      body{overflow:hidden;position:fixed;width:100%}
+      /* ── Layout geral ─────────────────────────────────── */
+      body{overflow:hidden;position:fixed;width:100%;-webkit-text-size-adjust:100%}
       #sidebar{position:fixed;top:0;left:0;height:100%;width:260px;z-index:200;transform:translateX(-100%);transition:transform .25s ease}
       #sidebar.open{transform:translateX(0);box-shadow:4px 0 24px rgba(0,0,0,.3)}
       #main{width:100%}
       #topbar{padding:0 12px;height:52px;gap:10px}
-      #btn-menu-mobile{display:flex;align-items:center;justify-content:center}
-      #page-title{font-size:14px}
+      #btn-menu-mobile{display:none!important}
+      #page-title{font-size:15px}
       #page-sub{display:none}
       .badge-nivel{font-size:10px;padding:3px 8px}
-      .page{padding:12px}
-      .metrics-grid{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-      .metric-card{padding:14px 12px}
-      .metric-value{font-size:14px}
-      .metric-icon{width:30px;height:30px;font-size:14px}
-      .charts-grid{grid-template-columns:1fr;gap:12px}
-      .chart-card{padding:14px 12px}
+      #content{padding-bottom:64px}
+      .page{padding:10px;-webkit-overflow-scrolling:touch;padding-bottom:74px}
+      /* ── Dashboard ────────────────────────────────────── */
+      .metrics-grid{grid-template-columns:1fr;gap:8px;margin-bottom:12px}
+      .metric-card{padding:12px 14px;flex-direction:row;align-items:center;gap:12px}
+      .metric-header{flex-direction:row-reverse;align-items:center;gap:8px}
+      .metric-value{font-size:18px}
+      .metric-icon{width:36px;height:36px;font-size:16px;flex-shrink:0}
+      .metric-sub{font-size:10px}
+      .charts-grid{grid-template-columns:1fr;gap:10px}
+      .chart-card{padding:12px 10px}
+      .chart-title{font-size:13px}
       .recentes-table{font-size:11px}
-      .recentes-table thead th,.recentes-table tbody td{padding:6px 8px}
-      .toolbar{flex-wrap:wrap;gap:8px}
-      .toolbar input,.toolbar select,#exec-busca{width:100%;max-width:none;font-size:13px}
+      .recentes-table thead th,.recentes-table tbody td{padding:5px 6px}
+      #page-dashboard .toolbar{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+      #page-dashboard .toolbar select{width:100%}
+      #page-dashboard .toolbar button{grid-column:span 2;width:100%}
+      /* ── Toolbar geral ────────────────────────────────── */
+      .toolbar{flex-direction:column;gap:6px}
+      .toolbar input,.toolbar select{width:100%;max-width:none;font-size:14px}
       .btn-refresh{width:100%;text-align:center}
-      #page-dashboard .toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-      #page-dashboard .toolbar{grid-template-columns:1fr 1fr 1fr}
-      #page-dashboard .toolbar button{grid-column:span 3}
+      /* ── Formulários ──────────────────────────────────── */
       .fgrid{grid-template-columns:1fr}
       .fg.span2{grid-column:span 1}
-      #exec-ctrl-form{max-width:100%;gap:12px}
-      .form-secao{padding:14px 12px!important}
+      #exec-ctrl-form{max-width:100%;gap:10px}
+      .form-secao{padding:12px 10px!important}
       .ec-item-card-title{font-size:12px}
       .ec-item-card-subtitle{font-size:10px}
       .btn-rem-item{padding:4px 8px;font-size:10px}
-      #ec-total-box{flex-direction:column;gap:4px;align-items:flex-start;padding:12px}
-      #ec-total-label{font-size:22px}
-      .exec-folder-cards{grid-template-columns:1fr;padding:8px 8px 12px 8px;gap:10px}
+      #ec-total-box{flex-direction:column;gap:4px;align-items:flex-start;padding:10px}
+      #ec-total-label{font-size:20px}
+      /* ── Execuções salvas ─────────────────────────────── */
+      .exec-folder-cards{grid-template-columns:1fr;padding:6px 6px 10px;gap:8px}
       .exec-folder-head{padding:10px 12px;gap:6px}
       .exec-folder-mes{font-size:13px}
       .exec-folder-total{display:none}
-      .exec-card-top{flex-wrap:wrap;gap:8px;padding:10px 12px}
-      .exec-card-btns{width:100%;justify-content:flex-end}
+      .exec-card-top{flex-wrap:wrap;gap:6px;padding:8px 10px}
+      .exec-card-badges{flex-wrap:wrap;gap:4px}
+      .exec-card-btns{width:100%;display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
+      .btn-edit-card,.btn-del-card,.btn-gerar-ap{padding:7px 4px;font-size:11px;text-align:center;width:100%}
       .exec-card-toggle-nome{font-size:12px}
-      .exec-card-body{padding:10px 12px;gap:8px}
-      .exec-card-item-row{padding:8px 10px}
-      .exec-card-total-val{font-size:15px}
-      #banco-folders{overflow-x:auto}
-      .data-table{min-width:560px}
-      .page-header{flex-direction:column;align-items:flex-start;gap:6px;margin-bottom:14px}
-      .page-header h2{font-size:16px}
-      #cardapio-table{min-width:560px}
+      .exec-card-body{padding:8px 10px;gap:6px}
+      .exec-card-item-row{padding:6px 8px}
+      .exec-card-total-val{font-size:14px}
+      /* ── Banco de APs ─────────────────────────────────── */
+      #banco-folders{overflow-x:hidden}
+      .data-table{min-width:unset;width:100%}
+      /* ── Page header ──────────────────────────────────── */
+      .page-header{flex-direction:column;align-items:flex-start;gap:4px;margin-bottom:10px}
+      .page-header h2{font-size:15px}
+      /* ── Cardápio ─────────────────────────────────────── */
+      #page-cardapio>div:last-child{overflow-x:auto}
+      #cardapio-table{min-width:520px}
+      /* ── Usuários ─────────────────────────────────────── */
       .cards-row{grid-template-columns:1fr}
-      #modal-card{margin:16px;padding:20px;max-width:calc(100vw - 32px)}
-      #toast{left:12px;right:12px;bottom:16px;text-align:center}
-      .exec-edit-form{padding:12px;gap:12px}
-      .exec-edit-actions{flex-direction:column;gap:8px}
+      /* ── Modal ────────────────────────────────────────── */
+      #modal-card{margin:12px;padding:18px;max-width:calc(100vw - 24px)}
+      /* ── Toast ────────────────────────────────────────── */
+      #toast{left:10px;right:10px;bottom:72px;text-align:center}
+      /* ── Edição ───────────────────────────────────────── */
+      .exec-edit-form{padding:10px;gap:10px}
+      .exec-edit-actions{flex-direction:column;gap:6px}
       .btn-save-edit,.btn-cancel-edit{width:100%;text-align:center}
-      .btn-edit-ap,.btn-del-ap,.btn-pdf{padding:4px 6px;font-size:10px}
-      /* Bottom bar */
+      .btn-edit-ap,.btn-del-ap,.btn-pdf{padding:5px 8px;font-size:11px}
+      /* ── Bottom bar ───────────────────────────────────── */
       #bottom-bar{display:flex;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--sidebar-bg);border-top:1px solid rgba(255,255,255,.08);z-index:300;padding-bottom:env(safe-area-inset-bottom)}
       .bb-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;color:rgba(255,255,255,.45);cursor:pointer;padding:6px 0;font-family:inherit;-webkit-tap-highlight-color:transparent;transition:color .15s}
       .bb-item.active{color:var(--laranja)}
       .bb-icon{font-size:18px;line-height:1}
       .bb-label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
-      /* Ajustes gerais iOS */
-      #content{padding-bottom:56px}
-      #btn-menu-mobile{display:none!important}
-      body{-webkit-text-size-adjust:100%}
-      .page{-webkit-overflow-scrolling:touch;padding-bottom:70px}
-      #topbar{padding:0 16px}
-      #toast{bottom:72px}
-      #modal-card{max-width:calc(100vw - 24px);margin:12px}
     }
 
     .page{display:none;height:100%;overflow-y:auto;padding:24px}
