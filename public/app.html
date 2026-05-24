@@ -1975,6 +1975,7 @@ function renderFatPagas(lista){
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
             <button onclick="window.open('/api/aps/${ap.id}/pdf','_blank')" style="background:var(--laranja-claro);color:var(--laranja);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📄 Ver AP</button>
             ${ap.ap_assinada_url?`<a href="${ap.ap_assinada_url}" target="_blank" style="background:var(--verde-claro);color:var(--verde);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">✅ Ver AP Assinada</a>`:''}
+            ${ap.nf_arquivo_url?`<a href="${ap.nf_arquivo_url}" target="_blank" style="background:var(--azul-claro);color:var(--azul);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">📎 Ver NF</a>`:''}
             <button onclick="desfazerPagamento(${ap.id})" style="background:#FEE2E2;color:#DC2626;border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">↩ Desfazer</button>
           </div>
         </div>`;
