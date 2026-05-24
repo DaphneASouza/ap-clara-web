@@ -991,7 +991,7 @@ async function carregarBanco(){
     const r=await fetch('/api/aps');
     banco=await r.json();
     filtrarBanco();
-  }catch{toast('Erro ao carregar banco.','erro');}
+  }catch(e){toast('Erro ao carregar banco.','erro');console.error('banco erro:',e);}
 }
 
 function filtrarBanco(){
@@ -1492,7 +1492,7 @@ async function carregarExecucoesSalvas(){
     }else{
       renderExecCards();
     }
-  }catch{toast('Erro ao carregar execuções.','erro');}
+  }catch(e){toast('Erro ao carregar execuções.','erro');console.error('execucoes erro:',e);}
 }
 
 const MESES_ORDER=['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
