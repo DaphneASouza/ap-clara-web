@@ -2126,7 +2126,7 @@ function renderFatEnviadas(lista){
             <button onclick="window.open('/api/aps/${ap.id}/pdf','_blank')" style="background:var(--laranja-claro);color:var(--laranja);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📄 Ver AP</button>
             ${ap.ap_assinada_url?`<a href="${ap.ap_assinada_url}" target="_blank" style="background:var(--verde-claro);color:var(--verde);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">✅ Ver AP Assinada</a>`:''}
           </div>
-          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;padding:10px 12px;background:var(--bg);border-radius:8px;${podeEditarFaturamento()?'':'display:none!important'}">
+          <div style="display:${podeEditarFaturamento()?'flex':'none'};flex-direction:column;gap:6px;margin-top:4px;padding:10px 12px;background:var(--bg);border-radius:8px">
             <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase">Link de Comprovação</label>
             <div style="display:flex;gap:6px">
               <input type="text" placeholder="https://drive.google.com/..." id="fat-comp-${ap.id}" value="${ap.link_comprovacao||''}" style="flex:1;padding:7px 10px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit"/>
