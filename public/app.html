@@ -2492,10 +2492,10 @@ document.querySelectorAll('.fat-tab').forEach(btn=>{
     });
     btn.style.color='var(--laranja)';btn.style.borderBottom='2px solid var(--laranja)';
     const tab=btn.dataset.tab;
-    document.getElementById('fat-tab-enviadas').style.display=tab==='enviadas'?'':'none';
-    document.getElementById('fat-tab-aguardando').style.display=tab==='aguardando'?'':'none';
-    document.getElementById('fat-tab-pagas').style.display=tab==='pagas'?'':'none';
-    document.getElementById('fat-tab-canceladas').style.display=tab==='canceladas'?'':'none';
+    ['enviadas','ap_assinada','comprovada','emitir_nf','aguardando_pagamento','pagas','canceladas'].forEach(t=>{
+      const el=document.getElementById(`fat-tab-${t}`);
+      if(el)el.style.display=tab===t?'':'none';
+    });
   });
 });
 
