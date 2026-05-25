@@ -2554,7 +2554,10 @@ async function salvarApAssinada(id){
     const data=await r.json();
     if(!data.secure_url){toast('Erro ao enviar para Cloudinary.','erro');console.error(data);return;}
     const r2=await fetch(`/api/aps/${id}/assinada`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ap_assinada_url:data.secure_url})});
-    if(r2.ok){toast('✅ AP assinada enviada!','ok');carregarFaturamento();}
+    if(r2.ok){
+      await fetch(`/api/aps/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'ap_assinada'})});
+      toast('✅ AP assinada! Movida para AP Assinada.','ok');carregarFaturamento();
+    }
     else toast('Erro ao salvar link.','erro');
   }catch(e){toast('Erro de conexão: '+e.message,'erro');}
 }
@@ -2562,8 +2565,8 @@ async function salvarApAssinada(id){
 async function salvarComprovacao(id){
   const link=document.getElementById(`fat-comp-${id}`)?.value.trim();
   if(!link){toast('Cole o link de comprovação.','erro');return;}
-  const r=await fetch(`/api/aps/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({link_comprovacao:link})});
-  if(r.ok){toast('✅ Comprovação salva!','ok');carregarFaturamento();}
+  const r=await fetch(`/api/aps/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'comprovada',link_comprovacao:link})});
+  if(r.ok){toast('✅ Comprovação salva! AP movida para Comprovada.','ok');carregarFaturamento();}
   else toast('Erro ao salvar comprovação.','erro');
 }
 
@@ -2580,8 +2583,8 @@ async function salvarNF(id){
     const r1=await fetch(`https://api.cloudinary.com/v1_1/dcazdsqkl/raw/upload`,{method:'POST',body:formData});
     const data=await r1.json();
     if(!data.secure_url){toast('Erro ao enviar arquivo para Cloudinary.','erro');console.error(data);return;}
-    const r2=await fetch(`/api/aps/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'aguardando_faturar',numero_nf:nf,nf_arquivo_url:data.secure_url})});
-    if(r2.ok){toast('✅ NF salva! AP movida para Aguardando Faturar.','ok');carregarFaturamento();}
+    const r2=await fetch(`/api/aps/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'aguardando_pagamento',numero_nf:nf,nf_arquivo_url:data.secure_url})});
+    if(r2.ok){toast('✅ NF salva! AP movida para Aguardando Pagamento.','ok');carregarFaturamento();}
     else toast('Erro ao salvar NF.','erro');
   }catch(e){toast('Erro: '+e.message,'erro');}
 }
