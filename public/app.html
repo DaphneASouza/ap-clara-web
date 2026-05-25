@@ -442,6 +442,10 @@
           <option value="todas">Todas as APs</option>
           <option value="gerada">APs Geradas</option>
           <option value="enviada">APs Enviadas</option>
+          <option value="ap_assinada">AP Assinada</option>
+          <option value="comprovada">Comprovadas</option>
+          <option value="emitir_nf">Emitir NF</option>
+          <option value="aguardando_pagamento">Aguardando Pagamento</option>
           <option value="paga">APs Pagas</option>
           <option value="cancelada">APs Canceladas</option>
           <option value="execucoes">Execuções Salvas</option>
@@ -964,10 +968,14 @@ function aplicarFiltrosDashboard(){
   if(visao==='gerada')filtrado=apsBase.filter(ap=>!ap.status||ap.status==='gerada');
   else if(visao==='enviada')filtrado=apsBase.filter(ap=>ap.status==='enviada');
   else if(visao==='paga')filtrado=apsBase.filter(ap=>ap.status==='paga');
+  else if(visao==='ap_assinada')filtrado=apsBase.filter(ap=>ap.status==='ap_assinada');
+  else if(visao==='comprovada')filtrado=apsBase.filter(ap=>ap.status==='comprovada');
+  else if(visao==='emitir_nf')filtrado=apsBase.filter(ap=>ap.status==='emitir_nf');
+  else if(visao==='aguardando_pagamento')filtrado=apsBase.filter(ap=>ap.status==='aguardando_pagamento');
   else if(visao==='cancelada')filtrado=apsBase.filter(ap=>ap.status==='cancelada');
 
-  const labels={todas:'APs no período',gerada:'APs Geradas',enviada:'APs Enviadas',paga:'APs Pagas',cancelada:'APs Canceladas'};
-  const cores={todas:'#E65C00',gerada:'#2563EB',enviada:'#F59E0B',paga:'#16A34A',cancelada:'#DC2626'};
+  const labels={todas:'APs no período',gerada:'APs Geradas',enviada:'APs Enviadas',ap_assinada:'AP Assinada',comprovada:'Comprovadas',emitir_nf:'Emitir NF',aguardando_pagamento:'Aguardando Pagamento',paga:'APs Pagas',cancelada:'APs Canceladas'};
+  const cores={todas:'#E65C00',gerada:'#2563EB',enviada:'#F59E0B',ap_assinada:'#7C3AED',comprovada:'#2563EB',emitir_nf:'#D97706',aguardando_pagamento:'#F59E0B',paga:'#16A34A',cancelada:'#DC2626'};
   if(el('m-aps-label'))el('m-aps-label').textContent=(labels[visao]||'APs')+sufixo;
   if(el('m-bruto-label'))el('m-bruto-label').textContent='Valor Bruto'+sufixo;
   if(el('m-desc-label'))el('m-desc-label').textContent='Com Desconto'+sufixo;
