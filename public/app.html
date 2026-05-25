@@ -2377,13 +2377,36 @@ function renderFatEtapa(status, lista, label, cor){
     rows.forEach(ap=>{
       const card=document.createElement('div');
       card.style.cssText='background:white;border-radius:10px;box-shadow:var(--shadow);border:1px solid var(--borda);overflow:hidden';
-      const proximoStatus={ap_assinada:'comprovada',comprovada:'emitir_nf',emitir_nf:'aguardando_pagamento'};
-      const proximoLabel={ap_assinada:'🔗 Comprovada',comprovada:'🧾 Emitir NF',emitir_nf:'🕐 Aguardando Pagamento'};
-      const prox=proximoStatus[status];
+      const acoesPorEtapa={
+        ap_assinada:`
+          <div style="display:flex;flex-direction:column;gap:6px;padding:10px 12px;background:var(--bg);border-radius:8px">
+            <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase">Link de Comprovação</label>
+            <div style="display:flex;gap:6px">
+              <input type="text" placeholder="https://drive.google.com/..." id="fat-comp-${ap.id}" value="${ap.link_comprovacao||''}" style="flex:1;padding:7px 10px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit"/>
+              <button onclick="salvarComprovacao(${ap.id})" style="background:var(--azul);color:white;border:none;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">💾 Salvar</button>
+            </div>
+            <button onclick="cancelarAP(${ap.id})" style="background:#FEE2E2;color:#DC2626;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;margin-top:4px">❌ Cancelar AP</button>
+          </div>`,
+        comprovada:`
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button onclick="avancarEtapa(${ap.id},'emitir_nf')" style="flex:1;background:var(--laranja);color:white;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🧾 Emitir NF</button>
+            <button onclick="cancelarAP(${ap.id})" style="background:#FEE2E2;color:#DC2626;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">❌</button>
+          </div>`,
+        emitir_nf:`
+          <div style="display:flex;flex-direction:column;gap:6px;padding:10px 12px;background:var(--bg);border-radius:8px">
+            <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase">Número da NF <span style="color:#DC2626">*</span></label>
+            <input type="text" placeholder="Ex: 001234" id="fat-nf-${ap.id}" value="${ap.numero_nf||''}" style="padding:7px 10px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit"/>
+            <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase">Arquivo da NF <span style="color:#DC2626">*</span></label>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="file" id="fat-nf-file-${ap.id}" style="flex:1;padding:5px;font-size:12px;border:1.5px solid var(--borda);border-radius:7px;font-family:inherit;background:white"/>
+              <button onclick="salvarNF(${ap.id})" style="background:var(--azul);color:white;border:none;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">💾 Salvar NF</button>
+            </div>
+            <button onclick="cancelarAP(${ap.id})" style="background:#FEE2E2;color:#DC2626;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;margin-top:4px">❌ Cancelar AP</button>
+          </div>`,
+      };
       card.innerHTML=`
         <div style="position:relative">
-          ${podeEditarFaturamento()?`<button onclick="excluirApFaturamento(${ap.id},'${status}')" style="position:absolute;top:8px;right:8px;background:none;border:none;font-size:16px;cursor:pointer;color:var(--texto-leve)" title="Excluir">×</button>`:''}
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 40px 12px 16px;border-bottom:1px solid var(--borda);flex-wrap:wrap;gap:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--borda);flex-wrap:wrap;gap:8px">
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
               <span class="tag-ap">${ap.numero}</span>
               <span style="background:${cor}22;color:${cor};padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700">${label}</span>
@@ -2393,17 +2416,13 @@ function renderFatEtapa(status, lista, label, cor){
         </div>
         <div style="padding:12px 16px;display:flex;flex-direction:column;gap:8px">
           <div style="font-size:13px;font-weight:600">${ap.nome_projeto||'—'}</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button onclick="window.open('/api/aps/${ap.id}/pdf','_blank')" style="background:var(--laranja-claro);color:var(--laranja);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📄 Ver AP</button>
             ${ap.ap_assinada_url?`<a href="${ap.ap_assinada_url}" target="_blank" style="background:var(--verde-claro);color:var(--verde);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">✅ Ver AP Assinada</a>`:''}
             ${ap.link_comprovacao?`<a href="${ap.link_comprovacao}" target="_blank" style="background:var(--roxo-claro);color:var(--roxo);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">🔗 Comprovação</a>`:''}
             ${ap.nf_arquivo_url?`<a href="${ap.nf_arquivo_url}" target="_blank" style="background:var(--azul-claro);color:var(--azul);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">📎 Ver NF</a>`:''}
           </div>
-          ${podeEditarFaturamento()&&prox?`
-          <div style="display:flex;gap:8px;margin-top:4px">
-            <button onclick="avancarEtapa(${ap.id},'${prox}')" style="flex:1;background:var(--laranja);color:white;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">➡️ ${proximoLabel[status]}</button>
-            <button onclick="cancelarAP(${ap.id})" style="background:#FEE2E2;color:#DC2626;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">❌</button>
-          </div>`:''}
+          ${podeEditarFaturamento()?(acoesPorEtapa[status]||''):''}
         </div>`;
       wrap.appendChild(card);
     });
