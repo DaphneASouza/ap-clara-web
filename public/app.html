@@ -173,6 +173,7 @@
     input,select,textarea{border:1.5px solid var(--borda);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;color:var(--texto);background:white;outline:none;transition:border-color .15s,box-shadow .15s}
     input:focus,select:focus,textarea:focus{border-color:var(--laranja);box-shadow:0 0 0 3px rgba(230,92,0,.1)}
     textarea{resize:vertical;min-height:56px}
+    textarea.auto-grow{resize:none;min-height:38px;overflow-y:hidden;line-height:1.4;width:100%}
 
     /* BANCO */
     .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
@@ -782,6 +783,7 @@ function podeEditarCalendario(){ return perm('editarCalendario'); }
 function podeGerenciarUsuarios(){ return perm('gerenciarUsuarios'); }
 
 function brl(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function autoGrow(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
 function brlK(v){v=Number(v||0);return v>=1000?`R$ ${(v/1000).toFixed(1)}k`:brl(v)}
 
 let toastT;
@@ -1343,7 +1345,7 @@ function criarCardItem(item,idx,itensArr,onUpdate){
     </div>
     <div class="ec-item-card-body open">
       <div class="fgrid">
-        <div class="fg span2"><label>Descrição do Projeto</label><input type="text" data-f="descricao_projeto" value="${item.descricao_projeto||''}" placeholder="Descreva este item..."/></div>
+        <div class="fg span2"><label>Descrição do Projeto</label><textarea class="auto-grow" data-f="descricao_projeto" rows="2" placeholder="Descreva este item...">${item.descricao_projeto||''}</textarea></div>
         <div class="fg span2"><label style="display:flex;align-items:center;justify-content:space-between">Link do Trello <button type="button" class="btn-add-link" style="background:var(--laranja);color:white;border:none;border-radius:5px;width:20px;height:20px;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</button></label><div class="links-trello-wrap" style="display:flex;flex-direction:column;gap:6px"><input type="text" data-f="link_trello" value="${item.link_trello||''}" placeholder="https://trello.com/..."/>${(item.links_trello_extra||[]).map(l=>`<input type="text" value="${l||''}" placeholder="https://trello.com/..." style="border:1.5px solid var(--borda);border-radius:8px;padding:8px 10px;font-size:12px;font-family:inherit;color:var(--texto);background:white;outline:none;width:100%"/>`).join('')}</div></div>
         <div class="fg span2"><label>Item do Cardápio</label><div class="cardapio-sel-wrap"></div></div>
         <div class="fg"><label>Quantidade</label><input type="number" data-f="quantidade" value="${item.quantidade||1}" min="1" style="text-align:center"/></div>
@@ -1399,6 +1401,7 @@ function criarCardItem(item,idx,itensArr,onUpdate){
       const f=el.dataset.f;
       const val=el.type==='number'?(parseFloat(el.value)||0):el.value;
       itensArr[idx][f]=val;
+      if(el.tagName==='TEXTAREA'&&el.classList.contains('auto-grow'))autoGrow(el);
       sincronizarLinks(card,itensArr,idx);
       if(f==='quantidade'){
         itensArr[idx].valor_total=(itensArr[idx].valor_unitario||0)*val;
@@ -1419,7 +1422,11 @@ function renderFormItens(){
     container.innerHTML='<div style="text-align:center;padding:24px;color:var(--texto-leve);font-size:13px">Nenhum item adicionado. Clique em + Adicionar Item.</div>';
     atualizarTotalizador();return;
   }
-  ecItens.forEach((item,idx)=>container.appendChild(criarCardItem(item,idx,ecItens,null)));
+  ecItens.forEach((item,idx)=>{
+    const card=criarCardItem(item,idx,ecItens,null);
+    container.appendChild(card);
+    card.querySelectorAll('textarea.auto-grow').forEach(autoGrow);
+  });
   atualizarTotalizador();
 }
 
