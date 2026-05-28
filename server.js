@@ -12,6 +12,7 @@ const path       = require('path');
 const { pool, setupDB } = require('./db');
 const { gerarPDF }      = require('./gerar-pdf');
 const { gerarRelatorio } = require('./gerar-relatorio');
+const { gerarRelatorioExecucoes } = require('./gerar-relatorio-execucoes');
 const { gerarPDFv2 }    = require('./gerar-pdf-v2');
 const { CARDAPIO }      = require('./cardapio');
 
@@ -169,6 +170,19 @@ app.post('/api/relatorio/dashboard', requireAuth, async (req, res) => {
     await gerarRelatorio({ filtros, cards, itens, geradoEm }, res);
   } catch(e) {
     console.error('[Relatório]', e);
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+app.post('/api/relatorio/execucoes', requireAuth, async (req, res) => {
+  try {
+    const { filtros, execucoes } = req.body;
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="Relatorio_Execucoes_${Date.now()}.pdf"`);
+    const buf = await gerarRelatorioExecucoes({ filtros, execucoes });
+    res.end(buf);
+  } catch(e) {
+    console.error('[Relatório Execuções]', e);
     res.status(500).json({ erro: e.message });
   }
 });
