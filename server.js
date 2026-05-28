@@ -243,6 +243,49 @@ app.patch('/api/aps/:id/status', requireAuth, async (req, res) => {
   } catch (e) { res.status(500).json({ erro: e.message }); }
 });
 
+// Desfazer etapa do faturamento (regressão granular com limpeza de campos)
+app.post('/api/aps/:id/desfazer', requireAuth, async (req, res) => {
+  try {
+    const u = req.session.usuario;
+    if (!['admin','faturamento','financeiro'].includes(u.nivel))
+      return res.status(403).json({ erro: 'Sem permissão para desfazer etapas.' });
+
+    const check = await pool.query(`SELECT * FROM aps WHERE id=$1`, [req.params.id]);
+    if (!check.rows.length) return res.status(404).json({ erro: 'AP não encontrada.' });
+    const ap = check.rows[0];
+
+    const REGRESSAO = {
+      ap_assinada:          { status: 'enviada',             limpar: ['ap_assinada_url']              },
+      comprovada:           { status: 'ap_assinada',         limpar: ['link_comprovacao']             },
+      emitir_nf:            { status: 'comprovada',          limpar: []                               },
+      aguardando_pagamento: { status: 'emitir_nf',           limpar: ['numero_nf','nf_arquivo_url']   },
+      paga:                 { status: 'aguardando_pagamento', limpar: ['data_pagamento']              },
+      cancelada:            { status: 'enviada',             limpar: ['motivo_cancelamento']          },
+    };
+
+    const regra = REGRESSAO[ap.status];
+    if (!regra)
+      return res.status(400).json({ erro: `Não há etapa anterior para desfazer (status atual: ${ap.status}).` });
+
+    // Monta SET explícito: status + cada campo a limpar recebe NULL diretamente
+    const setCampos = ['status=$1'];
+    const valores   = [regra.status];
+    regra.limpar.forEach(campo => {
+      valores.push(null);
+      setCampos.push(`${campo}=$${valores.length}`);
+    });
+    valores.push(req.params.id);
+
+    await pool.query(
+      `UPDATE aps SET ${setCampos.join(',')} WHERE id=$${valores.length}`,
+      valores
+    );
+
+    const atualizada = await pool.query(`SELECT * FROM aps WHERE id=$1`, [req.params.id]);
+    res.json({ ok: true, ap: atualizada.rows[0] });
+  } catch (e) { res.status(500).json({ erro: e.message }); }
+});
+
 // ── Calendário / Eventos ─────────────────────────────────────────────────────
 app.get('/api/eventos', requireAuth, async (req, res) => {
   try {
