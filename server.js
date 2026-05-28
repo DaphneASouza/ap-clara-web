@@ -145,7 +145,13 @@ app.post('/api/aps', requireAuth, async (req, res) => {
 
   } catch (e) {
     console.error(e);
-    if (!res.headersSent) res.status(500).json({ erro: e.message });
+    if (!res.headersSent) {
+      if (e.code === '23505') {
+        res.status(409).json({ erro: 'Já existe uma AP com este número.' });
+      } else {
+        res.status(500).json({ erro: e.message });
+      }
+    }
   }
 });
 

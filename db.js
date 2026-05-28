@@ -62,6 +62,7 @@ async function setupDB() {
   await pool.query(`ALTER TABLE aps ADD COLUMN IF NOT EXISTS nf_arquivo_url TEXT`);
   await pool.query(`ALTER TABLE aps ADD COLUMN IF NOT EXISTS link_comprovacao TEXT`);
   await pool.query(`ALTER TABLE aps ADD COLUMN IF NOT EXISTS motivo_cancelamento TEXT`);
+  await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS aps_numero_unique_idx ON aps (numero)`);
   await pool.query(`
     CREATE TABLE IF NOT EXISTS eventos (
       id          SERIAL PRIMARY KEY,
