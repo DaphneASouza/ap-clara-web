@@ -1700,11 +1700,11 @@ function renderCardView(card,row){
         <div class="exec-card-item-row">
           <div class="exec-card-item-prod">${idx+1}. ${it.produto||'—'} <span style="color:var(--texto-leve);font-weight:400;font-size:11px">${it.complexidade||''}</span></div>
           <div class="exec-card-item-meta">
-            ${it.descricao_projeto?`<span>📋 ${it.descricao_projeto}</span>`:''}
             ${it.item_id?`<span>Nº ${it.item_id}</span>`:''}
             <span>Qtd: ${it.quantidade||1}</span>
             <span style="color:var(--laranja);font-weight:700">${brl(it.valor_total||0)}</span>
           </div>
+          ${it.descricao_projeto?`<div style="color:var(--texto-leve);font-size:11px;margin-top:4px;word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap">📋 ${it.descricao_projeto}</div>`:''}
           <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap">
             ${it.link_trello?`<a href="${it.link_trello}" target="_blank" style="font-size:11px;color:var(--azul);text-decoration:none">🔗 Trello</a>`:''}
             ${(it.links_trello_extra||[]).map((l,i)=>l?`<a href="${l}" target="_blank" style="font-size:11px;color:var(--azul);text-decoration:none">🔗 Trello ${i+2}</a>`:'').join('')}
