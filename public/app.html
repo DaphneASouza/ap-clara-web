@@ -578,6 +578,7 @@
           <option value="DEZEMBRO">Dezembro</option>
         </select>
         <span id="exec-busca-count" style="font-size:11px;color:var(--texto-leve);white-space:nowrap"></span>
+        <button id="btn-exportar-execucoes" style="background:var(--laranja);color:white;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;gap:6px;align-items:center;white-space:nowrap" onclick="gerarRelatorioExecucoesPDF()">📊 Exportar PDF</button>
       </div>
       <div class="exec-cards-grid" id="exec-cards-grid"></div>
     </div>
@@ -2702,6 +2703,65 @@ async function gerarRelatorioDashboard(){
     toast('✅ Relatório gerado!','ok');
   }catch(e){toast('Erro: '+e.message,'erro');}
   finally{btn.textContent='📊 Exportar PDF';btn.disabled=false;}
+}
+
+async function gerarRelatorioExecucoesPDF(){
+  const btn=document.getElementById('btn-exportar-execucoes');
+  if(btn){btn.textContent='⏳ Gerando...';btn.disabled=true;}
+  try{
+    // Replicar EXATAMENTE a lógica de renderExecCards + filtrarExecucoes
+    const filtroUnd=(document.getElementById('exec-filtro-unidade')?.value||'');
+    const filtroMes=(document.getElementById('exec-filtro-mes')?.value||'');
+    const q=(document.getElementById('exec-busca')?.value||'').trim();
+
+    // Passo 1: filtro por unidade e mês (igual renderExecCards)
+    let base=execSalvasData.filter(row=>{
+      if(filtroUnd&&(row.unidade||'')!==filtroUnd)return false;
+      if(filtroMes&&extrairMes(row.numero_ap||'')!==filtroMes)return false;
+      return true;
+    });
+
+    // Passo 2: se busca ativa, aplica filtrarExecucoes sobre o resultado anterior
+    if(q){
+      const t=q.toLowerCase();
+      base=base.filter(row=>{
+        if((row.unidade||'').toLowerCase().includes(t))return true;
+        if((row.projeto||'').toLowerCase().includes(t))return true;
+        if((row.nome_projeto||'').toLowerCase().includes(t))return true;
+        if((row.numero_ap||'').toLowerCase().includes(t))return true;
+        if((row.obs||'').toLowerCase().includes(t))return true;
+        const itens=Array.isArray(row.itens)?row.itens:[];
+        return itens.some(i=>
+          (i.descricao_projeto||'').toLowerCase().includes(t)||
+          (i.link_trello||'').toLowerCase().includes(t)||
+          (i.produto||'').toLowerCase().includes(t)||
+          (i.complexidade||'').toLowerCase().includes(t)||
+          (i.link_trello_comprovacao||'').toLowerCase().includes(t)
+        );
+      });
+    }
+
+    if(!base.length){toast('Nenhuma execução pra exportar.','erro');return;}
+
+    // Monta filtros legíveis pro cabeçalho do PDF
+    const MESES_LABEL={JANEIRO:'Janeiro',FEVEREIRO:'Fevereiro','MARÇO':'Março',ABRIL:'Abril',MAIO:'Maio',JUNHO:'Junho',JULHO:'Julho',AGOSTO:'Agosto',SETEMBRO:'Setembro',OUTUBRO:'Outubro',NOVEMBRO:'Novembro',DEZEMBRO:'Dezembro'};
+    const filtros=[
+      {label:'Unidade',valor:filtroUnd||'Todas'},
+      {label:'Mês',valor:filtroMes?MESES_LABEL[filtroMes]||filtroMes:'Todos'},
+      {label:'Busca',valor:q||'—'},
+    ];
+
+    const r=await fetch('/api/relatorio/execucoes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filtros,execucoes:base}),cache:'no-store'});
+    if(!r.ok){const e=await r.json().catch(()=>({}));toast(e.erro||'Erro ao gerar PDF.','erro');return;}
+    const blob=await r.blob();
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='Relatorio_Execucoes.pdf';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
+    toast('✅ PDF gerado!','ok');
+  }catch(e){toast('Erro: '+e.message,'erro');}
+  finally{if(btn){btn.textContent='📊 Exportar PDF';btn.disabled=false;}}
 }
 
 init();
