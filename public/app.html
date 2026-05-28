@@ -2220,6 +2220,10 @@ function renderFatEnviadas(lista){
         </div>
         <div class="fat-card-body" style="display:none;flex-direction:column;gap:10px;padding:14px 16px">
           <div style="font-size:13px;font-weight:600">${ap.nome_projeto||'—'}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+            <button onclick="window.open('/api/aps/${ap.id}/pdf','_blank')" style="background:var(--laranja-claro);color:var(--laranja);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">📄 Ver AP</button>
+            ${ap.ap_assinada_url?`<a href="${ap.ap_assinada_url}" target="_blank" style="background:var(--verde-claro);color:var(--verde);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center">✅ Ver AP Assinada</a>`:''}
+          </div>
           ${podeEditarFaturamento()?`
           <div style="display:flex;flex-direction:column;gap:6px;padding:10px 12px;background:var(--bg);border-radius:8px">
             <label style="font-size:10px;font-weight:700;color:var(--texto-leve);text-transform:uppercase">AP Assinada (PDF)</label>
