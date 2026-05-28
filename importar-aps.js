@@ -32,7 +32,7 @@ function extrairDados(texto, nomeArquivo) {
   const ano = dataMatch ? dataMatch[2] : String(new Date().getFullYear());
 
   let unidade = 'Geral';
-  if (/UNIDADE REQUISITANTE[\s\S]{0,80}Interno/i.test(texto)) unidade = 'Interno';
+  if (/UNIDADE[\s\r\n]+REQUISITANTE[\s\S]{0,80}Interno/i.test(texto)) unidade = 'Interno';
 
   const projetoMatch = texto.match(/NOME DO PROJETO\s*\n?\s*([^\n]+)/i);
   const nome_projeto = projetoMatch ? projetoMatch[1].trim() : '';
