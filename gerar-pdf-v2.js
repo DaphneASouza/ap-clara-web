@@ -290,7 +290,7 @@ function buildHTML(dados) {
   <tr>
     <td class="rdf-data-esq">DATA: ${esc(dados.data || '—')}</td>
     <td class="rdf-data-dir" style="text-align:center; vertical-align:middle; padding:4px 8px;">
-      <img src="data:image/png;base64,${imgB64}" style="max-height:50px; max-width:100%; object-fit:contain; display:inline-block;">
+      <img src="data:image/png;base64,${imgB64}" style="max-height:120px; max-width:100%; object-fit:contain; display:inline-block;">
     </td>
   </tr>
 </table>
