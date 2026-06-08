@@ -145,28 +145,13 @@
     .page.active{display:block}
 
     /* DASHBOARD */
-    .metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
-    .metric-card{background:white;border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;transition:opacity .2s,box-shadow .2s}
+    .metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+    .metric-card{background:white;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}
     .metric-header{display:flex;justify-content:space-between;align-items:flex-start}
-    .metric-label{font-size:12px;color:var(--texto-leve);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+    .metric-label{font-size:12px;color:var(--texto-leve);font-weight:500}
     .metric-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
-    .metric-value{font-size:20px;font-weight:800;color:var(--texto);word-break:break-word}
+    .metric-value{font-size:16px;font-weight:700;color:var(--texto);word-break:break-word}
     .metric-sub{font-size:11px;color:var(--texto-leve)}
-    #card-total{background:#FFF3EC;border:2px solid #E65C00;grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-    #card-total .metric-label{font-size:13px;font-weight:700;color:var(--laranja);text-transform:none;letter-spacing:0}
-    #card-total .metric-value{font-size:26px;color:var(--laranja)}
-    .status-gerada{border-left:4px solid #6B7280}
-    .status-enviada{border-left:4px solid #E65C00}
-    .status-ap_assinada{border-left:4px solid #60A5FA}
-    .status-comprovada{border-left:4px solid #2563EB}
-    .status-emitir_nf{border-left:4px solid #7C3AED}
-    .status-aguardando_pagamento{border-left:4px solid #F59E0B}
-    .status-paga{border-left:4px solid #16A34A}
-    .status-cancelada{border-left:4px solid #DC2626}
-    .card-destaque{box-shadow:0 0 0 3px rgba(230,92,0,.35)!important;opacity:1!important}
-    .visao-filtrada .metric-card:not(#card-total):not(.card-destaque){opacity:.4}
-    @media(max-width:900px){.metrics-grid{grid-template-columns:repeat(2,1fr)}}
-    @media(max-width:520px){.metrics-grid{grid-template-columns:1fr}}
     .charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
     .chart-card{background:white;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
     .chart-title{font-size:14px;font-weight:700;margin-bottom:4px}
@@ -477,93 +462,38 @@
           <option value="execucoes">Execuções Salvas</option>
         </select>
       </div>
-      <!-- Cards visão APs: 1 Total + 8 status -->
-      <div id="cards-aps">
-        <div class="metrics-grid" id="metrics-aps">
-          <div class="metric-card" id="card-total">
-            <div>
-              <div class="metric-label">Total do período</div>
-              <div style="display:flex;gap:20px;align-items:baseline;flex-wrap:wrap;margin-top:6px">
-                <div><div class="metric-value" id="m-total-qtd">0</div><div class="metric-sub">APs</div></div>
-                <div style="width:1px;height:28px;background:var(--borda);align-self:center"></div>
-                <div><div class="metric-value" id="m-total-valor">R$ 0</div><div class="metric-sub">c/ desconto</div></div>
-              </div>
-            </div>
-            <div class="metric-icon" style="background:var(--laranja-claro);width:44px;height:44px;font-size:20px">📊</div>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-label" id="m-aps-label">APs no período</div>
+            <div class="metric-icon" style="background:var(--laranja-claro)">📄</div>
           </div>
-          <div class="metric-card status-gerada" id="card-st-gerada">
-            <div class="metric-label">Geradas</div>
-            <div class="metric-value" id="m-st-gerada-qtd">0</div>
-            <div class="metric-sub" id="m-st-gerada-valor">R$ 0</div>
-          </div>
-          <div class="metric-card status-enviada" id="card-st-enviada">
-            <div class="metric-label">Enviadas</div>
-            <div class="metric-value" id="m-st-enviada-qtd">0</div>
-            <div class="metric-sub" id="m-st-enviada-valor">R$ 0</div>
-          </div>
-          <div class="metric-card status-ap_assinada" id="card-st-ap_assinada">
-            <div class="metric-label">AP Assinada</div>
-            <div class="metric-value" id="m-st-ap_assinada-qtd">0</div>
-            <div class="metric-sub" id="m-st-ap_assinada-valor">R$ 0</div>
-          </div>
-          <div class="metric-card status-comprovada" id="card-st-comprovada">
-            <div class="metric-label">Comprovadas</div>
-            <div class="metric-value" id="m-st-comprovada-qtd">0</div>
-            <div class="metric-sub" id="m-st-comprovada-valor">R$ 0</div>
-          </div>
-          <div class="metric-card status-emitir_nf" id="card-st-emitir_nf">
-            <div class="metric-label">Emitir NF</div>
-            <div class="metric-value" id="m-st-emitir_nf-qtd">0</div>
-            <div class="metric-sub" id="m-st-emitir_nf-valor">R$ 0</div>
-          </div>
-          <div class="metric-card status-aguardando_pagamento" id="card-st-aguardando_pagamento">
-            <div class="metric-label">Aguardando Pagamento</div>
-            <div class="metric-value" id="m-st-aguardando_pagamento-qtd">0</div>
-            <div class="metric-sub" id="m-st-aguardando_pagamento-valor">R$ 0</div>
-          </div>
-          <div class="metric-card status-paga" id="card-st-paga">
-            <div class="metric-label">Pagas</div>
-            <div class="metric-value" id="m-st-paga-qtd">0</div>
-            <div class="metric-sub" id="m-st-paga-valor">R$ 0</div>
-          </div>
-          <div class="metric-card status-cancelada" id="card-st-cancelada">
-            <div class="metric-label">Canceladas</div>
-            <div class="metric-value" id="m-st-cancelada-qtd">0</div>
-            <div class="metric-sub" id="m-st-cancelada-valor">R$ 0</div>
-          </div>
+          <div class="metric-value" id="m-aps">0</div>
+          <div class="metric-sub">Autorizações geradas</div>
         </div>
-      </div>
-      <!-- Cards visão Execuções -->
-      <div id="cards-exec" style="display:none">
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <div class="metric-header">
-              <div class="metric-label" id="m-aps-label">Execuções Salvas</div>
-              <div class="metric-icon" style="background:var(--roxo-claro)">📁</div>
-            </div>
-            <div class="metric-value" id="m-aps">0</div>
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-label" id="m-bruto-label">Valor Bruto</div>
+            <div class="metric-icon" style="background:var(--azul-claro)">💰</div>
           </div>
-          <div class="metric-card">
-            <div class="metric-header">
-              <div class="metric-label" id="m-bruto-label">Valor Total (c/ desc.)</div>
-              <div class="metric-icon" style="background:var(--azul-claro)">💰</div>
-            </div>
-            <div class="metric-value" id="m-bruto">R$ 0</div>
+          <div class="metric-value" id="m-bruto">R$ 0</div>
+          <div class="metric-sub">Sem desconto aplicado</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-label" id="m-desc-label">Com Desconto</div>
+            <div class="metric-icon" style="background:var(--verde-claro)">✅</div>
           </div>
-          <div class="metric-card">
-            <div class="metric-header">
-              <div class="metric-label" id="m-desc-label">Média por Execução</div>
-              <div class="metric-icon" style="background:var(--verde-claro)">✅</div>
-            </div>
-            <div class="metric-value" id="m-desc">R$ 0</div>
+          <div class="metric-value" id="m-desc">R$ 0</div>
+          <div class="metric-sub">13,5% de desconto</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-header">
+            <div class="metric-label">Total Acumulado</div>
+            <div class="metric-icon" style="background:var(--roxo-claro)">📈</div>
           </div>
-          <div class="metric-card">
-            <div class="metric-header">
-              <div class="metric-label">Total Acumulado</div>
-              <div class="metric-icon" style="background:var(--roxo-claro)">📈</div>
-            </div>
-            <div class="metric-value" id="m-total">R$ 0</div>
-          </div>
+          <div class="metric-value" id="m-total">R$ 0</div>
+          <div class="metric-sub">Todas as APs</div>
         </div>
       </div>
       <div class="charts-grid">
@@ -1019,8 +949,6 @@ function aplicarFiltrosDashboard(){
   const sufixo=(filtroMes!==''?` — ${nomesMes[Number(filtroMes)]}`:'')+(filtroUnd?` (${filtroUnd})`:'');
 
   if(visao==='execucoes'){
-    document.getElementById('cards-aps').style.display='none';
-    document.getElementById('cards-exec').style.display='';
     const totalExec=execBase.reduce((s,r)=>{const itens=Array.isArray(r.itens)?r.itens:[];return s+itens.reduce((t,i)=>t+(i.valor_total||0),0);},0);
     if(el('m-aps-label'))el('m-aps-label').textContent='Execuções Salvas'+sufixo;
     if(el('m-bruto-label'))el('m-bruto-label').textContent='Valor Total (c/ desc.)'+sufixo;
@@ -1062,23 +990,16 @@ function aplicarFiltrosDashboard(){
   else if(visao==='aguardando_pagamento')filtrado=apsBase.filter(ap=>ap.status==='aguardando_pagamento');
   else if(visao==='cancelada')filtrado=apsBase.filter(ap=>ap.status==='cancelada');
 
-  // Toggle para visão APs
-  document.getElementById('cards-exec').style.display='none';
-  document.getElementById('cards-aps').style.display='';
-  // Card Total
-  if(el('m-total-qtd'))el('m-total-qtd').textContent=apsBase.length;
-  if(el('m-total-valor'))el('m-total-valor').textContent=brl(apsBase.reduce((s,a)=>s+Number(a.total_desconto||0),0));
-  // 8 cards de status
-  const STATUS_LIST=['gerada','enviada','ap_assinada','comprovada','emitir_nf','aguardando_pagamento','paga','cancelada'];
-  STATUS_LIST.forEach(st=>{
-    const arr=apsBase.filter(ap=>(ap.status||'gerada')===st);
-    if(el('m-st-'+st+'-qtd'))el('m-st-'+st+'-qtd').textContent=arr.length;
-    if(el('m-st-'+st+'-valor'))el('m-st-'+st+'-valor').textContent=brl(arr.reduce((s,ap)=>s+Number(ap.total_desconto||0),0));
-  });
-  // Destaque da visão selecionada
-  document.getElementById('metrics-aps')?.classList.toggle('visao-filtrada',visao!=='todas');
-  document.querySelectorAll('#metrics-aps .metric-card').forEach(c=>c.classList.remove('card-destaque'));
-  if(visao!=='todas')document.getElementById('card-st-'+visao)?.classList.add('card-destaque');
+  const labels={todas:'APs no período',gerada:'APs Geradas',enviada:'APs Enviadas',ap_assinada:'AP Assinada',comprovada:'Comprovadas',emitir_nf:'Emitir NF',aguardando_pagamento:'Aguardando Pagamento',paga:'APs Pagas',cancelada:'APs Canceladas'};
+  const cores={todas:'#E65C00',gerada:'#2563EB',enviada:'#F59E0B',ap_assinada:'#7C3AED',comprovada:'#2563EB',emitir_nf:'#D97706',aguardando_pagamento:'#F59E0B',paga:'#16A34A',cancelada:'#DC2626'};
+  if(el('m-aps-label'))el('m-aps-label').textContent=(labels[visao]||'APs')+sufixo;
+  if(el('m-bruto-label'))el('m-bruto-label').textContent='Valor Bruto'+sufixo;
+  if(el('m-desc-label'))el('m-desc-label').textContent='Com Desconto'+sufixo;
+  if(el('m-total-label'))el('m-total-label').textContent='Total Acumulado';
+  el('m-aps').textContent=filtrado.length;
+  el('m-bruto').textContent=brl(filtrado.reduce((s,a)=>s+Number(a.total_bruto||0),0));
+  el('m-desc').textContent=brl(filtrado.reduce((s,a)=>s+Number(a.total_desconto||0),0));
+  el('m-total').textContent=brl(apsBase.reduce((s,a)=>s+Number(a.total_desconto||0),0));
 
   // Tabela recentes
   const tbody=el('tbody-recentes');tbody.innerHTML='';
@@ -2766,28 +2687,12 @@ async function gerarRelatorioDashboard(){
       {label:'Ano',valor:filtroAno||'Todos'},
       {label:'Unidade',valor:filtroUnd||'Todas'},
     ];
-    const _stLabels={gerada:'Geradas',enviada:'Enviadas',ap_assinada:'AP Assinada',comprovada:'Comprovadas',emitir_nf:'Emitir NF',aguardando_pagamento:'Aguardando Pagamento',paga:'Pagas',cancelada:'Canceladas'};
-    const _stCores={gerada:'#6B7280',enviada:'#E65C00',ap_assinada:'#60A5FA',comprovada:'#2563EB',emitir_nf:'#7C3AED',aguardando_pagamento:'#F59E0B',paga:'#16A34A',cancelada:'#DC2626'};
-    const _g=id=>document.getElementById(id)?.textContent||'';
-    let cards;
-    if(visao==='execucoes'){
-      cards=[
-        {label:_g('m-aps-label')||'Execuções',value:_g('m-aps')||'0',sub:'',cor:'#7C3AED'},
-        {label:_g('m-bruto-label')||'Total',value:_g('m-bruto')||'R$ 0',sub:'',cor:'#7C3AED'},
-        {label:_g('m-desc-label')||'Média',value:_g('m-desc')||'R$ 0',sub:'',cor:'#7C3AED'},
-        {label:'Total Acumulado',value:_g('m-total')||'R$ 0',sub:'',cor:'#7C3AED'},
-      ];
-    } else {
-      cards=[
-        {label:'Total do período',value:(_g('m-total-qtd')||'0')+' APs',sub:_g('m-total-valor')||'R$ 0',cor:'#E65C00'},
-        ...['gerada','enviada','ap_assinada','comprovada','emitir_nf','aguardando_pagamento','paga','cancelada'].map(st=>({
-          label:_stLabels[st],
-          value:(_g('m-st-'+st+'-qtd')||'0')+' APs',
-          sub:_g('m-st-'+st+'-valor')||'R$ 0',
-          cor:_stCores[st],
-        })),
-      ];
-    }
+    const cards=[
+      {label:document.getElementById('m-aps-label')?.textContent||'APs',value:document.getElementById('m-aps')?.textContent||'0',sub:'',cor:'#E65C00'},
+      {label:document.getElementById('m-bruto-label')?.textContent||'Valor Bruto',value:document.getElementById('m-bruto')?.textContent||'R$ 0',sub:'Sem desconto',cor:'#2563EB'},
+      {label:document.getElementById('m-desc-label')?.textContent||'Com Desconto',value:document.getElementById('m-desc')?.textContent||'R$ 0',sub:'13,5% desconto',cor:'#16A34A'},
+      {label:'Total Acumulado',value:document.getElementById('m-total')?.textContent||'R$ 0',sub:'',cor:'#7C3AED'},
+    ];
     let itens=[];
     if(visao==='execucoes'){
       const execBase=(window._execSalvasDash||[]);
