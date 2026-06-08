@@ -461,7 +461,6 @@
           <option value="cancelada">APs Canceladas</option>
           <option value="execucoes">Execuções Salvas</option>
         </select>
-        <button onclick="aplicarFiltrosDashboard()" style="padding:7px 16px;background:var(--laranja);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">Aplicar</button>
       </div>
       <div class="metrics-grid">
         <div class="metric-card">
@@ -911,6 +910,10 @@ async function carregarDashboard(){
       unidades.forEach(u=>{const opt=document.createElement('option');opt.value=u;opt.textContent=u;if(u===valorAtual)opt.selected=true;selUnd.appendChild(opt);});
     }
     aplicarFiltrosDashboard();
+    document.getElementById('dash-filtro-mes')?.addEventListener('change',aplicarFiltrosDashboard);
+    document.getElementById('dash-filtro-ano')?.addEventListener('change',aplicarFiltrosDashboard);
+    document.getElementById('dash-filtro-unidade')?.addEventListener('change',aplicarFiltrosDashboard);
+    document.getElementById('dash-filtro-visao')?.addEventListener('change',aplicarFiltrosDashboard);
   }catch(e){console.error(e);}
 }
 
