@@ -464,8 +464,10 @@ app.put('/api/usuarios/perfil', requireAuth, async (req, res) => {
 app.get('/api/execucao', requireAuth, async (req, res) => {
   try {
     const r = await pool.query(`
-      SELECT e.*, u.nome as usuario_nome
-      FROM execucao e LEFT JOIN usuarios u ON e.usuario_id = u.id
+      SELECT e.*, u.nome as usuario_nome, a.status as ap_status
+      FROM execucao e
+      LEFT JOIN usuarios u ON e.usuario_id = u.id
+      LEFT JOIN aps a ON a.numero = e.numero_ap
       ORDER BY e.criado_em DESC
     `);
     res.json(r.rows);

@@ -259,7 +259,9 @@
     .exec-folder-body.open{max-height:8000px;opacity:1}
     .exec-folder-cards{padding:12px 12px 16px 28px;display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:14px}
     /* Card */
-    .exec-card{background:white;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+    .exec-card{background:white;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;border:2px solid transparent}
+    .exec-card.estado-enviada{border-color:#16A34A;background:#F0FDF4}
+    .exec-card.estado-cancelada{border-color:#DC2626;background:#FEF2F2}
     .exec-card-top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--borda);flex-shrink:0}
     .exec-card-badges{display:flex;gap:6px;flex-wrap:wrap}
     .badge-ec{padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
@@ -1693,6 +1695,11 @@ function renderExecCards(){
 }
 
 function renderCardView(card,row){
+  // Tingimento do card conforme status da AP correspondente
+  card.classList.remove('estado-enviada','estado-cancelada');
+  if(row.ap_status==='enviada')card.classList.add('estado-enviada');
+  else if(row.ap_status==='cancelada')card.classList.add('estado-cancelada');
+
   const itens=Array.isArray(row.itens)?row.itens:[];
   const total=itens.reduce((s,i)=>s+(i.valor_total||(i.valor_unitario||0)*(i.quantidade||1)),0);
 
