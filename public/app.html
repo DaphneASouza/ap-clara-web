@@ -1010,35 +1010,54 @@ function aplicarFiltrosDashboard(){
     tbody.appendChild(tr);
   });
 
-  // Gráfico barras empilhadas por status
-  const ultimos6=[];
-  for(let i=5;i>=0;i--){
-    const d=new Date(anoAtual,mesAtual-i,1);const m=d.getMonth(),a=d.getFullYear();
-    const label=MESES_ORDER[m].substring(0,3)+'/'+String(a).substring(2);
-    const base=filtrado.filter(ap=>{
-      const dt=ap.data_ap?ap.data_ap.split('/'):null;
-      const apMes=dt?(Number(dt[1])-1):new Date(ap.criado_em).getMonth();
-      const apAno=dt?Number(dt[2]):new Date(ap.criado_em).getFullYear();
-      return apMes===m&&apAno===a;
-    });
-    ultimos6.push({label,
-      gerada:base.filter(ap=>!ap.status||ap.status==='gerada').reduce((s,ap)=>s+Number(ap.total_desconto||0),0),
-      enviada:base.filter(ap=>ap.status==='enviada').reduce((s,ap)=>s+Number(ap.total_desconto||0),0),
-      paga:base.filter(ap=>ap.status==='paga').reduce((s,ap)=>s+Number(ap.total_desconto||0),0),
-    });
+  // Gráfico barras empilhadas — dinâmico (8 status, respeita filtros)
+  const STATUS_GRAFICO=[
+    {key:'gerada',              label:'Gerada',              cor:'#6B7280'},
+    {key:'enviada',             label:'Enviada',             cor:'#E65C00'},
+    {key:'ap_assinada',         label:'AP Assinada',         cor:'#60A5FA'},
+    {key:'comprovada',          label:'Comprovada',          cor:'#2563EB'},
+    {key:'emitir_nf',           label:'Emitir NF',           cor:'#7C3AED'},
+    {key:'aguardando_pagamento',label:'Aguardando Pagamento',cor:'#F59E0B'},
+    {key:'paga',                label:'Paga',                cor:'#16A34A'},
+    {key:'cancelada',           label:'Cancelada',           cor:'#DC2626'},
+  ];
+  const filtrouVisaoStatus=STATUS_GRAFICO.some(s=>s.key===visao);
+  // Eixo X: meses a exibir
+  const mesesGrafico=[];
+  if(filtroMes===''){
+    const refAno=filtroAno?Number(filtroAno):anoAtual;
+    const refMes=(filtroAno&&Number(filtroAno)!==anoAtual)?11:mesAtual;
+    for(let i=5;i>=0;i--){
+      const d=new Date(refAno,refMes-i,1);
+      mesesGrafico.push({m:d.getMonth(),a:d.getFullYear(),label:MESES_ORDER[d.getMonth()].substring(0,3)+'/'+String(d.getFullYear()).substring(2)});
+    }
+  } else {
+    const refAno=filtroAno?Number(filtroAno):anoAtual;
+    mesesGrafico.push({m:Number(filtroMes),a:refAno,label:MESES_ORDER[Number(filtroMes)].substring(0,3)+'/'+String(refAno).substring(2)});
   }
+  // Utilitário: APs de apsBase pertencentes a um mês/ano (mesma lógica do filtro upstream)
+  const apsNoMes=(arr,m,a)=>arr.filter(ap=>{
+    let dm,da;
+    if(ap.data_ap){const pt=ap.data_ap.split('/');if(pt.length!==3)return false;dm=Number(pt[1])-1;da=Number(pt[2]);}
+    else{const d=new Date(ap.criado_em);dm=d.getMonth();da=d.getFullYear();}
+    return dm===m&&da===a;
+  });
+  // Datasets: 1 série por status
+  const datasets=STATUS_GRAFICO.map(s=>{
+    const alpha=(filtrouVisaoStatus&&visao!==s.key)?'26':'B3';
+    return {
+      label:s.label,
+      data:mesesGrafico.map(({m,a})=>apsNoMes(apsBase,m,a).filter(ap=>(ap.status||'gerada')===s.key).reduce((sum,ap)=>sum+Number(ap.total_desconto||0),0)),
+      backgroundColor:s.cor+alpha,
+      borderRadius:4,
+      stack:'s',
+    };
+  });
   if(chartMensal)chartMensal.destroy();
   const ctx=el('chart-mensal').getContext('2d');
   chartMensal=new Chart(ctx,{
     type:'bar',
-    data:{
-      labels:ultimos6.map(x=>x.label),
-      datasets:[
-        {label:'Gerada',data:ultimos6.map(x=>x.gerada),backgroundColor:'rgba(37,99,235,0.7)',borderRadius:4,stack:'s'},
-        {label:'Enviada',data:ultimos6.map(x=>x.enviada),backgroundColor:'rgba(245,158,11,0.7)',borderRadius:4,stack:'s'},
-        {label:'Paga',data:ultimos6.map(x=>x.paga),backgroundColor:'rgba(22,163,74,0.7)',borderRadius:4,stack:'s'},
-      ]
-    },
+    data:{labels:mesesGrafico.map(x=>x.label),datasets},
     options:{responsive:true,plugins:{legend:{display:true,position:'top',labels:{font:{size:10},boxWidth:10}}},scales:{y:{stacked:true,ticks:{callback:v=>v>=1000?`R$ ${(v/1000).toFixed(0)}k`:`R$ ${v}`,font:{size:10}},grid:{color:'#F4F4F5'}},x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}}}}
   });
 }
