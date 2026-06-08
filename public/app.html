@@ -2195,7 +2195,7 @@ async function carregarFaturamento(){
     const filtrar=lista=>lista.filter(ap=>{
       if(und&&(ap.unidade||'').trim()!==und)return false;
       if(mes&&extrairMes(ap.numero||'')!==mes)return false;
-      if(q&&!(ap.numero||'').toLowerCase().includes(q)&&!(ap.nome_projeto||'').toLowerCase().includes(q))return false;
+      if(q){const campos=[ap.numero,ap.nome_projeto,ap.numero_nf,ap.motivo_cancelamento,ap.unidade,ap.observacao,ap.data_envio,ap.data_pagamento];if(!campos.some(v=>(v||'').toString().toLowerCase().includes(q)))return false;}
       return true;
     });
     renderFatEnviadas(filtrar(todas.filter(ap=>ap.status==='enviada')));
