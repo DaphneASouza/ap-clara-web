@@ -1696,8 +1696,9 @@ function renderExecCards(){
 
 function renderCardView(card,row){
   // Tingimento do card conforme status da AP correspondente
+  const verdesStatus=['enviada','ap_assinada','comprovada','emitir_nf','aguardando_pagamento','paga'];
   card.classList.remove('estado-enviada','estado-cancelada');
-  if(row.ap_status==='enviada')card.classList.add('estado-enviada');
+  if(verdesStatus.includes(row.ap_status))card.classList.add('estado-enviada');
   else if(row.ap_status==='cancelada')card.classList.add('estado-cancelada');
 
   const itens=Array.isArray(row.itens)?row.itens:[];
