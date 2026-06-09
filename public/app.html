@@ -2699,7 +2699,7 @@ async function gerarRelatorioDashboard(){
     const filtroUnd=document.getElementById('dash-filtro-unidade')?.value||'';
     const visao=document.getElementById('dash-filtro-visao')?.value||'todas';
     const nomesMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-    const labelsVisao={todas:'Todas as APs',gerada:'APs Geradas',enviada:'APs Enviadas',paga:'APs Pagas',execucoes:'Execuções Salvas'};
+    const labelsVisao={todas:'Todas as APs',gerada:'APs Geradas',enviada:'APs Enviadas',ap_assinada:'AP Assinada',comprovada:'Comprovadas',emitir_nf:'Emitir NF',aguardando_pagamento:'Aguardando Pagamento',paga:'APs Pagas',cancelada:'APs Canceladas',execucoes:'Execuções Salvas'};
     const filtros=[
       {label:'Visão',valor:labelsVisao[visao]||visao},
       {label:'Mês',valor:filtroMes!==''?nomesMes[Number(filtroMes)]:'Todos'},
@@ -2723,11 +2723,16 @@ async function gerarRelatorioDashboard(){
     } else {
       let base=banco;
       if(filtroUnd)base=base.filter(ap=>(ap.unidade||'').trim()===filtroUnd);
-      if(filtroAno)base=base.filter(ap=>new Date(ap.criado_em).getFullYear()===Number(filtroAno));
-      if(filtroMes!=='')base=base.filter(ap=>new Date(ap.criado_em).getMonth()===Number(filtroMes));
+      if(filtroAno)base=base.filter(ap=>{const d=ap.data_ap?ap.data_ap.split('/'):null;const ano=d?Number(d[2]):new Date(ap.criado_em).getFullYear();return ano===Number(filtroAno);});
+      if(filtroMes!=='')base=base.filter(ap=>{const d=ap.data_ap?ap.data_ap.split('/'):null;const mes=d?(Number(d[1])-1):new Date(ap.criado_em).getMonth();return mes===Number(filtroMes);});
       if(visao==='gerada')base=base.filter(ap=>!ap.status||ap.status==='gerada');
       else if(visao==='enviada')base=base.filter(ap=>ap.status==='enviada');
+      else if(visao==='ap_assinada')base=base.filter(ap=>ap.status==='ap_assinada');
+      else if(visao==='comprovada')base=base.filter(ap=>ap.status==='comprovada');
+      else if(visao==='emitir_nf')base=base.filter(ap=>ap.status==='emitir_nf');
+      else if(visao==='aguardando_pagamento')base=base.filter(ap=>ap.status==='aguardando_pagamento');
       else if(visao==='paga')base=base.filter(ap=>ap.status==='paga');
+      else if(visao==='cancelada')base=base.filter(ap=>ap.status==='cancelada');
       itens=base.map(ap=>({numero:ap.numero,nome_projeto:ap.nome_projeto,unidade:ap.unidade,data_ap:ap.data_ap,status:ap.status||'gerada',total_desconto:ap.total_desconto}));
     }
     const r=await fetch('/api/relatorio/dashboard',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filtros,cards,itens})});
