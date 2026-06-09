@@ -8,8 +8,28 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 
 function buildRelatorioHTML(dados){
   const { filtros, cards, itens, geradoEm } = dados;
-  const corStatus = { gerada:'#2563EB', enviada:'#F59E0B', paga:'#16A34A', '':'#E65C00' };
-  const labelStatus = { gerada:'Gerada', enviada:'Enviada', paga:'Paga', '':'—' };
+  const corStatus = {
+    gerada:'#6B7280',
+    enviada:'#E65C00',
+    ap_assinada:'#60A5FA',
+    comprovada:'#2563EB',
+    emitir_nf:'#7C3AED',
+    aguardando_pagamento:'#F59E0B',
+    paga:'#16A34A',
+    cancelada:'#DC2626',
+    '':'#A1A1AA'
+  };
+  const labelStatus = {
+    gerada:'Gerada',
+    enviada:'Enviada',
+    ap_assinada:'AP Assinada',
+    comprovada:'Comprovada',
+    emitir_nf:'Emitir NF',
+    aguardando_pagamento:'Aguardando Pagamento',
+    paga:'Paga',
+    cancelada:'Cancelada',
+    '':'—'
+  };
 
   const linhas = itens.map((item,i) => `
     <tr style="background:${i%2===0?'#fff':'#fafafa'}">
@@ -17,7 +37,7 @@ function buildRelatorioHTML(dados){
       <td>${esc(item.nome_projeto||'—')}</td>
       <td>${esc(item.unidade||'—')}</td>
       <td>${esc(item.data_ap||'—')}</td>
-      <td><span style="background:${corStatus[item.status||'']}22;color:${corStatus[item.status||'']};padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700">${labelStatus[item.status||'']||'Gerada'}</span></td>
+      <td><span style="background:${corStatus[item.status||'']}22;color:${corStatus[item.status||'']};padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700">${labelStatus[item.status||'']||item.status||'—'}</span></td>
       <td style="text-align:right;font-weight:700;color:#16A34A">${brl(item.total_desconto)}</td>
     </tr>`).join('');
 
